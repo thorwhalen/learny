@@ -1,0 +1,7095 @@
+{
+  "abundant": {
+    "synonyms": {
+      "choices": [
+        "plentiful",
+        "scarce",
+        "sparse",
+        "equipment"
+      ],
+      "correct": "plentiful"
+    },
+    "antonyms": {
+      "choices": [
+        "scarce",
+        "plentiful",
+        "copious",
+        "habitable"
+      ],
+      "correct": "scarce"
+    },
+    "odd_one_out": {
+      "choices": [
+        "abundant",
+        "plentiful",
+        "copious",
+        "scarce"
+      ],
+      "correct": "scarce"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "plentiful",
+        "bewildered",
+        "pompous",
+        "receive"
+      ],
+      "correct": "plentiful"
+    }
+  },
+  "accommodate": {
+    "synonyms": {
+      "choices": [
+        "house",
+        "evict",
+        "reject",
+        "unsurpassed"
+      ],
+      "correct": "house"
+    },
+    "antonyms": {
+      "choices": [
+        "evict",
+        "house",
+        "lodge",
+        "recite"
+      ],
+      "correct": "evict"
+    },
+    "odd_one_out": {
+      "choices": [
+        "accommodate",
+        "house",
+        "lodge",
+        "evict"
+      ],
+      "correct": "evict"
+    },
+    "analogies": {
+      "first": "light",
+      "second": "dark",
+      "relation": "antonym",
+      "choices": [
+        "evict",
+        "temperature",
+        "liberal",
+        "beautiful"
+      ],
+      "correct": "evict"
+    }
+  },
+  "accompany": {
+    "synonyms": {
+      "choices": [
+        "escort",
+        "abandon",
+        "leave",
+        "conserve"
+      ],
+      "correct": "escort"
+    },
+    "antonyms": {
+      "choices": [
+        "abandon",
+        "escort",
+        "attend",
+        "available"
+      ],
+      "correct": "abandon"
+    },
+    "odd_one_out": {
+      "choices": [
+        "accompany",
+        "escort",
+        "attend",
+        "abandon"
+      ],
+      "correct": "abandon"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "escort",
+        "mortal",
+        "frivolous",
+        "alert"
+      ],
+      "correct": "escort"
+    }
+  },
+  "accustomed": {
+    "synonyms": {
+      "choices": [
+        "used to",
+        "unaccustomed",
+        "unfamiliar",
+        "frequent"
+      ],
+      "correct": "used to"
+    },
+    "antonyms": {
+      "choices": [
+        "unaccustomed",
+        "used to",
+        "habituated",
+        "temptation"
+      ],
+      "correct": "unaccustomed"
+    },
+    "odd_one_out": {
+      "choices": [
+        "accustomed",
+        "used to",
+        "habituated",
+        "unaccustomed"
+      ],
+      "correct": "unaccustomed"
+    },
+    "analogies": {
+      "first": "day",
+      "second": "night",
+      "relation": "antonym",
+      "choices": [
+        "unaccustomed",
+        "admission",
+        "loyalty",
+        "contest"
+      ],
+      "correct": "unaccustomed"
+    }
+  },
+  "acquainted": {
+    "synonyms": {
+      "choices": [
+        "familiar",
+        "ignorant",
+        "unaware",
+        "prompt"
+      ],
+      "correct": "familiar"
+    },
+    "antonyms": {
+      "choices": [
+        "ignorant",
+        "familiar",
+        "aware",
+        "pledge"
+      ],
+      "correct": "ignorant"
+    },
+    "odd_one_out": {
+      "choices": [
+        "acquainted",
+        "familiar",
+        "aware",
+        "ignorant"
+      ],
+      "correct": "ignorant"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "ignorant",
+        "library",
+        "fragrant",
+        "convince"
+      ],
+      "correct": "ignorant"
+    }
+  },
+  "adhere": {
+    "synonyms": {
+      "choices": [
+        "stick",
+        "detach",
+        "loosen",
+        "inedible"
+      ],
+      "correct": "stick"
+    },
+    "antonyms": {
+      "choices": [
+        "detach",
+        "stick",
+        "cling",
+        "resolve"
+      ],
+      "correct": "detach"
+    },
+    "odd_one_out": {
+      "choices": [
+        "adhere",
+        "stick",
+        "cling",
+        "detach"
+      ],
+      "correct": "detach"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "stick",
+        "relevant",
+        "sanitary",
+        "composition"
+      ],
+      "correct": "stick"
+    }
+  },
+  "admission": {
+    "synonyms": {
+      "choices": [
+        "entry",
+        "exclusion",
+        "denial",
+        "attempt"
+      ],
+      "correct": "entry"
+    },
+    "antonyms": {
+      "choices": [
+        "exclusion",
+        "entry",
+        "admittance",
+        "lodge"
+      ],
+      "correct": "exclusion"
+    },
+    "odd_one_out": {
+      "choices": [
+        "admission",
+        "entry",
+        "admittance",
+        "exclusion"
+      ],
+      "correct": "exclusion"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "exclusion",
+        "programme",
+        "frequent",
+        "enterprise"
+      ],
+      "correct": "exclusion"
+    }
+  },
+  "affectionate": {
+    "synonyms": {
+      "choices": [
+        "loving",
+        "cold",
+        "aloof",
+        "familiar"
+      ],
+      "correct": "loving"
+    },
+    "antonyms": {
+      "choices": [
+        "cold",
+        "loving",
+        "tender",
+        "lament"
+      ],
+      "correct": "cold"
+    },
+    "odd_one_out": {
+      "choices": [
+        "affectionate",
+        "loving",
+        "tender",
+        "cold"
+      ],
+      "correct": "cold"
+    },
+    "analogies": {
+      "first": "begin",
+      "second": "end",
+      "relation": "antonym",
+      "choices": [
+        "cold",
+        "weary",
+        "reprimand",
+        "endeavour"
+      ],
+      "correct": "cold"
+    }
+  },
+  "amateur": {
+    "synonyms": {
+      "choices": [
+        "novice",
+        "professional",
+        "expert",
+        "custom"
+      ],
+      "correct": "novice"
+    },
+    "antonyms": {
+      "choices": [
+        "professional",
+        "novice",
+        "nonprofessional",
+        "prohibit"
+      ],
+      "correct": "professional"
+    },
+    "odd_one_out": {
+      "choices": [
+        "amateur",
+        "novice",
+        "nonprofessional",
+        "professional"
+      ],
+      "correct": "professional"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "professional",
+        "sanitary",
+        "ancient",
+        "queue"
+      ],
+      "correct": "professional"
+    }
+  },
+  "ample": {
+    "synonyms": {
+      "choices": [
+        "plentiful",
+        "meagre",
+        "scant",
+        "contemporary"
+      ],
+      "correct": "plentiful"
+    },
+    "antonyms": {
+      "choices": [
+        "meagre",
+        "plentiful",
+        "abundant",
+        "wretched"
+      ],
+      "correct": "meagre"
+    },
+    "odd_one_out": {
+      "choices": [
+        "ample",
+        "plentiful",
+        "abundant",
+        "meagre"
+      ],
+      "correct": "meagre"
+    },
+    "analogies": {
+      "first": "big",
+      "second": "small",
+      "relation": "antonym",
+      "choices": [
+        "meagre",
+        "unfathomable",
+        "extinction",
+        "awkward"
+      ],
+      "correct": "meagre"
+    }
+  },
+  "applicable": {
+    "synonyms": {
+      "choices": [
+        "relevant",
+        "irrelevant",
+        "inappropriate",
+        "hasty"
+      ],
+      "correct": "relevant"
+    },
+    "antonyms": {
+      "choices": [
+        "irrelevant",
+        "relevant",
+        "appropriate",
+        "perceive"
+      ],
+      "correct": "irrelevant"
+    },
+    "odd_one_out": {
+      "choices": [
+        "applicable",
+        "relevant",
+        "appropriate",
+        "irrelevant"
+      ],
+      "correct": "irrelevant"
+    },
+    "analogies": {
+      "first": "day",
+      "second": "night",
+      "relation": "antonym",
+      "choices": [
+        "irrelevant",
+        "restaurant",
+        "disastrous",
+        "awkward"
+      ],
+      "correct": "irrelevant"
+    }
+  },
+  "apprehensive": {
+    "synonyms": {
+      "choices": [
+        "anxious",
+        "confident",
+        "calm",
+        "idle"
+      ],
+      "correct": "anxious"
+    },
+    "antonyms": {
+      "choices": [
+        "confident",
+        "anxious",
+        "fearful",
+        "prohibit"
+      ],
+      "correct": "confident"
+    },
+    "odd_one_out": {
+      "choices": [
+        "apprehensive",
+        "anxious",
+        "fearful",
+        "confident"
+      ],
+      "correct": "confident"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "confident",
+        "bewildered",
+        "familiar",
+        "diluted"
+      ],
+      "correct": "confident"
+    }
+  },
+  "avowed": {
+    "synonyms": {
+      "choices": [
+        "declared",
+        "concealed",
+        "hidden",
+        "separate"
+      ],
+      "correct": "declared"
+    },
+    "antonyms": {
+      "choices": [
+        "concealed",
+        "declared",
+        "professed",
+        "minimum"
+      ],
+      "correct": "concealed"
+    },
+    "odd_one_out": {
+      "choices": [
+        "avowed",
+        "declared",
+        "professed",
+        "concealed"
+      ],
+      "correct": "concealed"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "concealed",
+        "privilege",
+        "lodge",
+        "convince"
+      ],
+      "correct": "concealed"
+    }
+  },
+  "bargain": {
+    "synonyms": {
+      "choices": [
+        "deal",
+        "rip-off",
+        "swindle",
+        "gratitude"
+      ],
+      "correct": "deal"
+    },
+    "antonyms": {
+      "choices": [
+        "rip-off",
+        "deal",
+        "negotiation",
+        "calamity"
+      ],
+      "correct": "rip-off"
+    },
+    "odd_one_out": {
+      "choices": [
+        "bargain",
+        "deal",
+        "negotiation",
+        "rip-off"
+      ],
+      "correct": "rip-off"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "deal",
+        "cunning",
+        "sermon",
+        "affectionate"
+      ],
+      "correct": "deal"
+    }
+  },
+  "barren": {
+    "synonyms": {
+      "choices": [
+        "desolate",
+        "fertile",
+        "fruitful",
+        "recognise"
+      ],
+      "correct": "desolate"
+    },
+    "antonyms": {
+      "choices": [
+        "fertile",
+        "desolate",
+        "infertile",
+        "brief"
+      ],
+      "correct": "fertile"
+    },
+    "odd_one_out": {
+      "choices": [
+        "barren",
+        "desolate",
+        "infertile",
+        "fertile"
+      ],
+      "correct": "fertile"
+    },
+    "analogies": {
+      "first": "light",
+      "second": "dark",
+      "relation": "antonym",
+      "choices": [
+        "fertile",
+        "sanitary",
+        "dose",
+        "flora"
+      ],
+      "correct": "fertile"
+    }
+  },
+  "belligerent": {
+    "synonyms": {
+      "choices": [
+        "hostile",
+        "peaceable",
+        "friendly",
+        "idol"
+      ],
+      "correct": "hostile"
+    },
+    "antonyms": {
+      "choices": [
+        "peaceable",
+        "hostile",
+        "aggressive",
+        "restaurant"
+      ],
+      "correct": "peaceable"
+    },
+    "odd_one_out": {
+      "choices": [
+        "belligerent",
+        "hostile",
+        "aggressive",
+        "peaceable"
+      ],
+      "correct": "peaceable"
+    },
+    "analogies": {
+      "first": "day",
+      "second": "night",
+      "relation": "antonym",
+      "choices": [
+        "peaceable",
+        "conventional",
+        "perilous",
+        "insert"
+      ],
+      "correct": "peaceable"
+    }
+  },
+  "bemused": {
+    "synonyms": {
+      "choices": [
+        "puzzled",
+        "clear-headed",
+        "alert",
+        "stubborn"
+      ],
+      "correct": "puzzled"
+    },
+    "antonyms": {
+      "choices": [
+        "clear-headed",
+        "puzzled",
+        "bewildered",
+        "advance"
+      ],
+      "correct": "clear-headed"
+    },
+    "odd_one_out": {
+      "choices": [
+        "bemused",
+        "puzzled",
+        "bewildered",
+        "clear-headed"
+      ],
+      "correct": "clear-headed"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "puzzled",
+        "feign",
+        "suspend",
+        "twelfth"
+      ],
+      "correct": "puzzled"
+    }
+  },
+  "besieged": {
+    "synonyms": {
+      "choices": [
+        "surrounded",
+        "free",
+        "unbesieged",
+        "dependable"
+      ],
+      "correct": "surrounded"
+    },
+    "antonyms": {
+      "choices": [
+        "free",
+        "surrounded",
+        "encircled",
+        "foe"
+      ],
+      "correct": "free"
+    },
+    "odd_one_out": {
+      "choices": [
+        "besieged",
+        "surrounded",
+        "encircled",
+        "free"
+      ],
+      "correct": "free"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "surrounded",
+        "description",
+        "college",
+        "decline"
+      ],
+      "correct": "surrounded"
+    }
+  },
+  "burden": {
+    "synonyms": {
+      "choices": [
+        "load",
+        "relief",
+        "ease",
+        "confine"
+      ],
+      "correct": "load"
+    },
+    "antonyms": {
+      "choices": [
+        "relief",
+        "load",
+        "weight",
+        "mercy"
+      ],
+      "correct": "relief"
+    },
+    "odd_one_out": {
+      "choices": [
+        "burden",
+        "load",
+        "weight",
+        "relief"
+      ],
+      "correct": "relief"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "load",
+        "because",
+        "release",
+        "anxious"
+      ],
+      "correct": "load"
+    }
+  },
+  "charred": {
+    "synonyms": {
+      "choices": [
+        "burned",
+        "fresh",
+        "untouched",
+        "secretary"
+      ],
+      "correct": "burned"
+    },
+    "antonyms": {
+      "choices": [
+        "fresh",
+        "burned",
+        "scorched",
+        "wholesome"
+      ],
+      "correct": "fresh"
+    },
+    "odd_one_out": {
+      "choices": [
+        "charred",
+        "burned",
+        "scorched",
+        "fresh"
+      ],
+      "correct": "fresh"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "burned",
+        "discontent",
+        "grave",
+        "complex"
+      ],
+      "correct": "burned"
+    }
+  },
+  "coarse": {
+    "synonyms": {
+      "choices": [
+        "rough",
+        "fine",
+        "smooth",
+        "submissive"
+      ],
+      "correct": "rough"
+    },
+    "antonyms": {
+      "choices": [
+        "fine",
+        "rough",
+        "crude",
+        "inferior"
+      ],
+      "correct": "fine"
+    },
+    "odd_one_out": {
+      "choices": [
+        "coarse",
+        "rough",
+        "crude",
+        "fine"
+      ],
+      "correct": "fine"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "fine",
+        "hasty",
+        "absence",
+        "weary"
+      ],
+      "correct": "fine"
+    }
+  },
+  "coax": {
+    "synonyms": {
+      "choices": [
+        "persuade",
+        "deter",
+        "dissuade",
+        "oath"
+      ],
+      "correct": "persuade"
+    },
+    "antonyms": {
+      "choices": [
+        "deter",
+        "persuade",
+        "cajole",
+        "interrogate"
+      ],
+      "correct": "deter"
+    },
+    "odd_one_out": {
+      "choices": [
+        "coax",
+        "persuade",
+        "cajole",
+        "deter"
+      ],
+      "correct": "deter"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "persuade",
+        "purpose",
+        "supposed",
+        "puncture"
+      ],
+      "correct": "persuade"
+    }
+  },
+  "commence": {
+    "synonyms": {
+      "choices": [
+        "begin",
+        "finish",
+        "end",
+        "admission"
+      ],
+      "correct": "begin"
+    },
+    "antonyms": {
+      "choices": [
+        "finish",
+        "begin",
+        "start",
+        "contemporary"
+      ],
+      "correct": "finish"
+    },
+    "odd_one_out": {
+      "choices": [
+        "commence",
+        "begin",
+        "start",
+        "finish"
+      ],
+      "correct": "finish"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "finish",
+        "transferral",
+        "brief",
+        "sufficient"
+      ],
+      "correct": "finish"
+    }
+  },
+  "committee": {
+    "synonyms": {
+      "choices": [
+        "board",
+        "individual",
+        "person",
+        "identity"
+      ],
+      "correct": "board"
+    },
+    "antonyms": {
+      "choices": [
+        "individual",
+        "board",
+        "panel",
+        "chaos"
+      ],
+      "correct": "individual"
+    },
+    "odd_one_out": {
+      "choices": [
+        "committee",
+        "board",
+        "panel",
+        "individual"
+      ],
+      "correct": "individual"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "board",
+        "offend",
+        "dismal",
+        "stomach"
+      ],
+      "correct": "board"
+    }
+  },
+  "composition": {
+    "synonyms": {
+      "choices": [
+        "makeup",
+        "decomposition",
+        "disassembly",
+        "dishevelled"
+      ],
+      "correct": "makeup"
+    },
+    "antonyms": {
+      "choices": [
+        "decomposition",
+        "makeup",
+        "structure",
+        "comprehend"
+      ],
+      "correct": "decomposition"
+    },
+    "odd_one_out": {
+      "choices": [
+        "composition",
+        "makeup",
+        "structure",
+        "decomposition"
+      ],
+      "correct": "decomposition"
+    },
+    "analogies": {
+      "first": "big",
+      "second": "small",
+      "relation": "antonym",
+      "choices": [
+        "decomposition",
+        "achieve",
+        "business",
+        "unnecessary"
+      ],
+      "correct": "decomposition"
+    }
+  },
+  "conceited": {
+    "synonyms": {
+      "choices": [
+        "arrogant",
+        "humble",
+        "modest",
+        "individual"
+      ],
+      "correct": "arrogant"
+    },
+    "antonyms": {
+      "choices": [
+        "humble",
+        "arrogant",
+        "vain",
+        "nimble"
+      ],
+      "correct": "humble"
+    },
+    "odd_one_out": {
+      "choices": [
+        "conceited",
+        "arrogant",
+        "vain",
+        "humble"
+      ],
+      "correct": "humble"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "arrogant",
+        "appreciate",
+        "debrief",
+        "suspect"
+      ],
+      "correct": "arrogant"
+    }
+  },
+  "conceive": {
+    "synonyms": {
+      "choices": [
+        "imagine",
+        "misconceive",
+        "misunderstand",
+        "advance"
+      ],
+      "correct": "imagine"
+    },
+    "antonyms": {
+      "choices": [
+        "misconceive",
+        "imagine",
+        "think of",
+        "shrine"
+      ],
+      "correct": "misconceive"
+    },
+    "odd_one_out": {
+      "choices": [
+        "conceive",
+        "imagine",
+        "think of",
+        "misconceive"
+      ],
+      "correct": "misconceive"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "sad",
+      "relation": "antonym",
+      "choices": [
+        "misconceive",
+        "margin",
+        "veil",
+        "avowed"
+      ],
+      "correct": "misconceive"
+    }
+  },
+  "condemn": {
+    "synonyms": {
+      "choices": [
+        "denounce",
+        "praise",
+        "commend",
+        "changeable"
+      ],
+      "correct": "denounce"
+    },
+    "antonyms": {
+      "choices": [
+        "praise",
+        "denounce",
+        "criticize",
+        "seize"
+      ],
+      "correct": "praise"
+    },
+    "odd_one_out": {
+      "choices": [
+        "condemn",
+        "denounce",
+        "criticize",
+        "praise"
+      ],
+      "correct": "praise"
+    },
+    "analogies": {
+      "first": "day",
+      "second": "night",
+      "relation": "antonym",
+      "choices": [
+        "praise",
+        "secure",
+        "assistance",
+        "reprimand"
+      ],
+      "correct": "praise"
+    }
+  },
+  "confidential": {
+    "synonyms": {
+      "choices": [
+        "secret",
+        "public",
+        "open",
+        "latter"
+      ],
+      "correct": "secret"
+    },
+    "antonyms": {
+      "choices": [
+        "public",
+        "secret",
+        "private",
+        "constant"
+      ],
+      "correct": "public"
+    },
+    "odd_one_out": {
+      "choices": [
+        "confidential",
+        "secret",
+        "private",
+        "public"
+      ],
+      "correct": "public"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "secret",
+        "language",
+        "resign",
+        "cease"
+      ],
+      "correct": "secret"
+    }
+  },
+  "confine": {
+    "synonyms": {
+      "choices": [
+        "limit",
+        "free",
+        "liberate",
+        "veil"
+      ],
+      "correct": "limit"
+    },
+    "antonyms": {
+      "choices": [
+        "free",
+        "limit",
+        "restrict",
+        "ambition"
+      ],
+      "correct": "free"
+    },
+    "odd_one_out": {
+      "choices": [
+        "confine",
+        "limit",
+        "restrict",
+        "free"
+      ],
+      "correct": "free"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "free",
+        "ceiling",
+        "permit",
+        "imitate"
+      ],
+      "correct": "free"
+    }
+  },
+  "conspire": {
+    "synonyms": {
+      "choices": [
+        "plot",
+        "cooperate",
+        "support",
+        "contempt"
+      ],
+      "correct": "plot"
+    },
+    "antonyms": {
+      "choices": [
+        "cooperate",
+        "plot",
+        "scheme",
+        "custom"
+      ],
+      "correct": "cooperate"
+    },
+    "odd_one_out": {
+      "choices": [
+        "conspire",
+        "plot",
+        "scheme",
+        "cooperate"
+      ],
+      "correct": "cooperate"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "plot",
+        "vehicle",
+        "library",
+        "conceal"
+      ],
+      "correct": "plot"
+    }
+  },
+  "consent": {
+    "synonyms": {
+      "choices": [
+        "agree",
+        "refuse",
+        "reject",
+        "ambition"
+      ],
+      "correct": "agree"
+    },
+    "antonyms": {
+      "choices": [
+        "refuse",
+        "agree",
+        "assent",
+        "according"
+      ],
+      "correct": "refuse"
+    },
+    "odd_one_out": {
+      "choices": [
+        "consent",
+        "agree",
+        "assent",
+        "refuse"
+      ],
+      "correct": "refuse"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "refuse",
+        "conventional",
+        "unite",
+        "leisure"
+      ],
+      "correct": "refuse"
+    }
+  },
+  "consist": {
+    "synonyms": {
+      "choices": [
+        "comprise",
+        "exclude",
+        "omit",
+        "surprise"
+      ],
+      "correct": "comprise"
+    },
+    "antonyms": {
+      "choices": [
+        "exclude",
+        "comprise",
+        "contain",
+        "empire"
+      ],
+      "correct": "exclude"
+    },
+    "odd_one_out": {
+      "choices": [
+        "consist",
+        "comprise",
+        "contain",
+        "exclude"
+      ],
+      "correct": "exclude"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "comprise",
+        "flamboyant",
+        "pledge",
+        "peak"
+      ],
+      "correct": "comprise"
+    }
+  },
+  "contemporary": {
+    "synonyms": {
+      "choices": [
+        "modern",
+        "ancient",
+        "old-fashioned",
+        "condemn"
+      ],
+      "correct": "modern"
+    },
+    "antonyms": {
+      "choices": [
+        "ancient",
+        "modern",
+        "current",
+        "environment"
+      ],
+      "correct": "ancient"
+    },
+    "odd_one_out": {
+      "choices": [
+        "contemporary",
+        "modern",
+        "current",
+        "ancient"
+      ],
+      "correct": "ancient"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "ancient",
+        "decline",
+        "cultivate",
+        "article"
+      ],
+      "correct": "ancient"
+    }
+  },
+  "contempt": {
+    "synonyms": {
+      "choices": [
+        "disdain",
+        "respect",
+        "admiration",
+        "recite"
+      ],
+      "correct": "disdain"
+    },
+    "antonyms": {
+      "choices": [
+        "respect",
+        "disdain",
+        "scorn",
+        "existence"
+      ],
+      "correct": "respect"
+    },
+    "odd_one_out": {
+      "choices": [
+        "contempt",
+        "disdain",
+        "scorn",
+        "respect"
+      ],
+      "correct": "respect"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "disdain",
+        "endure",
+        "acquainted",
+        "mortal"
+      ],
+      "correct": "disdain"
+    }
+  },
+  "conventional": {
+    "synonyms": {
+      "choices": [
+        "traditional",
+        "unconventional",
+        "radical",
+        "immerse"
+      ],
+      "correct": "traditional"
+    },
+    "antonyms": {
+      "choices": [
+        "unconventional",
+        "traditional",
+        "customary",
+        "objection"
+      ],
+      "correct": "unconventional"
+    },
+    "odd_one_out": {
+      "choices": [
+        "conventional",
+        "traditional",
+        "customary",
+        "unconventional"
+      ],
+      "correct": "unconventional"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "traditional",
+        "convert",
+        "leisure",
+        "changeable"
+      ],
+      "correct": "traditional"
+    }
+  },
+  "convert": {
+    "synonyms": {
+      "choices": [
+        "change",
+        "preserve",
+        "maintain",
+        "intangible"
+      ],
+      "correct": "change"
+    },
+    "antonyms": {
+      "choices": [
+        "preserve",
+        "change",
+        "transform",
+        "candidate"
+      ],
+      "correct": "preserve"
+    },
+    "odd_one_out": {
+      "choices": [
+        "convert",
+        "change",
+        "transform",
+        "preserve"
+      ],
+      "correct": "preserve"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "preserve",
+        "purpose",
+        "vacant",
+        "suspect"
+      ],
+      "correct": "preserve"
+    }
+  },
+  "convict": {
+    "synonyms": {
+      "choices": [
+        "find guilty",
+        "acquit",
+        "pardon",
+        "exciting"
+      ],
+      "correct": "find guilty"
+    },
+    "antonyms": {
+      "choices": [
+        "acquit",
+        "find guilty",
+        "condemn",
+        "incision"
+      ],
+      "correct": "acquit"
+    },
+    "odd_one_out": {
+      "choices": [
+        "convict",
+        "find guilty",
+        "condemn",
+        "acquit"
+      ],
+      "correct": "acquit"
+    },
+    "analogies": {
+      "first": "love",
+      "second": "hate",
+      "relation": "antonym",
+      "choices": [
+        "acquit",
+        "debrief",
+        "rhyme",
+        "ignorant"
+      ],
+      "correct": "acquit"
+    }
+  },
+  "correspond": {
+    "synonyms": {
+      "choices": [
+        "match",
+        "differ",
+        "disagree",
+        "sacrifice"
+      ],
+      "correct": "match"
+    },
+    "antonyms": {
+      "choices": [
+        "differ",
+        "match",
+        "agree",
+        "latter"
+      ],
+      "correct": "differ"
+    },
+    "odd_one_out": {
+      "choices": [
+        "correspond",
+        "match",
+        "agree",
+        "differ"
+      ],
+      "correct": "differ"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "differ",
+        "belligerent",
+        "benefit",
+        "perplexed"
+      ],
+      "correct": "differ"
+    }
+  },
+  "coy": {
+    "synonyms": {
+      "choices": [
+        "shy",
+        "bold",
+        "brazen",
+        "signature"
+      ],
+      "correct": "shy"
+    },
+    "antonyms": {
+      "choices": [
+        "bold",
+        "shy",
+        "bashful",
+        "wholly"
+      ],
+      "correct": "bold"
+    },
+    "odd_one_out": {
+      "choices": [
+        "coy",
+        "shy",
+        "bashful",
+        "bold"
+      ],
+      "correct": "bold"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "shy",
+        "government",
+        "evident",
+        "frivolous"
+      ],
+      "correct": "shy"
+    }
+  },
+  "cultivate": {
+    "synonyms": {
+      "choices": [
+        "grow",
+        "neglect",
+        "destroy",
+        "fertile"
+      ],
+      "correct": "grow"
+    },
+    "antonyms": {
+      "choices": [
+        "neglect",
+        "grow",
+        "nurture",
+        "intention"
+      ],
+      "correct": "neglect"
+    },
+    "odd_one_out": {
+      "choices": [
+        "cultivate",
+        "grow",
+        "nurture",
+        "neglect"
+      ],
+      "correct": "neglect"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "grow",
+        "quench",
+        "appearance",
+        "plume"
+      ],
+      "correct": "grow"
+    }
+  },
+  "cunning": {
+    "synonyms": {
+      "choices": [
+        "crafty",
+        "naive",
+        "honest",
+        "contest"
+      ],
+      "correct": "crafty"
+    },
+    "antonyms": {
+      "choices": [
+        "naive",
+        "crafty",
+        "sly",
+        "meant"
+      ],
+      "correct": "naive"
+    },
+    "odd_one_out": {
+      "choices": [
+        "cunning",
+        "crafty",
+        "sly",
+        "naive"
+      ],
+      "correct": "naive"
+    },
+    "analogies": {
+      "first": "safe",
+      "second": "dangerous",
+      "relation": "antonym",
+      "choices": [
+        "naive",
+        "peculiar",
+        "parallel",
+        "benefit"
+      ],
+      "correct": "naive"
+    }
+  },
+  "curb": {
+    "synonyms": {
+      "choices": [
+        "restrain",
+        "encourage",
+        "spur",
+        "fragment"
+      ],
+      "correct": "restrain"
+    },
+    "antonyms": {
+      "choices": [
+        "encourage",
+        "restrain",
+        "control",
+        "vehicle"
+      ],
+      "correct": "encourage"
+    },
+    "odd_one_out": {
+      "choices": [
+        "curb",
+        "restrain",
+        "control",
+        "encourage"
+      ],
+      "correct": "encourage"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "restrain",
+        "approve",
+        "flora",
+        "queue"
+      ],
+      "correct": "restrain"
+    }
+  },
+  "curt": {
+    "synonyms": {
+      "choices": [
+        "abrupt",
+        "polite",
+        "courteous",
+        "cunning"
+      ],
+      "correct": "abrupt"
+    },
+    "antonyms": {
+      "choices": [
+        "polite",
+        "abrupt",
+        "blunt",
+        "identity"
+      ],
+      "correct": "polite"
+    },
+    "odd_one_out": {
+      "choices": [
+        "curt",
+        "abrupt",
+        "blunt",
+        "polite"
+      ],
+      "correct": "polite"
+    },
+    "analogies": {
+      "first": "big",
+      "second": "small",
+      "relation": "antonym",
+      "choices": [
+        "polite",
+        "consist",
+        "lean",
+        "halt"
+      ],
+      "correct": "polite"
+    }
+  },
+  "debrief": {
+    "synonyms": {
+      "choices": [
+        "question",
+        "brief",
+        "inform",
+        "appearance"
+      ],
+      "correct": "question"
+    },
+    "antonyms": {
+      "choices": [
+        "brief",
+        "question",
+        "interview",
+        "peak"
+      ],
+      "correct": "brief"
+    },
+    "odd_one_out": {
+      "choices": [
+        "debrief",
+        "question",
+        "interview",
+        "brief"
+      ],
+      "correct": "brief"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "question",
+        "summit",
+        "uniform",
+        "average"
+      ],
+      "correct": "question"
+    }
+  },
+  "deceit": {
+    "synonyms": {
+      "choices": [
+        "deception",
+        "honesty",
+        "truthfulness",
+        "refer"
+      ],
+      "correct": "deception"
+    },
+    "antonyms": {
+      "choices": [
+        "honesty",
+        "deception",
+        "fraud",
+        "domestic"
+      ],
+      "correct": "honesty"
+    },
+    "odd_one_out": {
+      "choices": [
+        "deceit",
+        "deception",
+        "fraud",
+        "honesty"
+      ],
+      "correct": "honesty"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "sad",
+      "relation": "antonym",
+      "choices": [
+        "honesty",
+        "guarantee",
+        "score",
+        "subtropical"
+      ],
+      "correct": "honesty"
+    }
+  },
+  "endeavour": {
+    "synonyms": {
+      "choices": [
+        "attempt",
+        "give up",
+        "abandon",
+        "approve"
+      ],
+      "correct": "attempt"
+    },
+    "antonyms": {
+      "choices": [
+        "give up",
+        "attempt",
+        "try",
+        "guarantee"
+      ],
+      "correct": "give up"
+    },
+    "odd_one_out": {
+      "choices": [
+        "endeavour",
+        "attempt",
+        "try",
+        "give up"
+      ],
+      "correct": "give up"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "attempt",
+        "perceive",
+        "lament",
+        "accommodate"
+      ],
+      "correct": "attempt"
+    }
+  },
+  "enterprise": {
+    "synonyms": {
+      "choices": [
+        "business",
+        "inactivity",
+        "idleness",
+        "vacant"
+      ],
+      "correct": "business"
+    },
+    "antonyms": {
+      "choices": [
+        "inactivity",
+        "business",
+        "venture",
+        "lean"
+      ],
+      "correct": "inactivity"
+    },
+    "odd_one_out": {
+      "choices": [
+        "enterprise",
+        "business",
+        "venture",
+        "inactivity"
+      ],
+      "correct": "inactivity"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "business",
+        "disperse",
+        "vacant",
+        "physical"
+      ],
+      "correct": "business"
+    }
+  },
+  "errand": {
+    "synonyms": {
+      "choices": [
+        "task",
+        "leisure",
+        "rest",
+        "debrief"
+      ],
+      "correct": "task"
+    },
+    "antonyms": {
+      "choices": [
+        "leisure",
+        "task",
+        "chore",
+        "disappear"
+      ],
+      "correct": "leisure"
+    },
+    "odd_one_out": {
+      "choices": [
+        "errand",
+        "task",
+        "chore",
+        "leisure"
+      ],
+      "correct": "leisure"
+    },
+    "analogies": {
+      "first": "safe",
+      "second": "dangerous",
+      "relation": "antonym",
+      "choices": [
+        "leisure",
+        "temperature",
+        "brief",
+        "recite"
+      ],
+      "correct": "leisure"
+    }
+  },
+  "evaluation": {
+    "synonyms": {
+      "choices": [
+        "assessment",
+        "neglect",
+        "ignorance",
+        "abandon"
+      ],
+      "correct": "assessment"
+    },
+    "antonyms": {
+      "choices": [
+        "neglect",
+        "assessment",
+        "appraisal",
+        "foundation"
+      ],
+      "correct": "neglect"
+    },
+    "odd_one_out": {
+      "choices": [
+        "evaluation",
+        "assessment",
+        "appraisal",
+        "neglect"
+      ],
+      "correct": "neglect"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "assessment",
+        "public",
+        "enterprise",
+        "contract"
+      ],
+      "correct": "assessment"
+    }
+  },
+  "evident": {
+    "synonyms": {
+      "choices": [
+        "obvious",
+        "obscure",
+        "hidden",
+        "wretched"
+      ],
+      "correct": "obvious"
+    },
+    "antonyms": {
+      "choices": [
+        "obscure",
+        "obvious",
+        "clear",
+        "sturdy"
+      ],
+      "correct": "obscure"
+    },
+    "odd_one_out": {
+      "choices": [
+        "evident",
+        "obvious",
+        "clear",
+        "obscure"
+      ],
+      "correct": "obscure"
+    },
+    "analogies": {
+      "first": "big",
+      "second": "small",
+      "relation": "antonym",
+      "choices": [
+        "obscure",
+        "privilege",
+        "oppress",
+        "subdued"
+      ],
+      "correct": "obscure"
+    }
+  },
+  "expel": {
+    "synonyms": {
+      "choices": [
+        "eject",
+        "admit",
+        "include",
+        "plunge"
+      ],
+      "correct": "eject"
+    },
+    "antonyms": {
+      "choices": [
+        "admit",
+        "eject",
+        "banish",
+        "rigid"
+      ],
+      "correct": "admit"
+    },
+    "odd_one_out": {
+      "choices": [
+        "expel",
+        "eject",
+        "banish",
+        "admit"
+      ],
+      "correct": "admit"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "eject",
+        "option",
+        "deposit",
+        "composition"
+      ],
+      "correct": "eject"
+    }
+  },
+  "expense": {
+    "synonyms": {
+      "choices": [
+        "cost",
+        "income",
+        "revenue",
+        "identity"
+      ],
+      "correct": "cost"
+    },
+    "antonyms": {
+      "choices": [
+        "income",
+        "cost",
+        "expenditure",
+        "shrine"
+      ],
+      "correct": "income"
+    },
+    "odd_one_out": {
+      "choices": [
+        "expense",
+        "cost",
+        "expenditure",
+        "income"
+      ],
+      "correct": "income"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "income",
+        "rare",
+        "guarantee",
+        "limb"
+      ],
+      "correct": "income"
+    }
+  },
+  "famine": {
+    "synonyms": {
+      "choices": [
+        "starvation",
+        "plenty",
+        "abundance",
+        "twilight"
+      ],
+      "correct": "starvation"
+    },
+    "antonyms": {
+      "choices": [
+        "plenty",
+        "starvation",
+        "scarcity",
+        "banish"
+      ],
+      "correct": "plenty"
+    },
+    "odd_one_out": {
+      "choices": [
+        "famine",
+        "starvation",
+        "scarcity",
+        "plenty"
+      ],
+      "correct": "plenty"
+    },
+    "analogies": {
+      "first": "safe",
+      "second": "dangerous",
+      "relation": "antonym",
+      "choices": [
+        "plenty",
+        "distinct",
+        "exclaim",
+        "tomorrow"
+      ],
+      "correct": "plenty"
+    }
+  },
+  "fatigue": {
+    "synonyms": {
+      "choices": [
+        "tiredness",
+        "energy",
+        "vitality",
+        "desperately"
+      ],
+      "correct": "tiredness"
+    },
+    "antonyms": {
+      "choices": [
+        "energy",
+        "tiredness",
+        "exhaustion",
+        "majestic"
+      ],
+      "correct": "energy"
+    },
+    "odd_one_out": {
+      "choices": [
+        "fatigue",
+        "tiredness",
+        "exhaustion",
+        "energy"
+      ],
+      "correct": "energy"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "energy",
+        "amateur",
+        "toleration",
+        "excellent"
+      ],
+      "correct": "energy"
+    }
+  },
+  "feeble": {
+    "synonyms": {
+      "choices": [
+        "weak",
+        "strong",
+        "robust",
+        "lean"
+      ],
+      "correct": "weak"
+    },
+    "antonyms": {
+      "choices": [
+        "strong",
+        "weak",
+        "frail",
+        "mischief"
+      ],
+      "correct": "strong"
+    },
+    "odd_one_out": {
+      "choices": [
+        "feeble",
+        "weak",
+        "frail",
+        "strong"
+      ],
+      "correct": "strong"
+    },
+    "analogies": {
+      "first": "big",
+      "second": "small",
+      "relation": "antonym",
+      "choices": [
+        "strong",
+        "physical",
+        "betray",
+        "evident"
+      ],
+      "correct": "strong"
+    }
+  },
+  "feign": {
+    "synonyms": {
+      "choices": [
+        "pretend",
+        "honest",
+        "reveal",
+        "hygienic"
+      ],
+      "correct": "pretend"
+    },
+    "antonyms": {
+      "choices": [
+        "honest",
+        "pretend",
+        "fake",
+        "rowdy"
+      ],
+      "correct": "honest"
+    },
+    "odd_one_out": {
+      "choices": [
+        "feign",
+        "pretend",
+        "fake",
+        "honest"
+      ],
+      "correct": "honest"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "pretend",
+        "retain",
+        "lofty",
+        "system"
+      ],
+      "correct": "pretend"
+    }
+  },
+  "fertile": {
+    "synonyms": {
+      "choices": [
+        "fruitful",
+        "barren",
+        "sterile",
+        "extremely"
+      ],
+      "correct": "fruitful"
+    },
+    "antonyms": {
+      "choices": [
+        "barren",
+        "fruitful",
+        "productive",
+        "criticise"
+      ],
+      "correct": "barren"
+    },
+    "odd_one_out": {
+      "choices": [
+        "fertile",
+        "fruitful",
+        "productive",
+        "barren"
+      ],
+      "correct": "barren"
+    },
+    "analogies": {
+      "first": "light",
+      "second": "dark",
+      "relation": "antonym",
+      "choices": [
+        "barren",
+        "summit",
+        "foe",
+        "occur"
+      ],
+      "correct": "barren"
+    }
+  },
+  "flamboyant": {
+    "synonyms": {
+      "choices": [
+        "showy",
+        "modest",
+        "plain",
+        "advance"
+      ],
+      "correct": "showy"
+    },
+    "antonyms": {
+      "choices": [
+        "modest",
+        "showy",
+        "flashy",
+        "fleet"
+      ],
+      "correct": "modest"
+    },
+    "odd_one_out": {
+      "choices": [
+        "flamboyant",
+        "showy",
+        "flashy",
+        "modest"
+      ],
+      "correct": "modest"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "showy",
+        "recommend",
+        "competition",
+        "unite"
+      ],
+      "correct": "showy"
+    }
+  },
+  "fleet": {
+    "synonyms": {
+      "choices": [
+        "quick",
+        "slow",
+        "sluggish",
+        "dilapidated"
+      ],
+      "correct": "quick"
+    },
+    "antonyms": {
+      "choices": [
+        "slow",
+        "quick",
+        "swift",
+        "uniform"
+      ],
+      "correct": "slow"
+    },
+    "odd_one_out": {
+      "choices": [
+        "fleet",
+        "quick",
+        "swift",
+        "slow"
+      ],
+      "correct": "slow"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "quick",
+        "comprehend",
+        "sacred",
+        "secure"
+      ],
+      "correct": "quick"
+    }
+  },
+  "foe": {
+    "synonyms": {
+      "choices": [
+        "enemy",
+        "friend",
+        "ally",
+        "origin"
+      ],
+      "correct": "enemy"
+    },
+    "antonyms": {
+      "choices": [
+        "friend",
+        "enemy",
+        "opponent",
+        "sincere"
+      ],
+      "correct": "friend"
+    },
+    "odd_one_out": {
+      "choices": [
+        "foe",
+        "enemy",
+        "opponent",
+        "friend"
+      ],
+      "correct": "friend"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "friend",
+        "unfathomable",
+        "embrace",
+        "reveal"
+      ],
+      "correct": "friend"
+    }
+  },
+  "foundation": {
+    "synonyms": {
+      "choices": [
+        "base",
+        "top",
+        "roof",
+        "transferral"
+      ],
+      "correct": "base"
+    },
+    "antonyms": {
+      "choices": [
+        "top",
+        "base",
+        "basis",
+        "disappear"
+      ],
+      "correct": "top"
+    },
+    "odd_one_out": {
+      "choices": [
+        "foundation",
+        "base",
+        "basis",
+        "top"
+      ],
+      "correct": "top"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "top",
+        "complex",
+        "rigid",
+        "promote"
+      ],
+      "correct": "top"
+    }
+  },
+  "fragrant": {
+    "synonyms": {
+      "choices": [
+        "aromatic",
+        "stinky",
+        "odorous",
+        "dwelling"
+      ],
+      "correct": "aromatic"
+    },
+    "antonyms": {
+      "choices": [
+        "stinky",
+        "aromatic",
+        "sweet-smelling",
+        "quaint"
+      ],
+      "correct": "stinky"
+    },
+    "odd_one_out": {
+      "choices": [
+        "fragrant",
+        "aromatic",
+        "sweet-smelling",
+        "stinky"
+      ],
+      "correct": "stinky"
+    },
+    "analogies": {
+      "first": "begin",
+      "second": "end",
+      "relation": "antonym",
+      "choices": [
+        "stinky",
+        "altitude",
+        "submissive",
+        "idle"
+      ],
+      "correct": "stinky"
+    }
+  },
+  "frivolous": {
+    "synonyms": {
+      "choices": [
+        "silly",
+        "serious",
+        "important",
+        "achieve"
+      ],
+      "correct": "silly"
+    },
+    "antonyms": {
+      "choices": [
+        "serious",
+        "silly",
+        "trivial",
+        "elude"
+      ],
+      "correct": "serious"
+    },
+    "odd_one_out": {
+      "choices": [
+        "frivolous",
+        "silly",
+        "trivial",
+        "serious"
+      ],
+      "correct": "serious"
+    },
+    "analogies": {
+      "first": "safe",
+      "second": "dangerous",
+      "relation": "antonym",
+      "choices": [
+        "serious",
+        "twelfth",
+        "hoax",
+        "especially"
+      ],
+      "correct": "serious"
+    }
+  },
+  "garment": {
+    "synonyms": {
+      "choices": [
+        "clothing",
+        "nakedness",
+        "nudity",
+        "signature"
+      ],
+      "correct": "clothing"
+    },
+    "antonyms": {
+      "choices": [
+        "nakedness",
+        "clothing",
+        "attire",
+        "oath"
+      ],
+      "correct": "nakedness"
+    },
+    "odd_one_out": {
+      "choices": [
+        "garment",
+        "clothing",
+        "attire",
+        "nakedness"
+      ],
+      "correct": "nakedness"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "nakedness",
+        "sufficient",
+        "criticise",
+        "correspond"
+      ],
+      "correct": "nakedness"
+    }
+  },
+  "gratitude": {
+    "synonyms": {
+      "choices": [
+        "thankfulness",
+        "ingratitude",
+        "ungratefulness",
+        "temperature"
+      ],
+      "correct": "thankfulness"
+    },
+    "antonyms": {
+      "choices": [
+        "ingratitude",
+        "thankfulness",
+        "appreciation",
+        "famine"
+      ],
+      "correct": "ingratitude"
+    },
+    "odd_one_out": {
+      "choices": [
+        "gratitude",
+        "thankfulness",
+        "appreciation",
+        "ingratitude"
+      ],
+      "correct": "ingratitude"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "thankfulness",
+        "subterfuge",
+        "assistance",
+        "yacht"
+      ],
+      "correct": "thankfulness"
+    }
+  },
+  "grotesque": {
+    "synonyms": {
+      "choices": [
+        "ugly",
+        "beautiful",
+        "graceful",
+        "mysterious"
+      ],
+      "correct": "ugly"
+    },
+    "antonyms": {
+      "choices": [
+        "beautiful",
+        "ugly",
+        "distorted",
+        "assemble"
+      ],
+      "correct": "beautiful"
+    },
+    "odd_one_out": {
+      "choices": [
+        "grotesque",
+        "ugly",
+        "distorted",
+        "beautiful"
+      ],
+      "correct": "beautiful"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "sad",
+      "relation": "antonym",
+      "choices": [
+        "beautiful",
+        "poultry",
+        "stomach",
+        "lean"
+      ],
+      "correct": "beautiful"
+    }
+  },
+  "hindrance": {
+    "synonyms": {
+      "choices": [
+        "obstacle",
+        "aid",
+        "help",
+        "perceive"
+      ],
+      "correct": "obstacle"
+    },
+    "antonyms": {
+      "choices": [
+        "aid",
+        "obstacle",
+        "impediment",
+        "idle"
+      ],
+      "correct": "aid"
+    },
+    "odd_one_out": {
+      "choices": [
+        "hindrance",
+        "obstacle",
+        "impediment",
+        "aid"
+      ],
+      "correct": "aid"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "obstacle",
+        "tolerably",
+        "merchant",
+        "consist"
+      ],
+      "correct": "obstacle"
+    }
+  },
+  "hoax": {
+    "synonyms": {
+      "choices": [
+        "trick",
+        "truth",
+        "reality",
+        "oath"
+      ],
+      "correct": "trick"
+    },
+    "antonyms": {
+      "choices": [
+        "truth",
+        "trick",
+        "deception",
+        "evaluation"
+      ],
+      "correct": "truth"
+    },
+    "odd_one_out": {
+      "choices": [
+        "hoax",
+        "trick",
+        "deception",
+        "truth"
+      ],
+      "correct": "truth"
+    },
+    "analogies": {
+      "first": "begin",
+      "second": "end",
+      "relation": "antonym",
+      "choices": [
+        "truth",
+        "deliberate",
+        "ample",
+        "prosperous"
+      ],
+      "correct": "truth"
+    }
+  },
+  "humble": {
+    "synonyms": {
+      "choices": [
+        "modest",
+        "proud",
+        "arrogant",
+        "seldom"
+      ],
+      "correct": "modest"
+    },
+    "antonyms": {
+      "choices": [
+        "proud",
+        "modest",
+        "meek",
+        "permit"
+      ],
+      "correct": "proud"
+    },
+    "odd_one_out": {
+      "choices": [
+        "humble",
+        "modest",
+        "meek",
+        "proud"
+      ],
+      "correct": "proud"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "modest",
+        "privilege",
+        "purpose",
+        "vehicle"
+      ],
+      "correct": "modest"
+    }
+  },
+  "hygienic": {
+    "synonyms": {
+      "choices": [
+        "sanitary",
+        "unhygienic",
+        "dirty",
+        "precarious"
+      ],
+      "correct": "sanitary"
+    },
+    "antonyms": {
+      "choices": [
+        "unhygienic",
+        "sanitary",
+        "clean",
+        "ridiculous"
+      ],
+      "correct": "unhygienic"
+    },
+    "odd_one_out": {
+      "choices": [
+        "hygienic",
+        "sanitary",
+        "clean",
+        "unhygienic"
+      ],
+      "correct": "unhygienic"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "unhygienic",
+        "rare",
+        "quiver",
+        "pioneer"
+      ],
+      "correct": "unhygienic"
+    }
+  },
+  "idle": {
+    "synonyms": {
+      "choices": [
+        "inactive",
+        "busy",
+        "active",
+        "caffeine"
+      ],
+      "correct": "inactive"
+    },
+    "antonyms": {
+      "choices": [
+        "busy",
+        "inactive",
+        "lazy",
+        "prosperous"
+      ],
+      "correct": "busy"
+    },
+    "odd_one_out": {
+      "choices": [
+        "idle",
+        "inactive",
+        "lazy",
+        "busy"
+      ],
+      "correct": "busy"
+    },
+    "analogies": {
+      "first": "big",
+      "second": "small",
+      "relation": "antonym",
+      "choices": [
+        "busy",
+        "assistance",
+        "ventilation",
+        "physical"
+      ],
+      "correct": "busy"
+    }
+  },
+  "immerse": {
+    "synonyms": {
+      "choices": [
+        "submerge",
+        "emerge",
+        "surface",
+        "weary"
+      ],
+      "correct": "submerge"
+    },
+    "antonyms": {
+      "choices": [
+        "emerge",
+        "submerge",
+        "plunge",
+        "accommodate"
+      ],
+      "correct": "emerge"
+    },
+    "odd_one_out": {
+      "choices": [
+        "immerse",
+        "submerge",
+        "plunge",
+        "emerge"
+      ],
+      "correct": "emerge"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "submerge",
+        "pigment",
+        "foe",
+        "elect"
+      ],
+      "correct": "submerge"
+    }
+  },
+  "incision": {
+    "synonyms": {
+      "choices": [
+        "cut",
+        "closure",
+        "sewing",
+        "ramble"
+      ],
+      "correct": "cut"
+    },
+    "antonyms": {
+      "choices": [
+        "closure",
+        "cut",
+        "slit",
+        "robust"
+      ],
+      "correct": "closure"
+    },
+    "odd_one_out": {
+      "choices": [
+        "incision",
+        "cut",
+        "slit",
+        "closure"
+      ],
+      "correct": "closure"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "cut",
+        "limb",
+        "ceiling",
+        "consume"
+      ],
+      "correct": "cut"
+    }
+  },
+  "inconspicuous": {
+    "synonyms": {
+      "choices": [
+        "unobtrusive",
+        "conspicuous",
+        "noticeable",
+        "rural"
+      ],
+      "correct": "unobtrusive"
+    },
+    "antonyms": {
+      "choices": [
+        "conspicuous",
+        "unobtrusive",
+        "unnoticeable",
+        "profit"
+      ],
+      "correct": "conspicuous"
+    },
+    "odd_one_out": {
+      "choices": [
+        "inconspicuous",
+        "unobtrusive",
+        "unnoticeable",
+        "conspicuous"
+      ],
+      "correct": "conspicuous"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "conspicuous",
+        "fragment",
+        "physical",
+        "vast"
+      ],
+      "correct": "conspicuous"
+    }
+  },
+  "inferior": {
+    "synonyms": {
+      "choices": [
+        "lower",
+        "superior",
+        "better",
+        "omen"
+      ],
+      "correct": "lower"
+    },
+    "antonyms": {
+      "choices": [
+        "superior",
+        "lower",
+        "lesser",
+        "quaint"
+      ],
+      "correct": "superior"
+    },
+    "odd_one_out": {
+      "choices": [
+        "inferior",
+        "lower",
+        "lesser",
+        "superior"
+      ],
+      "correct": "superior"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "lower",
+        "matte",
+        "disperse",
+        "flora"
+      ],
+      "correct": "lower"
+    }
+  },
+  "insolent": {
+    "synonyms": {
+      "choices": [
+        "rude",
+        "respectful",
+        "polite",
+        "really"
+      ],
+      "correct": "rude"
+    },
+    "antonyms": {
+      "choices": [
+        "respectful",
+        "rude",
+        "disrespectful",
+        "dismal"
+      ],
+      "correct": "respectful"
+    },
+    "odd_one_out": {
+      "choices": [
+        "insolent",
+        "rude",
+        "disrespectful",
+        "respectful"
+      ],
+      "correct": "respectful"
+    },
+    "analogies": {
+      "first": "safe",
+      "second": "dangerous",
+      "relation": "antonym",
+      "choices": [
+        "respectful",
+        "hollow",
+        "grotesque",
+        "guarantee"
+      ],
+      "correct": "respectful"
+    }
+  },
+  "interpret": {
+    "synonyms": {
+      "choices": [
+        "explain",
+        "confuse",
+        "obscure",
+        "twelfth"
+      ],
+      "correct": "explain"
+    },
+    "antonyms": {
+      "choices": [
+        "confuse",
+        "explain",
+        "translate",
+        "receive"
+      ],
+      "correct": "confuse"
+    },
+    "odd_one_out": {
+      "choices": [
+        "interpret",
+        "explain",
+        "translate",
+        "confuse"
+      ],
+      "correct": "confuse"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "sad",
+      "relation": "antonym",
+      "choices": [
+        "confuse",
+        "recommend",
+        "curiosity",
+        "plume"
+      ],
+      "correct": "confuse"
+    }
+  },
+  "insolation": {
+    "synonyms": {
+      "choices": [
+        "sunlight",
+        "shade",
+        "darkness",
+        "grieve"
+      ],
+      "correct": "sunlight"
+    },
+    "antonyms": {
+      "choices": [
+        "shade",
+        "sunlight",
+        "solar radiation",
+        "foe"
+      ],
+      "correct": "shade"
+    },
+    "odd_one_out": {
+      "choices": [
+        "insolation",
+        "sunlight",
+        "solar radiation",
+        "shade"
+      ],
+      "correct": "shade"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "shade",
+        "oath",
+        "stretched",
+        "resign"
+      ],
+      "correct": "shade"
+    }
+  },
+  "labour": {
+    "synonyms": {
+      "choices": [
+        "work",
+        "leisure",
+        "rest",
+        "linger"
+      ],
+      "correct": "work"
+    },
+    "antonyms": {
+      "choices": [
+        "leisure",
+        "work",
+        "toil",
+        "physical"
+      ],
+      "correct": "leisure"
+    },
+    "odd_one_out": {
+      "choices": [
+        "labour",
+        "work",
+        "toil",
+        "leisure"
+      ],
+      "correct": "leisure"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "work",
+        "available",
+        "heroic",
+        "forty"
+      ],
+      "correct": "work"
+    }
+  },
+  "latter": {
+    "synonyms": {
+      "choices": [
+        "second",
+        "former",
+        "first",
+        "turbulent"
+      ],
+      "correct": "second"
+    },
+    "antonyms": {
+      "choices": [
+        "former",
+        "second",
+        "last",
+        "confidential"
+      ],
+      "correct": "former"
+    },
+    "odd_one_out": {
+      "choices": [
+        "latter",
+        "second",
+        "last",
+        "former"
+      ],
+      "correct": "former"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "former",
+        "extremely",
+        "influence",
+        "flamboyant"
+      ],
+      "correct": "former"
+    }
+  },
+  "lavish": {
+    "synonyms": {
+      "choices": [
+        "extravagant",
+        "frugal",
+        "meagre",
+        "disastrous"
+      ],
+      "correct": "extravagant"
+    },
+    "antonyms": {
+      "choices": [
+        "frugal",
+        "extravagant",
+        "luxurious",
+        "familiar"
+      ],
+      "correct": "frugal"
+    },
+    "odd_one_out": {
+      "choices": [
+        "lavish",
+        "extravagant",
+        "luxurious",
+        "frugal"
+      ],
+      "correct": "frugal"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "extravagant",
+        "debate",
+        "committee",
+        "perish"
+      ],
+      "correct": "extravagant"
+    }
+  },
+  "leisure": {
+    "synonyms": {
+      "choices": [
+        "free time",
+        "work",
+        "labour",
+        "parallel"
+      ],
+      "correct": "free time"
+    },
+    "antonyms": {
+      "choices": [
+        "work",
+        "free time",
+        "relaxation",
+        "yacht"
+      ],
+      "correct": "work"
+    },
+    "odd_one_out": {
+      "choices": [
+        "leisure",
+        "free time",
+        "relaxation",
+        "work"
+      ],
+      "correct": "work"
+    },
+    "analogies": {
+      "first": "safe",
+      "second": "dangerous",
+      "relation": "antonym",
+      "choices": [
+        "work",
+        "suspend",
+        "brief",
+        "retain"
+      ],
+      "correct": "work"
+    }
+  },
+  "lenient": {
+    "synonyms": {
+      "choices": [
+        "tolerant",
+        "strict",
+        "harsh",
+        "library"
+      ],
+      "correct": "tolerant"
+    },
+    "antonyms": {
+      "choices": [
+        "strict",
+        "tolerant",
+        "permissive",
+        "consume"
+      ],
+      "correct": "strict"
+    },
+    "odd_one_out": {
+      "choices": [
+        "lenient",
+        "tolerant",
+        "permissive",
+        "strict"
+      ],
+      "correct": "strict"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "tolerant",
+        "frequent",
+        "convict",
+        "confine"
+      ],
+      "correct": "tolerant"
+    }
+  },
+  "liberal": {
+    "synonyms": {
+      "choices": [
+        "generous",
+        "conservative",
+        "narrow-minded",
+        "dwelling"
+      ],
+      "correct": "generous"
+    },
+    "antonyms": {
+      "choices": [
+        "conservative",
+        "generous",
+        "broad-minded",
+        "muscle"
+      ],
+      "correct": "conservative"
+    },
+    "odd_one_out": {
+      "choices": [
+        "liberal",
+        "generous",
+        "broad-minded",
+        "conservative"
+      ],
+      "correct": "conservative"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "conservative",
+        "sacrifice",
+        "weird",
+        "profit"
+      ],
+      "correct": "conservative"
+    }
+  },
+  "linger": {
+    "synonyms": {
+      "choices": [
+        "stay",
+        "leave",
+        "depart",
+        "imitate"
+      ],
+      "correct": "stay"
+    },
+    "antonyms": {
+      "choices": [
+        "leave",
+        "stay",
+        "tarry",
+        "idol"
+      ],
+      "correct": "leave"
+    },
+    "odd_one_out": {
+      "choices": [
+        "linger",
+        "stay",
+        "tarry",
+        "leave"
+      ],
+      "correct": "leave"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "stay",
+        "physical",
+        "labour",
+        "loneliness"
+      ],
+      "correct": "stay"
+    }
+  },
+  "lofty": {
+    "synonyms": {
+      "choices": [
+        "tall",
+        "low",
+        "base",
+        "altitude"
+      ],
+      "correct": "tall"
+    },
+    "antonyms": {
+      "choices": [
+        "low",
+        "tall",
+        "high",
+        "parallel"
+      ],
+      "correct": "low"
+    },
+    "odd_one_out": {
+      "choices": [
+        "lofty",
+        "tall",
+        "high",
+        "low"
+      ],
+      "correct": "low"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "tall",
+        "referee",
+        "temptation",
+        "grotesque"
+      ],
+      "correct": "tall"
+    }
+  },
+  "majestic": {
+    "synonyms": {
+      "choices": [
+        "grand",
+        "humble",
+        "ordinary",
+        "interior"
+      ],
+      "correct": "grand"
+    },
+    "antonyms": {
+      "choices": [
+        "humble",
+        "grand",
+        "stately",
+        "painstaking"
+      ],
+      "correct": "humble"
+    },
+    "odd_one_out": {
+      "choices": [
+        "majestic",
+        "grand",
+        "stately",
+        "humble"
+      ],
+      "correct": "humble"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "humble",
+        "sincerely",
+        "transference",
+        "liberty"
+      ],
+      "correct": "humble"
+    }
+  },
+  "margin": {
+    "synonyms": {
+      "choices": [
+        "edge",
+        "centre",
+        "core",
+        "estimate"
+      ],
+      "correct": "edge"
+    },
+    "antonyms": {
+      "choices": [
+        "centre",
+        "edge",
+        "border",
+        "existence"
+      ],
+      "correct": "centre"
+    },
+    "odd_one_out": {
+      "choices": [
+        "margin",
+        "edge",
+        "border",
+        "centre"
+      ],
+      "correct": "centre"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "edge",
+        "guard",
+        "tolerably",
+        "complex"
+      ],
+      "correct": "edge"
+    }
+  },
+  "matte": {
+    "synonyms": {
+      "choices": [
+        "dull",
+        "shiny",
+        "glossy",
+        "nimble"
+      ],
+      "correct": "dull"
+    },
+    "antonyms": {
+      "choices": [
+        "shiny",
+        "dull",
+        "non-glossy",
+        "fragment"
+      ],
+      "correct": "shiny"
+    },
+    "odd_one_out": {
+      "choices": [
+        "matte",
+        "dull",
+        "non-glossy",
+        "shiny"
+      ],
+      "correct": "shiny"
+    },
+    "analogies": {
+      "first": "love",
+      "second": "hate",
+      "relation": "antonym",
+      "choices": [
+        "shiny",
+        "really",
+        "subterfuge",
+        "idol"
+      ],
+      "correct": "shiny"
+    }
+  },
+  "meagre": {
+    "synonyms": {
+      "choices": [
+        "scanty",
+        "ample",
+        "plentiful",
+        "pioneer"
+      ],
+      "correct": "scanty"
+    },
+    "antonyms": {
+      "choices": [
+        "ample",
+        "scanty",
+        "sparse",
+        "approve"
+      ],
+      "correct": "ample"
+    },
+    "odd_one_out": {
+      "choices": [
+        "meagre",
+        "scanty",
+        "sparse",
+        "ample"
+      ],
+      "correct": "ample"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "ample",
+        "declare",
+        "stem",
+        "origin"
+      ],
+      "correct": "ample"
+    }
+  },
+  "mercy": {
+    "synonyms": {
+      "choices": [
+        "compassion",
+        "cruelty",
+        "ruthlessness",
+        "gratitude"
+      ],
+      "correct": "compassion"
+    },
+    "antonyms": {
+      "choices": [
+        "cruelty",
+        "compassion",
+        "leniency",
+        "interested"
+      ],
+      "correct": "cruelty"
+    },
+    "odd_one_out": {
+      "choices": [
+        "mercy",
+        "compassion",
+        "leniency",
+        "cruelty"
+      ],
+      "correct": "cruelty"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "compassion",
+        "curt",
+        "develop",
+        "guarantee"
+      ],
+      "correct": "compassion"
+    }
+  },
+  "meticulous": {
+    "synonyms": {
+      "choices": [
+        "careful",
+        "careless",
+        "sloppy",
+        "grieve"
+      ],
+      "correct": "careful"
+    },
+    "antonyms": {
+      "choices": [
+        "careless",
+        "careful",
+        "precise",
+        "necessary"
+      ],
+      "correct": "careless"
+    },
+    "odd_one_out": {
+      "choices": [
+        "meticulous",
+        "careful",
+        "precise",
+        "careless"
+      ],
+      "correct": "careless"
+    },
+    "analogies": {
+      "first": "safe",
+      "second": "dangerous",
+      "relation": "antonym",
+      "choices": [
+        "careless",
+        "avoid",
+        "provoke",
+        "disappointed"
+      ],
+      "correct": "careless"
+    }
+  },
+  "minimum": {
+    "synonyms": {
+      "choices": [
+        "least",
+        "maximium",
+        "greatest",
+        "curb"
+      ],
+      "correct": "least"
+    },
+    "antonyms": {
+      "choices": [
+        "maximium",
+        "least",
+        "smallest",
+        "oppose"
+      ],
+      "correct": "maximium"
+    },
+    "odd_one_out": {
+      "choices": [
+        "minimum",
+        "least",
+        "smallest",
+        "maximium"
+      ],
+      "correct": "maximium"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "least",
+        "curiosity",
+        "determine",
+        "endeavour"
+      ],
+      "correct": "least"
+    }
+  },
+  "mischief": {
+    "synonyms": {
+      "choices": [
+        "naughtiness",
+        "obedience",
+        "good behaviour",
+        "digest"
+      ],
+      "correct": "naughtiness"
+    },
+    "antonyms": {
+      "choices": [
+        "obedience",
+        "naughtiness",
+        "troublemaking",
+        "suspend"
+      ],
+      "correct": "obedience"
+    },
+    "odd_one_out": {
+      "choices": [
+        "mischief",
+        "naughtiness",
+        "troublemaking",
+        "obedience"
+      ],
+      "correct": "obedience"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "obedience",
+        "drought",
+        "tolerable",
+        "legible"
+      ],
+      "correct": "obedience"
+    }
+  },
+  "moderate": {
+    "synonyms": {
+      "choices": [
+        "average",
+        "extreme",
+        "excessive",
+        "really"
+      ],
+      "correct": "average"
+    },
+    "antonyms": {
+      "choices": [
+        "extreme",
+        "average",
+        "mild",
+        "seldom"
+      ],
+      "correct": "extreme"
+    },
+    "odd_one_out": {
+      "choices": [
+        "moderate",
+        "average",
+        "mild",
+        "extreme"
+      ],
+      "correct": "extreme"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "average",
+        "banish",
+        "college",
+        "completely"
+      ],
+      "correct": "average"
+    }
+  },
+  "nimble": {
+    "synonyms": {
+      "choices": [
+        "agile",
+        "clumsy",
+        "slow",
+        "margin"
+      ],
+      "correct": "agile"
+    },
+    "antonyms": {
+      "choices": [
+        "clumsy",
+        "agile",
+        "quick",
+        "identity"
+      ],
+      "correct": "clumsy"
+    },
+    "odd_one_out": {
+      "choices": [
+        "nimble",
+        "agile",
+        "quick",
+        "clumsy"
+      ],
+      "correct": "clumsy"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "clumsy",
+        "sturdy",
+        "surprise",
+        "reserve"
+      ],
+      "correct": "clumsy"
+    }
+  },
+  "noted": {
+    "synonyms": {
+      "choices": [
+        "famous",
+        "obscure",
+        "unknown",
+        "turbulent"
+      ],
+      "correct": "famous"
+    },
+    "antonyms": {
+      "choices": [
+        "obscure",
+        "famous",
+        "renowned",
+        "procure"
+      ],
+      "correct": "obscure"
+    },
+    "odd_one_out": {
+      "choices": [
+        "noted",
+        "famous",
+        "renowned",
+        "obscure"
+      ],
+      "correct": "obscure"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "famous",
+        "meagre",
+        "extinction",
+        "imitate"
+      ],
+      "correct": "famous"
+    }
+  },
+  "nuisance": {
+    "synonyms": {
+      "choices": [
+        "annoyance",
+        "delight",
+        "pleasure",
+        "pioneer"
+      ],
+      "correct": "annoyance"
+    },
+    "antonyms": {
+      "choices": [
+        "delight",
+        "annoyance",
+        "bother",
+        "garment"
+      ],
+      "correct": "delight"
+    },
+    "odd_one_out": {
+      "choices": [
+        "nuisance",
+        "annoyance",
+        "bother",
+        "delight"
+      ],
+      "correct": "delight"
+    },
+    "analogies": {
+      "first": "love",
+      "second": "hate",
+      "relation": "antonym",
+      "choices": [
+        "delight",
+        "abundant",
+        "vast",
+        "evaluation"
+      ],
+      "correct": "delight"
+    }
+  },
+  "objection": {
+    "synonyms": {
+      "choices": [
+        "opposition",
+        "agreement",
+        "approval",
+        "garment"
+      ],
+      "correct": "opposition"
+    },
+    "antonyms": {
+      "choices": [
+        "agreement",
+        "opposition",
+        "protest",
+        "seldom"
+      ],
+      "correct": "agreement"
+    },
+    "odd_one_out": {
+      "choices": [
+        "objection",
+        "opposition",
+        "protest",
+        "agreement"
+      ],
+      "correct": "agreement"
+    },
+    "analogies": {
+      "first": "begin",
+      "second": "end",
+      "relation": "antonym",
+      "choices": [
+        "agreement",
+        "recite",
+        "quite",
+        "lenient"
+      ],
+      "correct": "agreement"
+    }
+  },
+  "obstinate": {
+    "synonyms": {
+      "choices": [
+        "stubborn",
+        "compliant",
+        "yielding",
+        "sturdy"
+      ],
+      "correct": "stubborn"
+    },
+    "antonyms": {
+      "choices": [
+        "compliant",
+        "stubborn",
+        "intransigent",
+        "quite"
+      ],
+      "correct": "compliant"
+    },
+    "odd_one_out": {
+      "choices": [
+        "obstinate",
+        "stubborn",
+        "intransigent",
+        "compliant"
+      ],
+      "correct": "compliant"
+    },
+    "analogies": {
+      "first": "safe",
+      "second": "dangerous",
+      "relation": "antonym",
+      "choices": [
+        "compliant",
+        "convict",
+        "inconspicuous",
+        "convince"
+      ],
+      "correct": "compliant"
+    }
+  },
+  "omen": {
+    "synonyms": {
+      "choices": [
+        "sign",
+        "coincidence",
+        "chance",
+        "debate"
+      ],
+      "correct": "sign"
+    },
+    "antonyms": {
+      "choices": [
+        "coincidence",
+        "sign",
+        "portent",
+        "omen"
+      ],
+      "correct": "coincidence"
+    },
+    "odd_one_out": {
+      "choices": [
+        "omen",
+        "sign",
+        "portent",
+        "coincidence"
+      ],
+      "correct": "coincidence"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "sign",
+        "sow",
+        "humble",
+        "tyrant"
+      ],
+      "correct": "sign"
+    }
+  },
+  "oppress": {
+    "synonyms": {
+      "choices": [
+        "persecute",
+        "liberate",
+        "free",
+        "linger"
+      ],
+      "correct": "persecute"
+    },
+    "antonyms": {
+      "choices": [
+        "liberate",
+        "persecute",
+        "suppress",
+        "succumb"
+      ],
+      "correct": "liberate"
+    },
+    "odd_one_out": {
+      "choices": [
+        "oppress",
+        "persecute",
+        "suppress",
+        "liberate"
+      ],
+      "correct": "liberate"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "sad",
+      "relation": "antonym",
+      "choices": [
+        "liberate",
+        "moral",
+        "loneliness",
+        "physical"
+      ],
+      "correct": "liberate"
+    }
+  },
+  "ordeal": {
+    "synonyms": {
+      "choices": [
+        "trial",
+        "relief",
+        "ease",
+        "resign"
+      ],
+      "correct": "trial"
+    },
+    "antonyms": {
+      "choices": [
+        "relief",
+        "trial",
+        "hardship",
+        "programme"
+      ],
+      "correct": "relief"
+    },
+    "odd_one_out": {
+      "choices": [
+        "ordeal",
+        "trial",
+        "hardship",
+        "relief"
+      ],
+      "correct": "relief"
+    },
+    "analogies": {
+      "first": "day",
+      "second": "night",
+      "relation": "antonym",
+      "choices": [
+        "relief",
+        "fund",
+        "charred",
+        "succumb"
+      ],
+      "correct": "relief"
+    }
+  },
+  "painstaking": {
+    "synonyms": {
+      "choices": [
+        "meticulous",
+        "careless",
+        "hasty",
+        "absurd"
+      ],
+      "correct": "meticulous"
+    },
+    "antonyms": {
+      "choices": [
+        "careless",
+        "meticulous",
+        "careful",
+        "retain"
+      ],
+      "correct": "careless"
+    },
+    "odd_one_out": {
+      "choices": [
+        "painstaking",
+        "meticulous",
+        "careful",
+        "careless"
+      ],
+      "correct": "careless"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "careless",
+        "dependable",
+        "extract",
+        "elude"
+      ],
+      "correct": "careless"
+    }
+  },
+  "passive": {
+    "synonyms": {
+      "choices": [
+        "inactive",
+        "active",
+        "aggressive",
+        "endure"
+      ],
+      "correct": "inactive"
+    },
+    "antonyms": {
+      "choices": [
+        "active",
+        "inactive",
+        "submissive",
+        "appearance"
+      ],
+      "correct": "active"
+    },
+    "odd_one_out": {
+      "choices": [
+        "passive",
+        "inactive",
+        "submissive",
+        "active"
+      ],
+      "correct": "active"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "inactive",
+        "extinction",
+        "devote",
+        "release"
+      ],
+      "correct": "inactive"
+    }
+  },
+  "perceive": {
+    "synonyms": {
+      "choices": [
+        "see",
+        "overlook",
+        "ignore",
+        "moral"
+      ],
+      "correct": "see"
+    },
+    "antonyms": {
+      "choices": [
+        "overlook",
+        "see",
+        "notice",
+        "wholesome"
+      ],
+      "correct": "overlook"
+    },
+    "odd_one_out": {
+      "choices": [
+        "perceive",
+        "see",
+        "notice",
+        "overlook"
+      ],
+      "correct": "overlook"
+    },
+    "analogies": {
+      "first": "begin",
+      "second": "end",
+      "relation": "antonym",
+      "choices": [
+        "overlook",
+        "hygienic",
+        "achieve",
+        "refer"
+      ],
+      "correct": "overlook"
+    }
+  },
+  "perilous": {
+    "synonyms": {
+      "choices": [
+        "dangerous",
+        "safe",
+        "secure",
+        "equipment"
+      ],
+      "correct": "dangerous"
+    },
+    "antonyms": {
+      "choices": [
+        "safe",
+        "dangerous",
+        "risky",
+        "controversy"
+      ],
+      "correct": "safe"
+    },
+    "odd_one_out": {
+      "choices": [
+        "perilous",
+        "dangerous",
+        "risky",
+        "safe"
+      ],
+      "correct": "safe"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "dangerous",
+        "lean",
+        "appeal",
+        "wasteful"
+      ],
+      "correct": "dangerous"
+    }
+  },
+  "pigment": {
+    "synonyms": {
+      "choices": [
+        "colourant",
+        "bleach",
+        "colourless",
+        "stomach"
+      ],
+      "correct": "colourant"
+    },
+    "antonyms": {
+      "choices": [
+        "bleach",
+        "colourant",
+        "dye",
+        "contemporary"
+      ],
+      "correct": "bleach"
+    },
+    "odd_one_out": {
+      "choices": [
+        "pigment",
+        "colourant",
+        "dye",
+        "bleach"
+      ],
+      "correct": "bleach"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "colourant",
+        "obstinate",
+        "companion",
+        "custom"
+      ],
+      "correct": "colourant"
+    }
+  },
+  "pioneer": {
+    "synonyms": {
+      "choices": [
+        "trailblazer",
+        "follower",
+        "imitator",
+        "pioneer"
+      ],
+      "correct": "trailblazer"
+    },
+    "antonyms": {
+      "choices": [
+        "follower",
+        "trailblazer",
+        "innovator",
+        "apprehensive"
+      ],
+      "correct": "follower"
+    },
+    "odd_one_out": {
+      "choices": [
+        "pioneer",
+        "trailblazer",
+        "innovator",
+        "follower"
+      ],
+      "correct": "follower"
+    },
+    "analogies": {
+      "first": "light",
+      "second": "dark",
+      "relation": "antonym",
+      "choices": [
+        "follower",
+        "cease",
+        "idol",
+        "pledge"
+      ],
+      "correct": "follower"
+    }
+  },
+  "pledge": {
+    "synonyms": {
+      "choices": [
+        "promise",
+        "break",
+        "renege",
+        "muscle"
+      ],
+      "correct": "promise"
+    },
+    "antonyms": {
+      "choices": [
+        "break",
+        "promise",
+        "vow",
+        "bargain"
+      ],
+      "correct": "break"
+    },
+    "odd_one_out": {
+      "choices": [
+        "pledge",
+        "promise",
+        "vow",
+        "break"
+      ],
+      "correct": "break"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "promise",
+        "business",
+        "loyalty",
+        "vessel"
+      ],
+      "correct": "promise"
+    }
+  },
+  "plume": {
+    "synonyms": {
+      "choices": [
+        "feather",
+        "stem",
+        "root",
+        "profit"
+      ],
+      "correct": "feather"
+    },
+    "antonyms": {
+      "choices": [
+        "stem",
+        "feather",
+        "quill",
+        "vacant"
+      ],
+      "correct": "stem"
+    },
+    "odd_one_out": {
+      "choices": [
+        "plume",
+        "feather",
+        "quill",
+        "stem"
+      ],
+      "correct": "stem"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "sad",
+      "relation": "antonym",
+      "choices": [
+        "stem",
+        "convey",
+        "humble",
+        "promote"
+      ],
+      "correct": "stem"
+    }
+  },
+  "plunge": {
+    "synonyms": {
+      "choices": [
+        "dive",
+        "rise",
+        "ascend",
+        "save"
+      ],
+      "correct": "dive"
+    },
+    "antonyms": {
+      "choices": [
+        "rise",
+        "dive",
+        "drop",
+        "legible"
+      ],
+      "correct": "rise"
+    },
+    "odd_one_out": {
+      "choices": [
+        "plunge",
+        "dive",
+        "drop",
+        "rise"
+      ],
+      "correct": "rise"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "dive",
+        "demolished",
+        "residence",
+        "expel"
+      ],
+      "correct": "dive"
+    }
+  },
+  "pompous": {
+    "synonyms": {
+      "choices": [
+        "arrogant",
+        "humble",
+        "modest",
+        "inconspicuous"
+      ],
+      "correct": "arrogant"
+    },
+    "antonyms": {
+      "choices": [
+        "humble",
+        "arrogant",
+        "pretentious",
+        "meagre"
+      ],
+      "correct": "humble"
+    },
+    "odd_one_out": {
+      "choices": [
+        "pompous",
+        "arrogant",
+        "pretentious",
+        "humble"
+      ],
+      "correct": "humble"
+    },
+    "analogies": {
+      "first": "day",
+      "second": "night",
+      "relation": "antonym",
+      "choices": [
+        "humble",
+        "conceited",
+        "nuisance",
+        "oath"
+      ],
+      "correct": "humble"
+    }
+  },
+  "poultry": {
+    "synonyms": {
+      "choices": [
+        "chickens",
+        "cattle",
+        "livestock",
+        "temperate"
+      ],
+      "correct": "chickens"
+    },
+    "antonyms": {
+      "choices": [
+        "cattle",
+        "chickens",
+        "fowl",
+        "sleek"
+      ],
+      "correct": "cattle"
+    },
+    "odd_one_out": {
+      "choices": [
+        "poultry",
+        "chickens",
+        "fowl",
+        "cattle"
+      ],
+      "correct": "cattle"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "chickens",
+        "wholly",
+        "recite",
+        "public"
+      ],
+      "correct": "chickens"
+    }
+  },
+  "precarious": {
+    "synonyms": {
+      "choices": [
+        "unstable",
+        "safe",
+        "stable",
+        "deposit"
+      ],
+      "correct": "unstable"
+    },
+    "antonyms": {
+      "choices": [
+        "safe",
+        "unstable",
+        "insecure",
+        "pledge"
+      ],
+      "correct": "safe"
+    },
+    "odd_one_out": {
+      "choices": [
+        "precarious",
+        "unstable",
+        "insecure",
+        "safe"
+      ],
+      "correct": "safe"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "safe",
+        "business",
+        "retain",
+        "sermon"
+      ],
+      "correct": "safe"
+    }
+  },
+  "prejudice": {
+    "synonyms": {
+      "choices": [
+        "bias",
+        "fairness",
+        "tolerance",
+        "contrast"
+      ],
+      "correct": "bias"
+    },
+    "antonyms": {
+      "choices": [
+        "fairness",
+        "bias",
+        "discrimination",
+        "torment"
+      ],
+      "correct": "fairness"
+    },
+    "odd_one_out": {
+      "choices": [
+        "prejudice",
+        "bias",
+        "discrimination",
+        "fairness"
+      ],
+      "correct": "fairness"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "bias",
+        "comprehend",
+        "wither",
+        "divine"
+      ],
+      "correct": "bias"
+    }
+  },
+  "proclaim": {
+    "synonyms": {
+      "choices": [
+        "announce",
+        "conceal",
+        "hide",
+        "absence"
+      ],
+      "correct": "announce"
+    },
+    "antonyms": {
+      "choices": [
+        "conceal",
+        "announce",
+        "declare",
+        "discontent"
+      ],
+      "correct": "conceal"
+    },
+    "odd_one_out": {
+      "choices": [
+        "proclaim",
+        "announce",
+        "declare",
+        "conceal"
+      ],
+      "correct": "conceal"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "conceal",
+        "plunge",
+        "transference",
+        "wholly"
+      ],
+      "correct": "conceal"
+    }
+  },
+  "procure": {
+    "synonyms": {
+      "choices": [
+        "obtain",
+        "lose",
+        "forfeit",
+        "lodge"
+      ],
+      "correct": "obtain"
+    },
+    "antonyms": {
+      "choices": [
+        "lose",
+        "obtain",
+        "acquire",
+        "twelfth"
+      ],
+      "correct": "lose"
+    },
+    "odd_one_out": {
+      "choices": [
+        "procure",
+        "obtain",
+        "acquire",
+        "lose"
+      ],
+      "correct": "lose"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "obtain",
+        "extended",
+        "fertile",
+        "vehicle"
+      ],
+      "correct": "obtain"
+    }
+  },
+  "prominent": {
+    "synonyms": {
+      "choices": [
+        "conspicuous",
+        "obscure",
+        "insignificant",
+        "quaint"
+      ],
+      "correct": "conspicuous"
+    },
+    "antonyms": {
+      "choices": [
+        "obscure",
+        "conspicuous",
+        "notable",
+        "matte"
+      ],
+      "correct": "obscure"
+    },
+    "odd_one_out": {
+      "choices": [
+        "prominent",
+        "conspicuous",
+        "notable",
+        "obscure"
+      ],
+      "correct": "obscure"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "obscure",
+        "stretched",
+        "prejudice",
+        "nauseous"
+      ],
+      "correct": "obscure"
+    }
+  },
+  "prompt": {
+    "synonyms": {
+      "choices": [
+        "quick",
+        "late",
+        "slow",
+        "vehicle"
+      ],
+      "correct": "quick"
+    },
+    "antonyms": {
+      "choices": [
+        "late",
+        "quick",
+        "immediate",
+        "incision"
+      ],
+      "correct": "late"
+    },
+    "odd_one_out": {
+      "choices": [
+        "prompt",
+        "quick",
+        "immediate",
+        "late"
+      ],
+      "correct": "late"
+    },
+    "analogies": {
+      "first": "big",
+      "second": "small",
+      "relation": "antonym",
+      "choices": [
+        "late",
+        "loyalty",
+        "reveal",
+        "ambition"
+      ],
+      "correct": "late"
+    }
+  },
+  "prosperous": {
+    "synonyms": {
+      "choices": [
+        "wealthy",
+        "poor",
+        "impoverished",
+        "domestic"
+      ],
+      "correct": "wealthy"
+    },
+    "antonyms": {
+      "choices": [
+        "poor",
+        "wealthy",
+        "affluent",
+        "foundation"
+      ],
+      "correct": "poor"
+    },
+    "odd_one_out": {
+      "choices": [
+        "prosperous",
+        "wealthy",
+        "affluent",
+        "poor"
+      ],
+      "correct": "poor"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "wealthy",
+        "inspire",
+        "parliament",
+        "endure"
+      ],
+      "correct": "wealthy"
+    }
+  },
+  "provoke": {
+    "synonyms": {
+      "choices": [
+        "incite",
+        "soothe",
+        "calm",
+        "constant"
+      ],
+      "correct": "incite"
+    },
+    "antonyms": {
+      "choices": [
+        "soothe",
+        "incite",
+        "anger",
+        "oppress"
+      ],
+      "correct": "soothe"
+    },
+    "odd_one_out": {
+      "choices": [
+        "provoke",
+        "incite",
+        "anger",
+        "soothe"
+      ],
+      "correct": "soothe"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "incite",
+        "sermon",
+        "inconspicuous",
+        "brief"
+      ],
+      "correct": "incite"
+    }
+  },
+  "punctual": {
+    "synonyms": {
+      "choices": [
+        "on time",
+        "late",
+        "tardy",
+        "forbid"
+      ],
+      "correct": "on time"
+    },
+    "antonyms": {
+      "choices": [
+        "late",
+        "on time",
+        "prompt",
+        "twelfth"
+      ],
+      "correct": "late"
+    },
+    "odd_one_out": {
+      "choices": [
+        "punctual",
+        "on time",
+        "prompt",
+        "late"
+      ],
+      "correct": "late"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "on time",
+        "oppose",
+        "temptation",
+        "sincere"
+      ],
+      "correct": "on time"
+    }
+  },
+  "quaint": {
+    "synonyms": {
+      "choices": [
+        "charming",
+        "modern",
+        "ordinary",
+        "perish"
+      ],
+      "correct": "charming"
+    },
+    "antonyms": {
+      "choices": [
+        "modern",
+        "charming",
+        "old-fashioned",
+        "completely"
+      ],
+      "correct": "modern"
+    },
+    "odd_one_out": {
+      "choices": [
+        "quaint",
+        "charming",
+        "old-fashioned",
+        "modern"
+      ],
+      "correct": "modern"
+    },
+    "analogies": {
+      "first": "love",
+      "second": "hate",
+      "relation": "antonym",
+      "choices": [
+        "modern",
+        "interrogate",
+        "wound",
+        "peak"
+      ],
+      "correct": "modern"
+    }
+  },
+  "quell": {
+    "synonyms": {
+      "choices": [
+        "suppress",
+        "incite",
+        "provoke",
+        "disclose"
+      ],
+      "correct": "suppress"
+    },
+    "antonyms": {
+      "choices": [
+        "incite",
+        "suppress",
+        "extinguish",
+        "contract"
+      ],
+      "correct": "incite"
+    },
+    "odd_one_out": {
+      "choices": [
+        "quell",
+        "suppress",
+        "extinguish",
+        "incite"
+      ],
+      "correct": "incite"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "suppress",
+        "desperately",
+        "objection",
+        "scripture"
+      ],
+      "correct": "suppress"
+    }
+  },
+  "quench": {
+    "synonyms": {
+      "choices": [
+        "extinguish",
+        "ignite",
+        "arouse",
+        "comprehend"
+      ],
+      "correct": "extinguish"
+    },
+    "antonyms": {
+      "choices": [
+        "ignite",
+        "extinguish",
+        "satisfy",
+        "adhere"
+      ],
+      "correct": "ignite"
+    },
+    "odd_one_out": {
+      "choices": [
+        "quench",
+        "extinguish",
+        "satisfy",
+        "ignite"
+      ],
+      "correct": "ignite"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "ignite",
+        "twelfth",
+        "lavish",
+        "restore"
+      ],
+      "correct": "ignite"
+    }
+  },
+  "quiver": {
+    "synonyms": {
+      "choices": [
+        "shake",
+        "steady",
+        "still",
+        "absurd"
+      ],
+      "correct": "shake"
+    },
+    "antonyms": {
+      "choices": [
+        "steady",
+        "shake",
+        "tremble",
+        "meant"
+      ],
+      "correct": "steady"
+    },
+    "odd_one_out": {
+      "choices": [
+        "quiver",
+        "shake",
+        "tremble",
+        "steady"
+      ],
+      "correct": "steady"
+    },
+    "analogies": {
+      "first": "safe",
+      "second": "dangerous",
+      "relation": "antonym",
+      "choices": [
+        "steady",
+        "debrief",
+        "sincerely",
+        "vanished"
+      ],
+      "correct": "steady"
+    }
+  },
+  "ramble": {
+    "synonyms": {
+      "choices": [
+        "wander",
+        "stay",
+        "remain",
+        "secure"
+      ],
+      "correct": "wander"
+    },
+    "antonyms": {
+      "choices": [
+        "stay",
+        "wander",
+        "roam",
+        "turbulent"
+      ],
+      "correct": "stay"
+    },
+    "odd_one_out": {
+      "choices": [
+        "ramble",
+        "wander",
+        "roam",
+        "stay"
+      ],
+      "correct": "stay"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "wander",
+        "barren",
+        "digest",
+        "suspend"
+      ],
+      "correct": "wander"
+    }
+  },
+  "relevant": {
+    "synonyms": {
+      "choices": [
+        "pertinent",
+        "irrelevant",
+        "unrelated",
+        "composition"
+      ],
+      "correct": "pertinent"
+    },
+    "antonyms": {
+      "choices": [
+        "irrelevant",
+        "pertinent",
+        "applicable",
+        "declare"
+      ],
+      "correct": "irrelevant"
+    },
+    "odd_one_out": {
+      "choices": [
+        "relevant",
+        "pertinent",
+        "applicable",
+        "irrelevant"
+      ],
+      "correct": "irrelevant"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "pertinent",
+        "accompany",
+        "interior",
+        "vessel"
+      ],
+      "correct": "pertinent"
+    }
+  },
+  "repent": {
+    "synonyms": {
+      "choices": [
+        "regret",
+        "rejoice",
+        "persist",
+        "deliberate"
+      ],
+      "correct": "regret"
+    },
+    "antonyms": {
+      "choices": [
+        "rejoice",
+        "regret",
+        "rue",
+        "disappear"
+      ],
+      "correct": "rejoice"
+    },
+    "odd_one_out": {
+      "choices": [
+        "repent",
+        "regret",
+        "rue",
+        "rejoice"
+      ],
+      "correct": "rejoice"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "rejoice",
+        "consist",
+        "bargain",
+        "debrief"
+      ],
+      "correct": "rejoice"
+    }
+  },
+  "reprimand": {
+    "synonyms": {
+      "choices": [
+        "scold",
+        "praise",
+        "commend",
+        "sow"
+      ],
+      "correct": "scold"
+    },
+    "antonyms": {
+      "choices": [
+        "praise",
+        "scold",
+        "rebuke",
+        "offend"
+      ],
+      "correct": "praise"
+    },
+    "odd_one_out": {
+      "choices": [
+        "reprimand",
+        "scold",
+        "rebuke",
+        "praise"
+      ],
+      "correct": "praise"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "scold",
+        "public",
+        "flora",
+        "individual"
+      ],
+      "correct": "scold"
+    }
+  },
+  "reside": {
+    "synonyms": {
+      "choices": [
+        "live",
+        "leave",
+        "depart",
+        "unnecessary"
+      ],
+      "correct": "live"
+    },
+    "antonyms": {
+      "choices": [
+        "leave",
+        "live",
+        "dwell",
+        "equipment"
+      ],
+      "correct": "leave"
+    },
+    "odd_one_out": {
+      "choices": [
+        "reside",
+        "live",
+        "dwell",
+        "leave"
+      ],
+      "correct": "leave"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "live",
+        "privilege",
+        "idol",
+        "parallel"
+      ],
+      "correct": "live"
+    }
+  },
+  "rigid": {
+    "synonyms": {
+      "choices": [
+        "stiff",
+        "flexible",
+        "pliable",
+        "supposed"
+      ],
+      "correct": "stiff"
+    },
+    "antonyms": {
+      "choices": [
+        "flexible",
+        "stiff",
+        "inflexible",
+        "nimble"
+      ],
+      "correct": "flexible"
+    },
+    "odd_one_out": {
+      "choices": [
+        "rigid",
+        "stiff",
+        "inflexible",
+        "flexible"
+      ],
+      "correct": "flexible"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "stiff",
+        "domestic",
+        "candidate",
+        "receive"
+      ],
+      "correct": "stiff"
+    }
+  },
+  "robust": {
+    "synonyms": {
+      "choices": [
+        "strong",
+        "weak",
+        "frail",
+        "quiet"
+      ],
+      "correct": "strong"
+    },
+    "antonyms": {
+      "choices": [
+        "weak",
+        "strong",
+        "sturdy",
+        "ambition"
+      ],
+      "correct": "weak"
+    },
+    "odd_one_out": {
+      "choices": [
+        "robust",
+        "strong",
+        "sturdy",
+        "weak"
+      ],
+      "correct": "weak"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "strong",
+        "privilege",
+        "consent",
+        "consume"
+      ],
+      "correct": "strong"
+    }
+  },
+  "rowdy": {
+    "synonyms": {
+      "choices": [
+        "boisterous",
+        "quiet",
+        "calm",
+        "wretched"
+      ],
+      "correct": "boisterous"
+    },
+    "antonyms": {
+      "choices": [
+        "quiet",
+        "boisterous",
+        "noisy",
+        "approve"
+      ],
+      "correct": "quiet"
+    },
+    "odd_one_out": {
+      "choices": [
+        "rowdy",
+        "boisterous",
+        "noisy",
+        "quiet"
+      ],
+      "correct": "quiet"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "boisterous",
+        "develop",
+        "purpose",
+        "modest"
+      ],
+      "correct": "boisterous"
+    }
+  },
+  "rural": {
+    "synonyms": {
+      "choices": [
+        "countryside",
+        "urban",
+        "city",
+        "occur"
+      ],
+      "correct": "countryside"
+    },
+    "antonyms": {
+      "choices": [
+        "urban",
+        "countryside",
+        "rustic",
+        "flourish"
+      ],
+      "correct": "urban"
+    },
+    "odd_one_out": {
+      "choices": [
+        "rural",
+        "countryside",
+        "rustic",
+        "urban"
+      ],
+      "correct": "urban"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "urban",
+        "relevant",
+        "interrupt",
+        "mysterious"
+      ],
+      "correct": "urban"
+    }
+  },
+  "sanitary": {
+    "synonyms": {
+      "choices": [
+        "hygienic",
+        "unsanitary",
+        "dirty",
+        "wholesome"
+      ],
+      "correct": "hygienic"
+    },
+    "antonyms": {
+      "choices": [
+        "unsanitary",
+        "hygienic",
+        "clean",
+        "proportion"
+      ],
+      "correct": "unsanitary"
+    },
+    "odd_one_out": {
+      "choices": [
+        "sanitary",
+        "hygienic",
+        "clean",
+        "unsanitary"
+      ],
+      "correct": "unsanitary"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "unsanitary",
+        "accuse",
+        "proportion",
+        "lavish"
+      ],
+      "correct": "unsanitary"
+    }
+  },
+  "scripture": {
+    "synonyms": {
+      "choices": [
+        "holy text",
+        "secular writing",
+        "profane text",
+        "recommend"
+      ],
+      "correct": "holy text"
+    },
+    "antonyms": {
+      "choices": [
+        "secular writing",
+        "holy text",
+        "Bible",
+        "business"
+      ],
+      "correct": "secular writing"
+    },
+    "odd_one_out": {
+      "choices": [
+        "scripture",
+        "holy text",
+        "Bible",
+        "secular writing"
+      ],
+      "correct": "secular writing"
+    },
+    "analogies": {
+      "first": "begin",
+      "second": "end",
+      "relation": "antonym",
+      "choices": [
+        "secular writing",
+        "yield",
+        "appearance",
+        "limb"
+      ],
+      "correct": "secular writing"
+    }
+  },
+  "seldom": {
+    "synonyms": {
+      "choices": [
+        "rarely",
+        "often",
+        "frequently",
+        "anxious"
+      ],
+      "correct": "rarely"
+    },
+    "antonyms": {
+      "choices": [
+        "often",
+        "rarely",
+        "infrequently",
+        "surprise"
+      ],
+      "correct": "often"
+    },
+    "odd_one_out": {
+      "choices": [
+        "seldom",
+        "rarely",
+        "infrequently",
+        "often"
+      ],
+      "correct": "often"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "often",
+        "sufficient",
+        "according",
+        "meagre"
+      ],
+      "correct": "often"
+    }
+  },
+  "sermon": {
+    "synonyms": {
+      "choices": [
+        "homily",
+        "joke",
+        "jest",
+        "stoop"
+      ],
+      "correct": "homily"
+    },
+    "antonyms": {
+      "choices": [
+        "joke",
+        "homily",
+        "lecture",
+        "plunge"
+      ],
+      "correct": "joke"
+    },
+    "odd_one_out": {
+      "choices": [
+        "sermon",
+        "homily",
+        "lecture",
+        "joke"
+      ],
+      "correct": "joke"
+    },
+    "analogies": {
+      "first": "big",
+      "second": "small",
+      "relation": "antonym",
+      "choices": [
+        "joke",
+        "grieve",
+        "endure",
+        "consent"
+      ],
+      "correct": "joke"
+    }
+  },
+  "shrine": {
+    "synonyms": {
+      "choices": [
+        "temple",
+        "ruin",
+        "wreck",
+        "queue"
+      ],
+      "correct": "temple"
+    },
+    "antonyms": {
+      "choices": [
+        "ruin",
+        "temple",
+        "memorial",
+        "loyalty"
+      ],
+      "correct": "ruin"
+    },
+    "odd_one_out": {
+      "choices": [
+        "shrine",
+        "temple",
+        "memorial",
+        "ruin"
+      ],
+      "correct": "ruin"
+    },
+    "analogies": {
+      "first": "light",
+      "second": "dark",
+      "relation": "antonym",
+      "choices": [
+        "ruin",
+        "vapour",
+        "submit",
+        "ignorant"
+      ],
+      "correct": "ruin"
+    }
+  },
+  "sincere": {
+    "synonyms": {
+      "choices": [
+        "genuine",
+        "insincere",
+        "fake",
+        "individual"
+      ],
+      "correct": "genuine"
+    },
+    "antonyms": {
+      "choices": [
+        "insincere",
+        "genuine",
+        "honest",
+        "mischief"
+      ],
+      "correct": "insincere"
+    },
+    "odd_one_out": {
+      "choices": [
+        "sincere",
+        "genuine",
+        "honest",
+        "insincere"
+      ],
+      "correct": "insincere"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "sad",
+      "relation": "antonym",
+      "choices": [
+        "insincere",
+        "flamboyant",
+        "inedible",
+        "available"
+      ],
+      "correct": "insincere"
+    }
+  },
+  "sleek": {
+    "synonyms": {
+      "choices": [
+        "smooth",
+        "rough",
+        "dull",
+        "ancient"
+      ],
+      "correct": "smooth"
+    },
+    "antonyms": {
+      "choices": [
+        "rough",
+        "smooth",
+        "glossy",
+        "distinguished"
+      ],
+      "correct": "rough"
+    },
+    "odd_one_out": {
+      "choices": [
+        "sleek",
+        "smooth",
+        "glossy",
+        "rough"
+      ],
+      "correct": "rough"
+    },
+    "analogies": {
+      "first": "day",
+      "second": "night",
+      "relation": "antonym",
+      "choices": [
+        "rough",
+        "appearance",
+        "companion",
+        "community"
+      ],
+      "correct": "rough"
+    }
+  },
+  "sly": {
+    "synonyms": {
+      "choices": [
+        "cunning",
+        "honest",
+        "open",
+        "exaggerate"
+      ],
+      "correct": "cunning"
+    },
+    "antonyms": {
+      "choices": [
+        "honest",
+        "cunning",
+        "crafty",
+        "peak"
+      ],
+      "correct": "honest"
+    },
+    "odd_one_out": {
+      "choices": [
+        "sly",
+        "cunning",
+        "crafty",
+        "honest"
+      ],
+      "correct": "honest"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "cunning",
+        "scripture",
+        "loyalty",
+        "volatile"
+      ],
+      "correct": "cunning"
+    }
+  },
+  "sow": {
+    "synonyms": {
+      "choices": [
+        "plant",
+        "reap",
+        "harvest",
+        "debate"
+      ],
+      "correct": "plant"
+    },
+    "antonyms": {
+      "choices": [
+        "reap",
+        "plant",
+        "scatter",
+        "appeal"
+      ],
+      "correct": "reap"
+    },
+    "odd_one_out": {
+      "choices": [
+        "sow",
+        "plant",
+        "scatter",
+        "reap"
+      ],
+      "correct": "reap"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "plant",
+        "calamity",
+        "lodge",
+        "reside"
+      ],
+      "correct": "plant"
+    }
+  },
+  "stoop": {
+    "synonyms": {
+      "choices": [
+        "bend",
+        "straighten",
+        "stand",
+        "contrast"
+      ],
+      "correct": "bend"
+    },
+    "antonyms": {
+      "choices": [
+        "straighten",
+        "bend",
+        "crouch",
+        "environment"
+      ],
+      "correct": "straighten"
+    },
+    "odd_one_out": {
+      "choices": [
+        "stoop",
+        "bend",
+        "crouch",
+        "straighten"
+      ],
+      "correct": "straighten"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "bend",
+        "habitat",
+        "transference",
+        "grotesque"
+      ],
+      "correct": "bend"
+    }
+  },
+  "stubborn": {
+    "synonyms": {
+      "choices": [
+        "obstinate",
+        "compliant",
+        "yielding",
+        "tomorrow"
+      ],
+      "correct": "obstinate"
+    },
+    "antonyms": {
+      "choices": [
+        "compliant",
+        "obstinate",
+        "tenacious",
+        "perceive"
+      ],
+      "correct": "compliant"
+    },
+    "odd_one_out": {
+      "choices": [
+        "stubborn",
+        "obstinate",
+        "tenacious",
+        "compliant"
+      ],
+      "correct": "compliant"
+    },
+    "analogies": {
+      "first": "safe",
+      "second": "dangerous",
+      "relation": "antonym",
+      "choices": [
+        "compliant",
+        "obscure",
+        "apprehensive",
+        "oath"
+      ],
+      "correct": "compliant"
+    }
+  },
+  "sturdy": {
+    "synonyms": {
+      "choices": [
+        "strong",
+        "weak",
+        "fragile",
+        "painstaking"
+      ],
+      "correct": "strong"
+    },
+    "antonyms": {
+      "choices": [
+        "weak",
+        "strong",
+        "robust",
+        "imitate"
+      ],
+      "correct": "weak"
+    },
+    "odd_one_out": {
+      "choices": [
+        "sturdy",
+        "strong",
+        "robust",
+        "weak"
+      ],
+      "correct": "weak"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "strong",
+        "weird",
+        "quiver",
+        "benefit"
+      ],
+      "correct": "strong"
+    }
+  },
+  "subdued": {
+    "synonyms": {
+      "choices": [
+        "quiet",
+        "loud",
+        "lively",
+        "shrine"
+      ],
+      "correct": "quiet"
+    },
+    "antonyms": {
+      "choices": [
+        "loud",
+        "quiet",
+        "hushed",
+        "meticulous"
+      ],
+      "correct": "loud"
+    },
+    "odd_one_out": {
+      "choices": [
+        "subdued",
+        "quiet",
+        "hushed",
+        "loud"
+      ],
+      "correct": "loud"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "loud",
+        "ventilation",
+        "reprimand",
+        "contribute"
+      ],
+      "correct": "loud"
+    }
+  },
+  "submissive": {
+    "synonyms": {
+      "choices": [
+        "obedient",
+        "assertive",
+        "defiant",
+        "intense"
+      ],
+      "correct": "obedient"
+    },
+    "antonyms": {
+      "choices": [
+        "assertive",
+        "obedient",
+        "compliant",
+        "community"
+      ],
+      "correct": "assertive"
+    },
+    "odd_one_out": {
+      "choices": [
+        "submissive",
+        "obedient",
+        "compliant",
+        "assertive"
+      ],
+      "correct": "assertive"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "obedient",
+        "occur",
+        "convenience",
+        "description"
+      ],
+      "correct": "obedient"
+    }
+  },
+  "subterfuge": {
+    "synonyms": {
+      "choices": [
+        "deception",
+        "honesty",
+        "openness",
+        "seldom"
+      ],
+      "correct": "deception"
+    },
+    "antonyms": {
+      "choices": [
+        "honesty",
+        "deception",
+        "trickery",
+        "banish"
+      ],
+      "correct": "honesty"
+    },
+    "odd_one_out": {
+      "choices": [
+        "subterfuge",
+        "deception",
+        "trickery",
+        "honesty"
+      ],
+      "correct": "honesty"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "deception",
+        "curt",
+        "condemn",
+        "limb"
+      ],
+      "correct": "deception"
+    }
+  },
+  "subtropical": {
+    "synonyms": {
+      "choices": [
+        "warm",
+        "polar",
+        "arctic",
+        "adhere"
+      ],
+      "correct": "warm"
+    },
+    "antonyms": {
+      "choices": [
+        "polar",
+        "warm",
+        "semi-tropical",
+        "dilapidated"
+      ],
+      "correct": "polar"
+    },
+    "odd_one_out": {
+      "choices": [
+        "subtropical",
+        "warm",
+        "semi-tropical",
+        "polar"
+      ],
+      "correct": "polar"
+    },
+    "analogies": {
+      "first": "light",
+      "second": "dark",
+      "relation": "antonym",
+      "choices": [
+        "polar",
+        "average",
+        "complex",
+        "absence"
+      ],
+      "correct": "polar"
+    }
+  },
+  "succumb": {
+    "synonyms": {
+      "choices": [
+        "yield",
+        "resist",
+        "withstand",
+        "apprehensive"
+      ],
+      "correct": "yield"
+    },
+    "antonyms": {
+      "choices": [
+        "resist",
+        "yield",
+        "surrender",
+        "category"
+      ],
+      "correct": "resist"
+    },
+    "odd_one_out": {
+      "choices": [
+        "succumb",
+        "yield",
+        "surrender",
+        "resist"
+      ],
+      "correct": "resist"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "sad",
+      "relation": "antonym",
+      "choices": [
+        "resist",
+        "mortal",
+        "hygienic",
+        "disastrous"
+      ],
+      "correct": "resist"
+    }
+  },
+  "temperate": {
+    "synonyms": {
+      "choices": [
+        "mild",
+        "extreme",
+        "harsh",
+        "weird"
+      ],
+      "correct": "mild"
+    },
+    "antonyms": {
+      "choices": [
+        "extreme",
+        "mild",
+        "moderate",
+        "oath"
+      ],
+      "correct": "extreme"
+    },
+    "odd_one_out": {
+      "choices": [
+        "temperate",
+        "mild",
+        "moderate",
+        "extreme"
+      ],
+      "correct": "extreme"
+    },
+    "analogies": {
+      "first": "begin",
+      "second": "end",
+      "relation": "antonym",
+      "choices": [
+        "extreme",
+        "tranquil",
+        "description",
+        "shrine"
+      ],
+      "correct": "extreme"
+    }
+  },
+  "thrust": {
+    "synonyms": {
+      "choices": [
+        "push",
+        "pull",
+        "drag",
+        "dependable"
+      ],
+      "correct": "push"
+    },
+    "antonyms": {
+      "choices": [
+        "pull",
+        "push",
+        "drive",
+        "offend"
+      ],
+      "correct": "pull"
+    },
+    "odd_one_out": {
+      "choices": [
+        "thrust",
+        "push",
+        "drive",
+        "pull"
+      ],
+      "correct": "pull"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "push",
+        "mortal",
+        "recognise",
+        "shrine"
+      ],
+      "correct": "push"
+    }
+  },
+  "tolerable": {
+    "synonyms": {
+      "choices": [
+        "bearable",
+        "intolerable",
+        "unbearable",
+        "applicable"
+      ],
+      "correct": "bearable"
+    },
+    "antonyms": {
+      "choices": [
+        "intolerable",
+        "bearable",
+        "acceptable",
+        "excellent"
+      ],
+      "correct": "intolerable"
+    },
+    "odd_one_out": {
+      "choices": [
+        "tolerable",
+        "bearable",
+        "acceptable",
+        "intolerable"
+      ],
+      "correct": "intolerable"
+    },
+    "analogies": {
+      "first": "hot",
+      "second": "cold",
+      "relation": "antonym",
+      "choices": [
+        "intolerable",
+        "margin",
+        "tyrant",
+        "disappointed"
+      ],
+      "correct": "intolerable"
+    }
+  },
+  "tolerably": {
+    "synonyms": {
+      "choices": [
+        "fairly",
+        "intolerably",
+        "unbearably",
+        "restore"
+      ],
+      "correct": "fairly"
+    },
+    "antonyms": {
+      "choices": [
+        "intolerably",
+        "fairly",
+        "adequately",
+        "exciting"
+      ],
+      "correct": "intolerably"
+    },
+    "odd_one_out": {
+      "choices": [
+        "tolerably",
+        "fairly",
+        "adequately",
+        "intolerably"
+      ],
+      "correct": "intolerably"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "fairly",
+        "grave",
+        "caution",
+        "identity"
+      ],
+      "correct": "fairly"
+    }
+  },
+  "toleration": {
+    "synonyms": {
+      "choices": [
+        "tolerance",
+        "intolerance",
+        "impatience",
+        "forty"
+      ],
+      "correct": "tolerance"
+    },
+    "antonyms": {
+      "choices": [
+        "intolerance",
+        "tolerance",
+        "endurance",
+        "dose"
+      ],
+      "correct": "intolerance"
+    },
+    "odd_one_out": {
+      "choices": [
+        "toleration",
+        "tolerance",
+        "endurance",
+        "intolerance"
+      ],
+      "correct": "intolerance"
+    },
+    "analogies": {
+      "first": "big",
+      "second": "small",
+      "relation": "antonym",
+      "choices": [
+        "intolerance",
+        "present",
+        "dispute",
+        "prominent"
+      ],
+      "correct": "intolerance"
+    }
+  },
+  "torment": {
+    "synonyms": {
+      "choices": [
+        "torture",
+        "comfort",
+        "pleasure",
+        "condemn"
+      ],
+      "correct": "torture"
+    },
+    "antonyms": {
+      "choices": [
+        "comfort",
+        "torture",
+        "agony",
+        "parallel"
+      ],
+      "correct": "comfort"
+    },
+    "odd_one_out": {
+      "choices": [
+        "torment",
+        "torture",
+        "agony",
+        "comfort"
+      ],
+      "correct": "comfort"
+    },
+    "analogies": {
+      "first": "light",
+      "second": "dark",
+      "relation": "antonym",
+      "choices": [
+        "comfort",
+        "insane",
+        "legible",
+        "inedible"
+      ],
+      "correct": "comfort"
+    }
+  },
+  "tranquil": {
+    "synonyms": {
+      "choices": [
+        "calm",
+        "turbulent",
+        "chaotic",
+        "conserve"
+      ],
+      "correct": "calm"
+    },
+    "antonyms": {
+      "choices": [
+        "turbulent",
+        "calm",
+        "peaceful",
+        "quiet"
+      ],
+      "correct": "turbulent"
+    },
+    "odd_one_out": {
+      "choices": [
+        "tranquil",
+        "calm",
+        "peaceful",
+        "turbulent"
+      ],
+      "correct": "turbulent"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "sad",
+      "relation": "antonym",
+      "choices": [
+        "turbulent",
+        "amateur",
+        "temperate",
+        "grate"
+      ],
+      "correct": "turbulent"
+    }
+  },
+  "transference": {
+    "synonyms": {
+      "choices": [
+        "transfer",
+        "retention",
+        "keeping",
+        "provoke"
+      ],
+      "correct": "transfer"
+    },
+    "antonyms": {
+      "choices": [
+        "retention",
+        "transfer",
+        "relocation",
+        "oppress"
+      ],
+      "correct": "retention"
+    },
+    "odd_one_out": {
+      "choices": [
+        "transference",
+        "transfer",
+        "relocation",
+        "retention"
+      ],
+      "correct": "retention"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "transfer",
+        "quiet",
+        "earnest",
+        "nimble"
+      ],
+      "correct": "transfer"
+    }
+  },
+  "trivial": {
+    "synonyms": {
+      "choices": [
+        "unimportant",
+        "significant",
+        "important",
+        "thrust"
+      ],
+      "correct": "unimportant"
+    },
+    "antonyms": {
+      "choices": [
+        "significant",
+        "unimportant",
+        "insignificant",
+        "obscure"
+      ],
+      "correct": "significant"
+    },
+    "odd_one_out": {
+      "choices": [
+        "trivial",
+        "unimportant",
+        "insignificant",
+        "significant"
+      ],
+      "correct": "significant"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "unimportant",
+        "cultivate",
+        "wholly",
+        "plume"
+      ],
+      "correct": "unimportant"
+    }
+  },
+  "turbulent": {
+    "synonyms": {
+      "choices": [
+        "chaotic",
+        "calm",
+        "peaceful",
+        "gratitude"
+      ],
+      "correct": "chaotic"
+    },
+    "antonyms": {
+      "choices": [
+        "calm",
+        "chaotic",
+        "stormy",
+        "dismal"
+      ],
+      "correct": "calm"
+    },
+    "odd_one_out": {
+      "choices": [
+        "turbulent",
+        "chaotic",
+        "stormy",
+        "calm"
+      ],
+      "correct": "calm"
+    },
+    "analogies": {
+      "first": "young",
+      "second": "old",
+      "relation": "antonym",
+      "choices": [
+        "calm",
+        "sleek",
+        "submissive",
+        "meagre"
+      ],
+      "correct": "calm"
+    }
+  },
+  "tyrant": {
+    "synonyms": {
+      "choices": [
+        "dictator",
+        "democrat",
+        "liberator",
+        "accustomed"
+      ],
+      "correct": "dictator"
+    },
+    "antonyms": {
+      "choices": [
+        "democrat",
+        "dictator",
+        "oppressor",
+        "obedience"
+      ],
+      "correct": "democrat"
+    },
+    "odd_one_out": {
+      "choices": [
+        "tyrant",
+        "dictator",
+        "oppressor",
+        "democrat"
+      ],
+      "correct": "democrat"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "dictator",
+        "despair",
+        "merchant",
+        "amateur"
+      ],
+      "correct": "dictator"
+    }
+  },
+  "unfathomable": {
+    "synonyms": {
+      "choices": [
+        "incomprehensible",
+        "fathomable",
+        "understandable",
+        "decline"
+      ],
+      "correct": "incomprehensible"
+    },
+    "antonyms": {
+      "choices": [
+        "fathomable",
+        "incomprehensible",
+        "deep",
+        "interpret"
+      ],
+      "correct": "fathomable"
+    },
+    "odd_one_out": {
+      "choices": [
+        "unfathomable",
+        "incomprehensible",
+        "deep",
+        "fathomable"
+      ],
+      "correct": "fathomable"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "fathomable",
+        "repent",
+        "referee",
+        "confidential"
+      ],
+      "correct": "fathomable"
+    }
+  },
+  "unsurpassed": {
+    "synonyms": {
+      "choices": [
+        "unmatched",
+        "inferior",
+        "ordinary",
+        "contest"
+      ],
+      "correct": "unmatched"
+    },
+    "antonyms": {
+      "choices": [
+        "inferior",
+        "unmatched",
+        "unequalled",
+        "submit"
+      ],
+      "correct": "inferior"
+    },
+    "odd_one_out": {
+      "choices": [
+        "unsurpassed",
+        "unmatched",
+        "unequalled",
+        "inferior"
+      ],
+      "correct": "inferior"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "unmatched",
+        "yacht",
+        "because",
+        "identity"
+      ],
+      "correct": "unmatched"
+    }
+  },
+  "ventilation": {
+    "synonyms": {
+      "choices": [
+        "airing",
+        "suffocation",
+        "stagnation",
+        "extremely"
+      ],
+      "correct": "airing"
+    },
+    "antonyms": {
+      "choices": [
+        "suffocation",
+        "airing",
+        "aeration",
+        "alert"
+      ],
+      "correct": "suffocation"
+    },
+    "odd_one_out": {
+      "choices": [
+        "ventilation",
+        "airing",
+        "aeration",
+        "suffocation"
+      ],
+      "correct": "suffocation"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "airing",
+        "beautiful",
+        "dose",
+        "deliberate"
+      ],
+      "correct": "airing"
+    }
+  },
+  "vessel": {
+    "synonyms": {
+      "choices": [
+        "container",
+        "solid",
+        "land",
+        "article"
+      ],
+      "correct": "container"
+    },
+    "antonyms": {
+      "choices": [
+        "solid",
+        "container",
+        "ship",
+        "mischief"
+      ],
+      "correct": "solid"
+    },
+    "odd_one_out": {
+      "choices": [
+        "vessel",
+        "container",
+        "ship",
+        "solid"
+      ],
+      "correct": "solid"
+    },
+    "analogies": {
+      "first": "day",
+      "second": "night",
+      "relation": "antonym",
+      "choices": [
+        "solid",
+        "earnest",
+        "caffeine",
+        "yield"
+      ],
+      "correct": "solid"
+    }
+  },
+  "volatile": {
+    "synonyms": {
+      "choices": [
+        "unstable",
+        "stable",
+        "calm",
+        "empire"
+      ],
+      "correct": "unstable"
+    },
+    "antonyms": {
+      "choices": [
+        "stable",
+        "unstable",
+        "explosive",
+        "incision"
+      ],
+      "correct": "stable"
+    },
+    "odd_one_out": {
+      "choices": [
+        "volatile",
+        "unstable",
+        "explosive",
+        "stable"
+      ],
+      "correct": "stable"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "unstable",
+        "resign",
+        "flawless",
+        "subtropical"
+      ],
+      "correct": "unstable"
+    }
+  },
+  "wholly": {
+    "synonyms": {
+      "choices": [
+        "completely",
+        "partially",
+        "partly",
+        "fatigue"
+      ],
+      "correct": "completely"
+    },
+    "antonyms": {
+      "choices": [
+        "partially",
+        "completely",
+        "entirely",
+        "objection"
+      ],
+      "correct": "partially"
+    },
+    "odd_one_out": {
+      "choices": [
+        "wholly",
+        "completely",
+        "entirely",
+        "partially"
+      ],
+      "correct": "partially"
+    },
+    "analogies": {
+      "first": "up",
+      "second": "down",
+      "relation": "antonym",
+      "choices": [
+        "partially",
+        "occupy",
+        "relevant",
+        "insane"
+      ],
+      "correct": "partially"
+    }
+  },
+  "wither": {
+    "synonyms": {
+      "choices": [
+        "wilt",
+        "flourish",
+        "bloom",
+        "definite"
+      ],
+      "correct": "wilt"
+    },
+    "antonyms": {
+      "choices": [
+        "flourish",
+        "wilt",
+        "fade",
+        "empire"
+      ],
+      "correct": "flourish"
+    },
+    "odd_one_out": {
+      "choices": [
+        "wither",
+        "wilt",
+        "fade",
+        "flourish"
+      ],
+      "correct": "flourish"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "wilt",
+        "odour",
+        "guarantee",
+        "reserve"
+      ],
+      "correct": "wilt"
+    }
+  },
+  "wretched": {
+    "synonyms": {
+      "choices": [
+        "miserable",
+        "happy",
+        "content",
+        "abandon"
+      ],
+      "correct": "miserable"
+    },
+    "antonyms": {
+      "choices": [
+        "happy",
+        "miserable",
+        "unhappy",
+        "intangible"
+      ],
+      "correct": "happy"
+    },
+    "odd_one_out": {
+      "choices": [
+        "wretched",
+        "miserable",
+        "unhappy",
+        "happy"
+      ],
+      "correct": "happy"
+    },
+    "analogies": {
+      "first": "happy",
+      "second": "glad",
+      "relation": "synonym",
+      "choices": [
+        "miserable",
+        "liberty",
+        "changeable",
+        "union"
+      ],
+      "correct": "miserable"
+    }
+  }
+}
