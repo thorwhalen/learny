@@ -188,13 +188,13 @@ const ElevenPlusQuizApp = () => {
       <div className="min-h-screen p-4 bg-gradient-to-br from-purple-400 via-pink-500 to-blue-500">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12 floating">
-            <h1 className="text-6xl font-bold text-white mb-4 drop-shadow-lg">
+            <h1 className="text-3xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
               🎓 11+ Vocabulary Quiz
             </h1>
-            <p className="text-2xl text-white/90 font-medium mb-2">
+            <p className="text-lg md:text-2xl text-white/90 font-medium mb-2">
               Master your vocabulary with interactive quizzes
             </p>
-            <div className="score-badge inline-block text-lg">
+            <div className="score-badge inline-block text-sm md:text-lg">
               📚 {words.length} essential words • 3 question types
             </div>
           </div>
@@ -289,39 +289,39 @@ const ElevenPlusQuizApp = () => {
         <div className="main-card question-card p-6 mb-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <span className="text-4xl">{config.icon}</span>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="text-2xl md:text-4xl">{config.icon}</span>
+              <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 {config.title}
               </h1>
             </div>
             <button
               onClick={backToMenu}
-              className="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-all duration-300 font-semibold hover:transform hover:-translate-y-1"
+              className="px-4 py-2 md:px-6 md:py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-all duration-300 font-semibold hover:transform hover:-translate-y-1 text-sm md:text-base"
             >
-              🏠 Back to Menu
+              🏠 Back
             </button>
           </div>
         </div>
 
         {/* Score Display */}
-        <div className="main-card p-6 mb-8">
-          <div className="flex justify-between items-center">
-            <div className="flex space-x-8">
+        <div className="main-card p-4 md:p-6 mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+            <div className="flex space-x-6 sm:space-x-8">
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">{score.correct}</div>
-                <div className="text-sm text-gray-600 font-medium">Correct</div>
+                <div className="text-2xl md:text-3xl font-bold text-green-600">{score.correct}</div>
+                <div className="text-xs md:text-sm text-gray-600 font-medium">Correct</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">{score.total}</div>
-                <div className="text-sm text-gray-600 font-medium">Total</div>
+                <div className="text-2xl md:text-3xl font-bold text-blue-600">{score.total}</div>
+                <div className="text-xs md:text-sm text-gray-600 font-medium">Total</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600">{percentage}%</div>
-                <div className="text-sm text-gray-600 font-medium">Accuracy</div>
+                <div className="text-2xl md:text-3xl font-bold text-purple-600">{percentage}%</div>
+                <div className="text-xs md:text-sm text-gray-600 font-medium">Accuracy</div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="score-badge">
+            <div className="text-center sm:text-right">
+              <div className="score-badge text-sm md:text-base">
                 📚 {usedWords.size} / {words.length} words
               </div>
             </div>
@@ -329,26 +329,26 @@ const ElevenPlusQuizApp = () => {
         </div>
 
         {/* Question Card */}
-        <div className="main-card question-card p-8 mb-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+        <div className="main-card question-card p-4 md:p-8 mb-8">
+          <div className="text-center mb-6 md:mb-8">
+            <h2 className="text-xl md:text-3xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               {currentQuestion.question}
             </h2>
             {currentQuestion.word && (
-              <div className="text-xl text-gray-600 mb-6">
+              <div className="text-lg md:text-xl text-gray-600 mb-4 md:mb-6">
                 Focus word: <span className="font-bold text-purple-700">{currentQuestion.word}</span>
               </div>
             )}
           </div>
 
-          {/* Options */}
-          <div className="grid grid-cols-1 gap-4 mb-8">
+          {/* Options - Stacked vertically for mobile */}
+          <div className="space-y-3 md:space-y-4 mb-6 md:mb-8">
             {currentQuestion.options.map((option, index) => (
               <button
                 key={index}
                 onClick={() => handleAnswer(option)}
                 disabled={feedback !== null}
-                className={`answer-btn p-6 text-left border-2 rounded-xl transition-all duration-300 font-medium text-lg ${
+                className={`w-full answer-btn p-4 md:p-6 text-left border-2 rounded-xl transition-all duration-300 font-medium text-lg md:text-xl min-h-[60px] md:min-h-[80px] ${
                   feedback === null
                     ? 'bg-white border-gray-300 hover:bg-purple-50 hover:border-purple-400 hover:text-purple-700'
                     : feedback.selectedAnswer === option
@@ -361,12 +361,12 @@ const ElevenPlusQuizApp = () => {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="flex-1">{option}</span>
+                  <span className="flex-1 pr-2">{option}</span>
                   {feedback !== null && option === currentQuestion.correctAnswer && (
-                    <span className="text-green-600 text-2xl ml-3">✓</span>
+                    <span className="text-green-600 text-xl md:text-2xl ml-3 flex-shrink-0">✓</span>
                   )}
                   {feedback !== null && feedback.selectedAnswer === option && !feedback.isCorrect && (
-                    <span className="text-red-600 text-2xl ml-3">✗</span>
+                    <span className="text-red-600 text-xl md:text-2xl ml-3 flex-shrink-0">✗</span>
                   )}
                 </div>
               </button>
