@@ -1,0 +1,4 @@
+learny
+======
+.. automodule:: learny
+   :members:
