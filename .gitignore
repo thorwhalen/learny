@@ -79,6 +79,12 @@ instance/
 # Sphinx documentation
 docs/_build/
 docs/*
+# ...but not hand-written docs. `docs/*` is aimed at GENERATED Sphinx output and
+# swallows everything else in the folder with it, silently — a research report
+# committed here simply did not appear in `git status`. Un-ignore the authored
+# subfolders explicitly rather than narrowing the rule, so generated output stays
+# ignored by default and anything hand-written has to be opted in on purpose.
+!docs/research/
 
 # PyBuilder
 target/
