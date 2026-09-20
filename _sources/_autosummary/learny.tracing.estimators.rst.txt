@@ -1,0 +1,24 @@
+learny.tracing.estimators
+=========================
+
+.. automodule:: learny.tracing.estimators
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      logit
+      expit
+      difficulty_from_rank
+      mark_not_reached
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Estimator
+      RaschEstimator
+      Mastery
+      Skill
+   

@@ -1,0 +1,12 @@
+learny.tracing.model
+====================
+
+.. automodule:: learny.tracing.model
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      LearnerModel
+   

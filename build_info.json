@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "built_at": "2026-09-20T10:05:41Z",
+  "package": {
+    "name": "learny",
+    "version": "0.0.1",
+    "display_name": "learny",
+    "source": "pyproject.toml"
+  },
+  "git": {
+    "available": true,
+    "commit": "765482cda51c7eec03512c20ea0382795895295d",
+    "short_commit": "765482c",
+    "branch": "main",
+    "tags": [],
+    "dirty": false,
+    "remote_url": "https://github.com/thorwhalen/learny",
+    "commit_url": "https://github.com/thorwhalen/learny/commit/765482cda51c7eec03512c20ea0382795895295d",
+    "error": null
+  },
+  "ci": {
+    "provider": "github",
+    "repository": "thorwhalen/learny",
+    "sha": "765482cda51c7eec03512c20ea0382795895295d",
+    "sha_in_history": true,
+    "ref": "refs/heads/main",
+    "ref_name": "main",
+    "run_id": "35504028576",
+    "run_url": "https://github.com/thorwhalen/learny/actions/runs/35504028576",
+    "server_url": "https://github.com"
+  },
+  "tools": {
+    "epythet": "0.2.12",
+    "sphinx": "9.1.0",
+    "docutils": "0.22.4",
+    "python": "3.12.14"
+  },
+  "config": {
+    "theme": "auto",
+    "html_theme": "pydata_sphinx_theme",
+    "accent": "#006e4a",
+    "mode": "auto",
+    "api_generator": "autosummary",
+    "ignore": [
+      "tests/",
+      "scrap/",
+      "examples/"
+    ],
+    "agent_outputs": true,
+    "aggregates": [
+      "md"
+    ],
+    "ai_artifacts": true,
+    "provenance": true,
+    "docs_dir": "docsrc"
+  },
+  "site": {
+    "modules_documented": 6,
+    "objects_documented": 103
+  },
+  "pypi": {
+    "checked": true,
+    "latest": null,
+    "relation": "unknown",
+    "error": null
+  },
+  "reproduce": "git clone https://github.com/thorwhalen/learny && cd learny\ngit checkout 765482cda51c7eec03512c20ea0382795895295d\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "warnings": [],
+  "alignment": {
+    "aligned": true,
+    "notes": []
+  }
+}
