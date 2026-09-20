@@ -85,6 +85,7 @@ docs/*
 # subfolders explicitly rather than narrowing the rule, so generated output stays
 # ignored by default and anything hand-written has to be opted in on purpose.
 !docs/research/
+!docs/learner-model-design.md
 
 # PyBuilder
 target/

@@ -142,6 +142,8 @@ python_versions = [
 pytest_args = [
     "-v",
     "--tb=short",
+    # The doctests are the documentation; make them gate.
+    "--doctest-modules",
 ]
 coverage_enabled = true
 coverage_threshold = 0

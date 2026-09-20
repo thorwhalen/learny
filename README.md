@@ -5,3 +5,75 @@ Turn learning into play — build knowledge with joy
 
 
 To install:	```pip install learny```
+
+## Learner modelling
+
+`learny.tracing` estimates what a student knows from what they have answered — a per-student model whose priors update from that student's own data.
+
+```python
+from learny.tracing import Item, LearnerModel
+
+items = {
+    'q1': Item('q1', labels=('fractions',), difficulty=0.3),
+    'q2': Item('q2', labels=('fractions', 'area'), difficulty=0.8),
+}
+
+model = LearnerModel(items=items)
+
+model.record('ada', 'q1', 'correct')
+model.record('ada', 'q2', 'wrong')
+
+model.predict('ada', 'q2')      # probability she gets this one right
+model.weakest('ada', n=3)       # the labels to practise next
+```
+
+That is the whole common case. Responses are appended to a log under `~/.local/share/learny/` and the estimates are kept beside it; nothing needs configuring, and no data is written anywhere near your code.
+
+### What it is for
+
+Small numbers of learners with sparse data — a family, a tutor, one classroom — where an item bank already carries a published difficulty and most skills have a handful of observations at best. Cold start is the normal case, so the model is built around it rather than around a warm-up.
+
+### What it assumes, and what you can change
+
+Every part is one keyword argument with a working default:
+
+```python
+from learny.tracing import LearnerModel, RaschEstimator
+
+model = LearnerModel(
+    items=items,
+    estimator=RaschEstimator(guess=0.2, conjunctivity=2.0),
+    log=my_log,          # any append-only log; default: JSON lines per student
+    estimates=my_store,  # any MutableMapping; default: JSON files
+)
+```
+
+- **`guess`** — the chance of getting an item right by guessing. 0.2 for five-option multiple choice. Left at 0 by default because it is a property of *your assessment*, not of the model.
+- **`conjunctivity`** — 0 (default) lets a student's strong labels offset their weak ones; raise it and the label they are worst at dominates.
+- **Label weights** — `Item('q', labels={'topic': 1.0, 'trap': 0.57})` attenuates a label you trust less, so a noisily-tagged facet moves the estimate less than a reliable one.
+
+### Three things worth knowing
+
+**A skip is not a wrong answer.** `Outcome` has three values. A blank at the end of a paper is the clock running out; a blank with answers after it is a decision. `mark_not_reached` separates them, and neither is ever scored as wrong.
+
+**Item difficulty does not update by default.** With one or two learners, a student's ability and an item's difficulty are not jointly identifiable — they absorb each other and you get a model that fits the past and predicts nothing. So difficulty is taken as given from the bank. Pass `update_difficulty=True` when you genuinely have a population.
+
+**No student's data ever informs another's estimate.** Pooling happens across *labels within one student*: a label carries only a deviation from that student's overall skill, so their first paper gives every label a usable prior. The single-student case is the default path, not a degenerate one.
+
+### The log is the source of truth
+
+Estimates are a cache. `model.replay()` rebuilds them from the log alone, and a test asserts it reproduces live state exactly — which is what lets the estimator be replaced later without migrating any data.
+
+```python
+model.replay()   # rebuild every student's estimate from the log
+```
+
+See [`docs/learner-model-design.md`](docs/learner-model-design.md) for the design and its boundaries, and [`docs/research/`](docs/research/) for the literature behind it.
+
+### Privacy
+
+Learner responses are personal data. They are written under `~/.local/share/learny/` — never inside your project — one file per student, so one learner's data can be handed over or deleted on its own. Set `LEARNY_DATA_DIR` to move the root. Every example and test in this package is synthetic.
+
+## Games
+
+`learny.eleven_plus` holds vocabulary material and a quiz app for the UK 11+ exam. The game-parameter JSON files ship with the package and can be loaded by any front-end.
