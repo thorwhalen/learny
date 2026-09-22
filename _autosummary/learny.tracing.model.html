@@ -10,6 +10,8 @@
 
 <link rel="alternate" type="text/markdown" href="learny.tracing.model.html.md">
 <link rel="describedby" href="../llms.txt" type="text/markdown">
+<link rel="alternate" type="text/markdown" href="learny.tracing.model.html.md">
+<link rel="describedby" href="llms.txt">
     <title>learny.tracing.model &#8212; learny</title>
   
   
@@ -304,6 +306,7 @@
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="learny.html">learny</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="learny.tracing.html">learny.tracing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.diagnostics.html">learny.tracing.diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.estimators.html">learny.tracing.estimators</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">learny.tracing.model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.records.html">learny.tracing.records</a></li>
@@ -439,6 +442,18 @@ exercises than a student who has answered nothing:</p>
 <dl class="field-list simple">
 </dl>
 <dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.model.LearnerModel.calibration">
+<span class="sig-name descname"><span class="pre">calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.calibration" title="Link to this definition">#</a></dt>
+<dd><p>Prequential calibration over the log; see <a class="reference internal" href="#learny.tracing.model.LearnerModel.calibration" title="learny.tracing.model.LearnerModel.calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">calibration()</span></code></a>.</p>
+<p>Reads the log only; the estimate cache is neither used nor changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.CalibrationReport" title="learny.tracing.diagnostics.CalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="learny.tracing.model.LearnerModel.mastery">
 <span class="sig-name descname"><span class="pre">mastery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.mastery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.mastery" title="Link to this definition">#</a></dt>
 <dd><p>Per-label mastery for one student, weakest first when sorted by skill.</p>
@@ -499,11 +514,28 @@ state that live recording produced.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.model.LearnerModel.separation">
+<span class="sig-name descname"><span class="pre">separation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.separation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.separation" title="Link to this definition">#</a></dt>
+<dd><p>How distinguishable this student’s labels are; see <code class="xref py py-func docutils literal notranslate"><span class="pre">label_separation()</span></code>.</p>
+<p>Check <code class="docutils literal notranslate"><span class="pre">.distinguishable</span></code> before acting on an ordering from <a class="reference internal" href="#learny.tracing.model.LearnerModel.weakest" title="learny.tracing.model.LearnerModel.weakest"><code class="xref py py-meth docutils literal notranslate"><span class="pre">weakest()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.LabelSeparation" title="learny.tracing.diagnostics.LabelSeparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="learny.tracing.model.LearnerModel.weakest">
-<span class="sig-name descname"><span class="pre">weakest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.weakest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.weakest" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">weakest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">credible_below</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.weakest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.weakest" title="Link to this definition">#</a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">n</span></code> labels this student looks weakest on — what to practise next.</p>
 <p>Labels with no evidence are not included: the model has nothing to say about
 them, and saying it anyway is how a learner model loses trust.</p>
+<p><code class="docutils literal notranslate"><span class="pre">credible_below=z</span></code> goes one step further and keeps only labels whose deviation
+from the student’s own global skill is credibly negative — its upper bound
+<code class="docutils literal notranslate"><span class="pre">mu</span> <span class="pre">+</span> <span class="pre">z</span> <span class="pre">*</span> <span class="pre">sd</span></code> below zero. With labels that cannot be told apart that returns
+nothing, which is the honest answer. <code class="docutils literal notranslate"><span class="pre">None</span></code> (the default) ranks every label
+with evidence; check <a class="reference internal" href="#learny.tracing.model.LearnerModel.separation" title="learny.tracing.model.LearnerModel.separation"><code class="xref py py-meth docutils literal notranslate"><span class="pre">separation()</span></code></a> before believing that ranking.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.Mastery" title="learny.tracing.estimators.Mastery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mastery</span></code></a>]</span></p>
@@ -563,11 +595,13 @@ them, and saying it anyway is how a learner model loses trust.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel"><code class="docutils literal notranslate"><span class="pre">LearnerModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.calibration"><code class="docutils literal notranslate"><span class="pre">LearnerModel.calibration()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.mastery"><code class="docutils literal notranslate"><span class="pre">LearnerModel.mastery()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.predict"><code class="docutils literal notranslate"><span class="pre">LearnerModel.predict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.record"><code class="docutils literal notranslate"><span class="pre">LearnerModel.record()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.record_many"><code class="docutils literal notranslate"><span class="pre">LearnerModel.record_many()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.replay"><code class="docutils literal notranslate"><span class="pre">LearnerModel.replay()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.separation"><code class="docutils literal notranslate"><span class="pre">LearnerModel.separation()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.weakest"><code class="docutils literal notranslate"><span class="pre">LearnerModel.weakest()</span></code></a></li>
 </ul>
 </li>

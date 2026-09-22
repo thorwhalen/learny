@@ -6,18 +6,19 @@
 ## Pages
 
 - [learny](index.html.md): Turn learning into play — build knowledge with joy
-- [API reference](api.html.md): | [`learny`](_autosummary/learny.html.md#module-learny)   | Turn learning into play — build knowledg...
+- [API reference](api.html.md): | &#96;learny&#96;   | Turn learning into play — build knowledge with joy.   |
 - [learny](_autosummary/learny.html.md): Turn learning into play — build knowledge with joy.
 - [learny.tracing](_autosummary/learny.tracing.html.md): Learner modelling: what a student knows, estimated from what they have answered.
+- [learny.tracing.diagnostics](_autosummary/learny.tracing.diagnostics.html.md): Diagnostics: when to believe the model, and how well it has predicted so far.
 - [learny.tracing.estimators](_autosummary/learny.tracing.estimators.html.md): Estimators: how one response changes what we believe about a student.
 - [learny.tracing.model](_autosummary/learny.tracing.model.html.md): The facade: one object that records responses and answers questions about a student.
 - [learny.tracing.records](_autosummary/learny.tracing.records.html.md): Core data types for learner modelling: items, outcomes, and responses.
 - [learny.tracing.stores](_autosummary/learny.tracing.stores.html.md): Where learner data lives, and how code reaches it.
-- [About this build](about-this-build.html.md): This documentation was built on **2026-09-20 10:05 UTC** from commit <a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-09-22 12:55 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
----
+## Optional
 
-For more comprehensive documentation, see [learny.md](learny.md)
+- [learny.md](learny.md): Complete documentation in a single file.
 
 ## Build
 

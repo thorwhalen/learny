@@ -10,6 +10,12 @@ learny.tracing.records
    
       LabelWeights
    
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      restrict_labels
+   
    .. rubric:: Classes
 
    .. autosummary::

@@ -1,0 +1,18 @@
+# learny
+
+> Turn learning into play — build knowledge with joy
+
+
+## Pages in this subsection
+
+- [learny](learny.html.md): Turn learning into play — build knowledge with joy.
+- [learny.tracing](learny.tracing.html.md): Learner modelling: what a student knows, estimated from what they have answered.
+- [learny.tracing.diagnostics](learny.tracing.diagnostics.html.md): Diagnostics: when to believe the model, and how well it has predicted so far.
+- [learny.tracing.estimators](learny.tracing.estimators.html.md): Estimators: how one response changes what we believe about a student.
+- [learny.tracing.model](learny.tracing.model.html.md): The facade: one object that records responses and answers questions about a student.
+- [learny.tracing.records](learny.tracing.records.html.md): Core data types for learner modelling: items, outcomes, and responses.
+- [learny.tracing.stores](learny.tracing.stores.html.md): Where learner data lives, and how code reaches it.
+
+## Optional
+
+- [Top-level llms.txt](../llms.txt): Complete documentation index.

@@ -10,6 +10,8 @@
 
 <link rel="alternate" type="text/markdown" href="learny.tracing.records.html.md">
 <link rel="describedby" href="../llms.txt" type="text/markdown">
+<link rel="alternate" type="text/markdown" href="learny.tracing.records.html.md">
+<link rel="describedby" href="llms.txt">
     <title>learny.tracing.records &#8212; learny</title>
   
   
@@ -304,6 +306,7 @@
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="learny.html">learny</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="learny.tracing.html">learny.tracing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.diagnostics.html">learny.tracing.diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.estimators.html">learny.tracing.estimators</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.model.html">learny.tracing.model</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">learny.tracing.records</a></li>
@@ -395,6 +398,15 @@ the log records what happened.</p>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.records.LabelWeights" title="learny.tracing.records.LabelWeights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelWeights</span></code></a></p></td>
 <td><p>A mapping from label to the weight that label carries for an item.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.records.restrict_labels" title="learny.tracing.records.restrict_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">restrict_labels</span></code></a>(items, *, keep[, ...])</p></td>
+<td><p>Project an item bank onto a subset of its labels — one facet, say.</p></td>
 </tr>
 </tbody>
 </table>
@@ -525,6 +537,37 @@ replayed into one.</p>
 
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.records.restrict_labels">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.records.</span></span><span class="sig-name descname"><span class="pre">restrict_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_unlabelled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/records.html#restrict_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.records.restrict_labels" title="Link to this definition">#</a></dt>
+<dd><p>Project an item bank onto a subset of its labels — one facet, say.</p>
+<p>Labels that never vary independently of each other cannot be told apart: tag every
+item with nine labels and each label’s deviation stays at the student’s global
+skill, whatever the data. Modelling one facet at a time is often what makes labels
+separable (<a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.label_separation" title="learny.tracing.diagnostics.label_separation"><code class="xref py py-func docutils literal notranslate"><span class="pre">label_separation()</span></code></a> measures it).
+<em>Which</em> labels belong together is a judgement about the taxonomy, so the library
+never collapses anything by itself; this is the explicit, opt-in way to do it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">keep</span></code> is a collection of labels or a predicate on a label. Weights are preserved.
+An item left with no labels still carries its difficulty and still informs the
+student’s global skill, so it is kept unless <code class="docutils literal notranslate"><span class="pre">drop_unlabelled=True</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="#learny.tracing.records.Item" title="learny.tracing.records.Item"><code class="xref py py-class docutils literal notranslate"><span class="pre">Item</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bank</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s1">'q1'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q1'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">{</span><span class="s1">'topic:fractions'</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">'trap:units'</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">}),</span>
+<span class="gp">... </span>    <span class="s1">'q2'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q2'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'trap:units'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.7</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">topics</span> <span class="o">=</span> <span class="n">restrict_labels</span><span class="p">(</span><span class="n">bank</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="k">lambda</span> <span class="n">label</span><span class="p">:</span> <span class="n">label</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'topic:'</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">topics</span><span class="p">[</span><span class="s1">'q1'</span><span class="p">]</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">topics</span><span class="p">[</span><span class="s1">'q2'</span><span class="p">]</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">topics</span><span class="p">[</span><span class="s1">'q2'</span><span class="p">]</span><span class="o">.</span><span class="n">difficulty</span>
+<span class="go">({'topic:fractions': 1.0}, {}, 0.7)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">restrict_labels</span><span class="p">(</span><span class="n">bank</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="p">{</span><span class="s1">'topic:fractions'</span><span class="p">},</span> <span class="n">drop_unlabelled</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="go">['q1']</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 
 
@@ -589,6 +632,7 @@ replayed into one.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.Response.to_dict"><code class="docutils literal notranslate"><span class="pre">Response.to_dict()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.restrict_labels"><code class="docutils literal notranslate"><span class="pre">restrict_labels()</span></code></a></li>
 </ul>
   </nav></div>
 

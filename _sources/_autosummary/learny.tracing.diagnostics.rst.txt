@@ -1,0 +1,29 @@
+learny.tracing.diagnostics
+==========================
+
+.. automodule:: learny.tracing.diagnostics
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DEFAULT_SEPARATION_THRESHOLD
+      DEFAULT_N_BINS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      label_separation
+      prequential
+      calibration
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      LabelSeparation
+      CalibrationBin
+      CalibrationReport
+   

@@ -2,7 +2,7 @@
 
 Core data types for learner modelling: items, outcomes, and responses.
 
-These are the vocabulary every other module in [`learny.tracing`](learny.tracing.html.md#module-learny.tracing) speaks. They are
+These are the vocabulary every other module in [`learny.tracing`](learny.tracing.md#module-learny.tracing) speaks. They are
 deliberately small and serialisable: a [`Response`](#learny.tracing.records.Response) is what gets appended to the
 append-only log that is the system’s single source of truth, so its shape is a
 long-lived commitment while everything derived from it is a rebuildable cache.
@@ -134,7 +134,7 @@ Project an item bank onto a subset of its labels — one facet, say.
 Labels that never vary independently of each other cannot be told apart: tag every
 item with nine labels and each label’s deviation stays at the student’s global
 skill, whatever the data. Modelling one facet at a time is often what makes labels
-separable ([`label_separation()`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation) measures it).
+separable ([`label_separation()`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.label_separation) measures it).
 *Which* labels belong together is a judgement about the taxonomy, so the library
 never collapses anything by itself; this is the explicit, opt-in way to do it.
 

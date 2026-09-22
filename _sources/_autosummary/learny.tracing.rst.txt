@@ -11,6 +11,10 @@ learny.tracing
       estimate_store
       response_log
       data_dir
+      label_separation
+      calibration
+      prequential
+      restrict_labels
       difficulty_from_rank
       mark_not_reached
       expit
@@ -29,6 +33,9 @@ learny.tracing
       Estimator
       RaschEstimator
       ResponseLog
+      LabelSeparation
+      CalibrationReport
+      CalibrationBin
    
 .. rubric:: Modules
 
@@ -36,6 +43,7 @@ learny.tracing
    :toctree:
    :recursive:
 
+   diagnostics
    estimators
    model
    records

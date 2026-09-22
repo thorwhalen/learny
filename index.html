@@ -10,6 +10,8 @@
 
 <link rel="alternate" type="text/markdown" href="index.html.md">
 <link rel="describedby" href="llms.txt" type="text/markdown">
+<link rel="alternate" type="text/markdown" href="index.html.md">
+<link rel="describedby" href="llms.txt">
     <title>learny &#8212; learny</title>
   
   
@@ -371,6 +373,15 @@
 <p><strong>Item difficulty does not update by default.</strong> With one or two learners, a student’s ability and an item’s difficulty are not jointly identifiable — they absorb each other and you get a model that fits the past and predicts nothing. So difficulty is taken as given from the bank. Pass <code class="docutils literal notranslate"><span class="pre">update_difficulty=True</span></code> when you genuinely have a population.</p>
 <p><strong>No student’s data ever informs another’s estimate.</strong> Pooling happens across <em>labels within one student</em>: a label carries only a deviation from that student’s overall skill, so their first paper gives every label a usable prior. The single-student case is the default path, not a degenerate one.</p>
 </section>
+<section id="when-to-believe-it">
+<h3>When to believe it<a class="headerlink" href="#when-to-believe-it" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">separation</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">)</span><span class="o">.</span><span class="n">distinguishable</span>     <span class="c1"># can her labels be told apart at all?</span>
+<span class="n">model</span><span class="o">.</span><span class="n">weakest</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">credible_below</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># only labels credibly below her own level</span>
+<span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">()</span>                          <span class="c1"># prequential: are the probabilities honest?</span>
+</pre></div>
+</div>
+<p>If every item carries many labels at once, the labels cannot be told apart however much data there is. <code class="docutils literal notranslate"><span class="pre">restrict_labels(items,</span> <span class="pre">keep=...)</span></code> projects the bank onto one facet; the library never collapses a taxonomy on its own.</p>
+</section>
 <section id="the-log-is-the-source-of-truth">
 <h3>The log is the source of truth<a class="headerlink" href="#the-log-is-the-source-of-truth" title="Link to this heading">#</a></h3>
 <p>Estimates are a cache. <code class="docutils literal notranslate"><span class="pre">model.replay()</span></code> rebuilds them from the log alone, and a test asserts it reproduces live state exactly — which is what lets the estimator be replaced later without migrating any data.</p>
@@ -393,7 +404,7 @@
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-20 10:05 UTC from <a href="https://github.com/thorwhalen/learny/commit/765482cda51c7eec03512c20ea0382795895295d">765482c</a> (main) · learny 0.0.1 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-22 12:55 UTC from <a href="https://github.com/thorwhalen/learny/commit/2700ae1f71b7b6778e669b3ae859ac437bc92bb1">2700ae1</a> (main) · learny 0.0.1 · <a href="about-this-build.html">about this build</a></p>
 
                 </article>
               
@@ -436,6 +447,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-is-for">What it is for</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-assumes-and-what-you-can-change">What it assumes, and what you can change</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#three-things-worth-knowing">Three things worth knowing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-believe-it">When to believe it</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-log-is-the-source-of-truth">The log is the source of truth</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#privacy">Privacy</a></li>
 </ul>

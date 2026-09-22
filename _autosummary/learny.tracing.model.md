@@ -8,7 +8,7 @@ and every part can be replaced without touching the others:
 
 | `items`     | what is known about each question (labels, difficulty)                                                                                     |
 |-------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| `estimator` | how one response changes belief ([`RaschEstimator`](learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator)) |
+| `estimator` | how one response changes belief ([`RaschEstimator`](learny.tracing.estimators.md#learny.tracing.estimators.RaschEstimator)) |
 | `log`       | the append-only record of responses — the source of truth                                                                                  |
 | `estimates` | the cache of per-student state, rebuildable from `log`                                                                                     |
 
@@ -54,14 +54,14 @@ Prequential calibration over the log; see [`calibration()`](#learny.tracing.mode
 Reads the log only; the estimate cache is neither used nor changed.
 
 * **Return type:**
-  [`CalibrationReport`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+  [`CalibrationReport`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.CalibrationReport)
 
 #### mastery(student)
 
 Per-label mastery for one student, weakest first when sorted by skill.
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.md#learny.tracing.estimators.Mastery)]
 
 #### predict(student, item)
 
@@ -105,7 +105,7 @@ How distinguishable this student’s labels are; see `label_separation()`.
 Check `.distinguishable` before acting on an ordering from [`weakest()`](#learny.tracing.model.LearnerModel.weakest).
 
 * **Return type:**
-  [`LabelSeparation`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
+  [`LabelSeparation`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.LabelSeparation)
 
 #### weakest(student, n=5, , credible_below=None)
 
@@ -121,4 +121,4 @@ nothing, which is the honest answer. `None` (the default) ranks every label
 with evidence; check [`separation()`](#learny.tracing.model.LearnerModel.separation) before believing that ranking.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Mastery`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Mastery`](learny.tracing.estimators.md#learny.tracing.estimators.Mastery)]

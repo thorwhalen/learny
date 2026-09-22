@@ -713,12 +713,12 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">asdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Outcome"</span><span class="p">,</span> <span class="s2">"Item"</span><span class="p">,</span> <span class="s2">"Response"</span><span class="p">,</span> <span class="s2">"LabelWeights"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Outcome"</span><span class="p">,</span> <span class="s2">"Item"</span><span class="p">,</span> <span class="s2">"Response"</span><span class="p">,</span> <span class="s2">"LabelWeights"</span><span class="p">,</span> <span class="s2">"restrict_labels"</span><span class="p">]</span>
 
 <span class="c1">#: Spellings seen in real answer keys, mapped to the canonical three. Extend by passing</span>
 <span class="c1">#: your own mapping at the adapter boundary rather than editing this.</span>
@@ -892,6 +892,50 @@ window.runMermaid = runMermaid;</script>
         <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"student"</span><span class="p">,</span> <span class="s2">"item"</span><span class="p">,</span> <span class="s2">"outcome"</span><span class="p">,</span> <span class="s2">"at"</span><span class="p">,</span> <span class="s2">"meta"</span><span class="p">)}</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">known</span><span class="p">})</span></div>
 </div>
+
+
+
+<div class="viewcode-block" id="restrict_labels">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.records.html#learny.tracing.restrict_labels">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">restrict_labels</span><span class="p">(</span>
+    <span class="n">items</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Item</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">keep</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
+    <span class="n">drop_unlabelled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Item</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Project an item bank onto a subset of its labels — one facet, say.</span>
+
+<span class="sd">    Labels that never vary independently of each other cannot be told apart: tag every</span>
+<span class="sd">    item with nine labels and each label's deviation stays at the student's global</span>
+<span class="sd">    skill, whatever the data. Modelling one facet at a time is often what makes labels</span>
+<span class="sd">    separable (:func:`~learny.tracing.diagnostics.label_separation` measures it).</span>
+<span class="sd">    *Which* labels belong together is a judgement about the taxonomy, so the library</span>
+<span class="sd">    never collapses anything by itself; this is the explicit, opt-in way to do it.</span>
+
+<span class="sd">    ``keep`` is a collection of labels or a predicate on a label. Weights are preserved.</span>
+<span class="sd">    An item left with no labels still carries its difficulty and still informs the</span>
+<span class="sd">    student's global skill, so it is kept unless ``drop_unlabelled=True``.</span>
+
+<span class="sd">    &gt;&gt;&gt; bank = {</span>
+<span class="sd">    ...     'q1': Item('q1', labels={'topic:fractions': 1.0, 'trap:units': 0.6}),</span>
+<span class="sd">    ...     'q2': Item('q2', labels=('trap:units',), difficulty=0.7),</span>
+<span class="sd">    ... }</span>
+<span class="sd">    &gt;&gt;&gt; topics = restrict_labels(bank, keep=lambda label: label.startswith('topic:'))</span>
+<span class="sd">    &gt;&gt;&gt; topics['q1'].weights, topics['q2'].weights, topics['q2'].difficulty</span>
+<span class="sd">    ({'topic:fractions': 1.0}, {}, 0.7)</span>
+<span class="sd">    &gt;&gt;&gt; sorted(restrict_labels(bank, keep={'topic:fractions'}, drop_unlabelled=True))</span>
+<span class="sd">    ['q1']</span>
+<span class="sd">    """</span>
+    <span class="n">wanted</span> <span class="o">=</span> <span class="n">keep</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span> <span class="k">else</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span><span class="o">.</span><span class="fm">__contains__</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">project</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Item</span><span class="p">:</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">w</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">wanted</span><span class="p">(</span><span class="n">label</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="n">Item</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">difficulty</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">difficulty</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+
+    <span class="n">projected</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">project</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">if</span> <span class="n">drop_unlabelled</span><span class="p">:</span>
+        <span class="n">projected</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">item</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">projected</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">weights</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">projected</span></div>
 
 </pre></div>
 

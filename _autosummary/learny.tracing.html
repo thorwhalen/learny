@@ -10,6 +10,8 @@
 
 <link rel="alternate" type="text/markdown" href="learny.tracing.html.md">
 <link rel="describedby" href="../llms.txt" type="text/markdown">
+<link rel="alternate" type="text/markdown" href="learny.tracing.html.md">
+<link rel="describedby" href="llms.txt">
     <title>learny.tracing &#8212; learny</title>
   
   
@@ -51,7 +53,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="learny.tracing.estimators" href="learny.tracing.estimators.html" />
+    <link rel="next" title="learny.tracing.diagnostics" href="learny.tracing.diagnostics.html" />
     <link rel="prev" title="learny" href="learny.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -304,6 +306,7 @@
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="learny.html">learny</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active has-children"><a class="current reference internal" href="#">learny.tracing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.diagnostics.html">learny.tracing.diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.estimators.html">learny.tracing.estimators</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.model.html">learny.tracing.model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.records.html">learny.tracing.records</a></li>
@@ -403,6 +406,18 @@ lets the estimator be replaced later without a data migration, and it is why
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.data_dir" title="learny.tracing.data_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data_dir</span></code></a>([kind, app_name])</p></td>
 <td><p>The per-kind data directory, created on demand.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.label_separation" title="learny.tracing.label_separation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">label_separation</span></code></a>(state, *[, min_n, threshold])</p></td>
+<td><p>Separation of one student's label deviations, from their estimator state.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.calibration" title="learny.tracing.calibration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibration</span></code></a>(log, *, items, estimator[, ...])</p></td>
+<td><p>Prequential calibration of <code class="docutils literal notranslate"><span class="pre">estimator</span></code> over the students in <code class="docutils literal notranslate"><span class="pre">log</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.prequential" title="learny.tracing.prequential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prequential</span></code></a>(responses, *, items, estimator)</p></td>
+<td><p>Yield <code class="docutils literal notranslate"><span class="pre">(response,</span> <span class="pre">p)</span></code> where <code class="docutils literal notranslate"><span class="pre">p</span></code> was predicted <em>before</em> the response was seen.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.restrict_labels" title="learny.tracing.restrict_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">restrict_labels</span></code></a>(items, *, keep[, ...])</p></td>
+<td><p>Project an item bank onto a subset of its labels — one facet, say.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.difficulty_from_rank" title="learny.tracing.difficulty_from_rank"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difficulty_from_rank</span></code></a>(rank, n_ranks)</p></td>
 <td><p>Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).</p></td>
 </tr>
@@ -448,9 +463,69 @@ lets the estimator be replaced later without a data migration, and it is why
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.ResponseLog" title="learny.tracing.ResponseLog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ResponseLog</span></code></a>(*[, rootdir])</p></td>
 <td><p>The append-only record of every response.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.LabelSeparation" title="learny.tracing.LabelSeparation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a>(n_labels, observed_sd, rmse)</p></td>
+<td><p>How distinguishable one student's labels are from each other.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.CalibrationReport" title="learny.tracing.CalibrationReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a>(n, log_loss, brier, ece, ...)</p></td>
+<td><p>Prequential scores for a set of predictions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.CalibrationBin" title="learny.tracing.CalibrationBin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CalibrationBin</span></code></a>(lo, hi, n, mean_predicted, ...)</p></td>
+<td><p>One row of a reliability table: predictions in <code class="docutils literal notranslate"><span class="pre">[lo,</span> <span class="pre">hi)</span></code> and what happened.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.CalibrationBin">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">CalibrationBin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_predicted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observed_rate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#CalibrationBin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.CalibrationBin" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>One row of a reliability table: predictions in <code class="docutils literal notranslate"><span class="pre">[lo,</span> <span class="pre">hi)</span></code> and what happened.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.CalibrationBin.gap">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">gap</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.CalibrationBin.gap" title="Link to this definition">#</a></dt>
+<dd><p>positive means the model was too pessimistic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Observed minus predicted</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.CalibrationReport">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">CalibrationReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ece</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_log_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#CalibrationReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.CalibrationReport" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Prequential scores for a set of predictions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">log_loss</span></code> and <code class="docutils literal notranslate"><span class="pre">brier</span></code> are proper scoring rules (lower is better). <code class="docutils literal notranslate"><span class="pre">ece</span></code> is the
+expected calibration error: the count-weighted mean absolute gap across bins.
+<code class="docutils literal notranslate"><span class="pre">base_log_loss</span></code> is what always predicting the observed success rate would score,
+so <code class="docutils literal notranslate"><span class="pre">log_loss</span> <span class="pre">&lt;</span> <span class="pre">base_log_loss</span></code> means the model beats knowing only the average.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.CalibrationReport.from_pairs">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pairs</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#CalibrationReport.from_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.CalibrationReport.from_pairs" title="Link to this definition">#</a></dt>
+<dd><p>Build a report from <code class="docutils literal notranslate"><span class="pre">(predicted,</span> <span class="pre">observed)</span></code> pairs, observed in <code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">1}</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.CalibrationReport" title="learny.tracing.diagnostics.CalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">CalibrationReport</span><span class="o">.</span><span class="n">from_pairs</span><span class="p">([(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">brier</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">ece</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">(4, 0.21, 0.25)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">b</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">observed_rate</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">bins</span><span class="p">]</span>
+<span class="go">[(2, 0.5), (2, 1.0)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="learny.tracing.Estimator">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">Estimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#Estimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.Estimator" title="Link to this definition">#</a></dt>
@@ -533,6 +608,70 @@ Leave it <code class="docutils literal notranslate"><span class="pre">None</span
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.LabelSeparation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">LabelSeparation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observed_sd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rmse</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#LabelSeparation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LabelSeparation" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>How distinguishable one student’s labels are from each other.</p>
+<p><code class="docutils literal notranslate"><span class="pre">separation</span></code> is the Rasch separation index <em>G</em>: the “true” spread of the label
+deviations (observed variance minus mean error variance) divided by their root-mean
+error. <code class="docutils literal notranslate"><span class="pre">reliability</span></code> is <code class="docutils literal notranslate"><span class="pre">G²</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">G²)</span></code>, the share of observed spread that is
+signal. <code class="docutils literal notranslate"><span class="pre">distinguishable</span></code> is the verdict a caller should act on.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">LabelSeparation</span><span class="p">(</span><span class="n">n_labels</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">observed_sd</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">rmse</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">true_sd</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">separation</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">reliability</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">(0.687, 2.291, 0.84)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">strata</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3.39</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">distinguishable</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LabelSeparation</span><span class="p">(</span><span class="n">n_labels</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">observed_sd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">rmse</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span><span class="o">.</span><span class="n">distinguishable</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.LabelSeparation.distinguishable">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">distinguishable</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#learny.tracing.LabelSeparation.distinguishable" title="Link to this definition">#</a></dt>
+<dd><p>Whether an ordering of these labels (<code class="docutils literal notranslate"><span class="pre">weakest()</span></code>, say) is worth believing.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.LabelSeparation.reliability">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">reliability</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.LabelSeparation.reliability" title="Link to this definition">#</a></dt>
+<dd><p>the share of the observed spread that is not noise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">G²</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">G²)</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.LabelSeparation.separation">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">separation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.LabelSeparation.separation" title="Link to this definition">#</a></dt>
+<dd><p>Signal-to-noise of the label spread (Rasch <em>G</em>). 0 when it is all noise.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.LabelSeparation.strata">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">strata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.LabelSeparation.strata" title="Link to this definition">#</a></dt>
+<dd><p>roughly how many levels the labels fall into.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Wright’s <code class="docutils literal notranslate"><span class="pre">(4G</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">3</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.LabelSeparation.true_sd">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">true_sd</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.LabelSeparation.true_sd" title="Link to this definition">#</a></dt>
+<dd><p>Spread of the deviations with their measurement error removed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="learny.tracing.LearnerModel">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">LearnerModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LearnerModel" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
@@ -560,6 +699,18 @@ exercises than a student who has answered nothing:</p>
 </div>
 <dl class="field-list simple">
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.LearnerModel.calibration">
+<span class="sig-name descname"><span class="pre">calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LearnerModel.calibration" title="Link to this definition">#</a></dt>
+<dd><p>Prequential calibration over the log; see <a class="reference internal" href="#learny.tracing.calibration" title="learny.tracing.calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">calibration()</span></code></a>.</p>
+<p>Reads the log only; the estimate cache is neither used nor changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.CalibrationReport" title="learny.tracing.diagnostics.CalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="learny.tracing.LearnerModel.mastery">
 <span class="sig-name descname"><span class="pre">mastery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.mastery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LearnerModel.mastery" title="Link to this definition">#</a></dt>
@@ -621,11 +772,28 @@ state that live recording produced.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.LearnerModel.separation">
+<span class="sig-name descname"><span class="pre">separation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.separation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LearnerModel.separation" title="Link to this definition">#</a></dt>
+<dd><p>How distinguishable this student’s labels are; see <a class="reference internal" href="#learny.tracing.label_separation" title="learny.tracing.label_separation"><code class="xref py py-func docutils literal notranslate"><span class="pre">label_separation()</span></code></a>.</p>
+<p>Check <code class="docutils literal notranslate"><span class="pre">.distinguishable</span></code> before acting on an ordering from <a class="reference internal" href="#learny.tracing.LearnerModel.weakest" title="learny.tracing.LearnerModel.weakest"><code class="xref py py-meth docutils literal notranslate"><span class="pre">weakest()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.LabelSeparation" title="learny.tracing.diagnostics.LabelSeparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="learny.tracing.LearnerModel.weakest">
-<span class="sig-name descname"><span class="pre">weakest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.weakest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LearnerModel.weakest" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">weakest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">credible_below</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.weakest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LearnerModel.weakest" title="Link to this definition">#</a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">n</span></code> labels this student looks weakest on — what to practise next.</p>
 <p>Labels with no evidence are not included: the model has nothing to say about
 them, and saying it anyway is how a learner model loses trust.</p>
+<p><code class="docutils literal notranslate"><span class="pre">credible_below=z</span></code> goes one step further and keeps only labels whose deviation
+from the student’s own global skill is credibly negative — its upper bound
+<code class="docutils literal notranslate"><span class="pre">mu</span> <span class="pre">+</span> <span class="pre">z</span> <span class="pre">*</span> <span class="pre">sd</span></code> below zero. With labels that cannot be told apart that returns
+nothing, which is the honest answer. <code class="docutils literal notranslate"><span class="pre">None</span></code> (the default) ranks every label
+with evidence; check <a class="reference internal" href="#learny.tracing.LearnerModel.separation" title="learny.tracing.LearnerModel.separation"><code class="xref py py-meth docutils literal notranslate"><span class="pre">separation()</span></code></a> before believing that ranking.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.Mastery" title="learny.tracing.estimators.Mastery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mastery</span></code></a>]</span></p>
@@ -1009,6 +1177,31 @@ be replayed is what makes changing it a re-run rather than a migration.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.calibration">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.calibration" title="Link to this definition">#</a></dt>
+<dd><p>Prequential calibration of <code class="docutils literal notranslate"><span class="pre">estimator</span></code> over the students in <code class="docutils literal notranslate"><span class="pre">log</span></code>.</p>
+<p>Each student is replayed on their own — no student’s responses inform another’s
+predictions, exactly as in live use — and only then are the scored predictions
+pooled into one table. Skips are replayed (they move the state) but not scored:
+there is no right answer to compare them to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.CalibrationReport" title="learny.tracing.diagnostics.CalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">RaschEstimator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'x'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">report</span> <span class="o">=</span> <span class="n">calibration</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">RaschEstimator</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">report</span><span class="o">.</span><span class="n">n</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">report</span><span class="o">.</span><span class="n">log_loss</span> <span class="o">&lt;</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>   <span class="c1"># beats a coin flip once it has learned</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.data_dir">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">data_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'learny'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/stores.html#data_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.data_dir" title="Link to this definition">#</a></dt>
 <dd><p>The per-kind data directory, created on demand.</p>
@@ -1085,6 +1278,35 @@ the response log, and the tests assert exactly that.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.label_separation">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">label_separation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#label_separation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.label_separation" title="Link to this definition">#</a></dt>
+<dd><p>Separation of one student’s label deviations, from their estimator state.</p>
+<p>Works on any state that stores labels as <code class="docutils literal notranslate"><span class="pre">{label:</span> <span class="pre">{&quot;mu&quot;,</span> <span class="pre">&quot;var&quot;,</span> <span class="pre">&quot;n&quot;}}</span></code> — the
+<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.RaschEstimator" title="learny.tracing.estimators.RaschEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a> layout. Only labels with at least
+<code class="docutils literal notranslate"><span class="pre">min_n</span></code> observations are counted; a label nobody has evidence on is not a label
+that can be told apart from anything.</p>
+<p>Deviations, not mastery, are what is measured: the question is whether the labels
+differ <em>from each other</em>, and every label shares the same global skill.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.LabelSeparation" title="learny.tracing.diagnostics.LabelSeparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">state</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"labels"</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">"fractions"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"mu"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s2">"var"</span><span class="p">:</span> <span class="mf">0.02</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">:</span> <span class="mi">30</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">"area"</span><span class="p">:</span>      <span class="p">{</span><span class="s2">"mu"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.8</span><span class="p">,</span> <span class="s2">"var"</span><span class="p">:</span> <span class="mf">0.02</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">:</span> <span class="mi">30</span><span class="p">},</span>
+<span class="gp">... </span><span class="p">}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">label_separation</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">distinguishable</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blurred</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"labels"</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">{</span><span class="s2">"mu"</span><span class="p">:</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">i</span><span class="p">,</span> <span class="s2">"var"</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
+<span class="gp">... </span>                      <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="s2">"abcdefghi"</span><span class="p">)}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">label_separation</span><span class="p">(</span><span class="n">blurred</span><span class="p">)</span><span class="o">.</span><span class="n">distinguishable</span>   <span class="c1"># nine labels, all noise</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.logit">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">logit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#logit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.logit" title="Link to this definition">#</a></dt>
 <dd><p>Inverse of <a class="reference internal" href="#learny.tracing.expit" title="learny.tracing.expit"><code class="xref py py-func docutils literal notranslate"><span class="pre">expit()</span></code></a>, clamped away from 0 and 1 so it stays finite.</p>
@@ -1125,6 +1347,28 @@ student. Pass one sitting’s responses <strong>in the order they were presented
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.prequential">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">prequential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">responses</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#prequential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.prequential" title="Link to this definition">#</a></dt>
+<dd><p>Yield <code class="docutils literal notranslate"><span class="pre">(response,</span> <span class="pre">p)</span></code> where <code class="docutils literal notranslate"><span class="pre">p</span></code> was predicted <em>before</em> the response was seen.</p>
+<p>Pass one student’s responses in log order. Each prediction uses only the responses
+that came before it, so this is the honest out-of-sample stream that calibration,
+and any later hyperparameter fit, should be scored on. Every response is yielded,
+skips included; filter on <code class="docutils literal notranslate"><span class="pre">response.outcome.is_scored</span></code> to score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Response" title="learny.tracing.records.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">RaschEstimator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'q'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'x'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'q'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">),</span> <span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'q'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">prequential</span><span class="p">(</span><span class="n">rs</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">RaschEstimator</span><span class="p">())]</span>
+<span class="go">[0.5, 0.607]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.response_log">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">response_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">rootdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/stores.html#response_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.response_log" title="Link to this definition">#</a></dt>
 <dd><p>The default response log, under <code class="docutils literal notranslate"><span class="pre">~/.local/share/learny/responses/</span></code>.</p>
@@ -1135,19 +1379,53 @@ student. Pass one sitting’s responses <strong>in the order they were presented
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.restrict_labels">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">restrict_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_unlabelled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/records.html#restrict_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.restrict_labels" title="Link to this definition">#</a></dt>
+<dd><p>Project an item bank onto a subset of its labels — one facet, say.</p>
+<p>Labels that never vary independently of each other cannot be told apart: tag every
+item with nine labels and each label’s deviation stays at the student’s global
+skill, whatever the data. Modelling one facet at a time is often what makes labels
+separable (<a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.label_separation" title="learny.tracing.diagnostics.label_separation"><code class="xref py py-func docutils literal notranslate"><span class="pre">label_separation()</span></code></a> measures it).
+<em>Which</em> labels belong together is a judgement about the taxonomy, so the library
+never collapses anything by itself; this is the explicit, opt-in way to do it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">keep</span></code> is a collection of labels or a predicate on a label. Weights are preserved.
+An item left with no labels still carries its difficulty and still informs the
+student’s global skill, so it is kept unless <code class="docutils literal notranslate"><span class="pre">drop_unlabelled=True</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Item" title="learny.tracing.records.Item"><code class="xref py py-class docutils literal notranslate"><span class="pre">Item</span></code></a>]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bank</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s1">'q1'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q1'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">{</span><span class="s1">'topic:fractions'</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">'trap:units'</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">}),</span>
+<span class="gp">... </span>    <span class="s1">'q2'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q2'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'trap:units'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.7</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">topics</span> <span class="o">=</span> <span class="n">restrict_labels</span><span class="p">(</span><span class="n">bank</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="k">lambda</span> <span class="n">label</span><span class="p">:</span> <span class="n">label</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'topic:'</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">topics</span><span class="p">[</span><span class="s1">'q1'</span><span class="p">]</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">topics</span><span class="p">[</span><span class="s1">'q2'</span><span class="p">]</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">topics</span><span class="p">[</span><span class="s1">'q2'</span><span class="p">]</span><span class="o">.</span><span class="n">difficulty</span>
+<span class="go">({'topic:fractions': 1.0}, {}, 0.7)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">restrict_labels</span><span class="p">(</span><span class="n">bank</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="p">{</span><span class="s1">'topic:fractions'</span><span class="p">},</span> <span class="n">drop_unlabelled</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="go">['q1']</span>
+</pre></div>
+</div>
+</dd></dl>
+
 <p class="rubric">Modules</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.estimators.html#module-learny.tracing.estimators" title="learny.tracing.estimators"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimators</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.diagnostics.html#module-learny.tracing.diagnostics" title="learny.tracing.diagnostics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">diagnostics</span></code></a></p></td>
+<td><p>Diagnostics: when to believe the model, and how well it has predicted so far.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="learny.tracing.estimators.html#module-learny.tracing.estimators" title="learny.tracing.estimators"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimators</span></code></a></p></td>
 <td><p>Estimators: how one response changes what we believe about a student.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="learny.tracing.model.html#module-learny.tracing.model" title="learny.tracing.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.model.html#module-learny.tracing.model" title="learny.tracing.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model</span></code></a></p></td>
 <td><p>The facade: one object that records responses and answers questions about a student.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.records.html#module-learny.tracing.records" title="learny.tracing.records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">records</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="learny.tracing.records.html#module-learny.tracing.records" title="learny.tracing.records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">records</span></code></a></p></td>
 <td><p>Core data types for learner modelling: items, outcomes, and responses.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="learny.tracing.stores.html#module-learny.tracing.stores" title="learny.tracing.stores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stores</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.stores.html#module-learny.tracing.stores" title="learny.tracing.stores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stores</span></code></a></p></td>
 <td><p>Where learner data lives, and how code reaches it.</p></td>
 </tr>
 </tbody>
@@ -1175,11 +1453,11 @@ student. Pass one sitting’s responses <strong>in the order they were presented
       </div>
     </a>
     <a class="right-next"
-       href="learny.tracing.estimators.html"
+       href="learny.tracing.diagnostics.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">learny.tracing.estimators</p>
+        <p class="prev-next-title">learny.tracing.diagnostics</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1202,6 +1480,14 @@ student. Pass one sitting’s responses <strong>in the order they were presented
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.CalibrationBin"><code class="docutils literal notranslate"><span class="pre">CalibrationBin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.CalibrationBin.gap"><code class="docutils literal notranslate"><span class="pre">CalibrationBin.gap</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.CalibrationReport"><code class="docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.CalibrationReport.from_pairs"><code class="docutils literal notranslate"><span class="pre">CalibrationReport.from_pairs()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimator"><code class="docutils literal notranslate"><span class="pre">Estimator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimator.init"><code class="docutils literal notranslate"><span class="pre">Estimator.init()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimator.mastery"><code class="docutils literal notranslate"><span class="pre">Estimator.mastery()</span></code></a></li>
@@ -1213,12 +1499,22 @@ student. Pass one sitting’s responses <strong>in the order they were presented
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Item.weights"><code class="docutils literal notranslate"><span class="pre">Item.weights</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LabelSeparation"><code class="docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LabelSeparation.distinguishable"><code class="docutils literal notranslate"><span class="pre">LabelSeparation.distinguishable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LabelSeparation.reliability"><code class="docutils literal notranslate"><span class="pre">LabelSeparation.reliability</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LabelSeparation.separation"><code class="docutils literal notranslate"><span class="pre">LabelSeparation.separation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LabelSeparation.strata"><code class="docutils literal notranslate"><span class="pre">LabelSeparation.strata</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LabelSeparation.true_sd"><code class="docutils literal notranslate"><span class="pre">LabelSeparation.true_sd</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel"><code class="docutils literal notranslate"><span class="pre">LearnerModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.calibration"><code class="docutils literal notranslate"><span class="pre">LearnerModel.calibration()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.mastery"><code class="docutils literal notranslate"><span class="pre">LearnerModel.mastery()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.predict"><code class="docutils literal notranslate"><span class="pre">LearnerModel.predict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.record"><code class="docutils literal notranslate"><span class="pre">LearnerModel.record()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.record_many"><code class="docutils literal notranslate"><span class="pre">LearnerModel.record_many()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.replay"><code class="docutils literal notranslate"><span class="pre">LearnerModel.replay()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.separation"><code class="docutils literal notranslate"><span class="pre">LearnerModel.separation()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.weakest"><code class="docutils literal notranslate"><span class="pre">LearnerModel.weakest()</span></code></a></li>
 </ul>
 </li>
@@ -1264,13 +1560,17 @@ student. Pass one sitting’s responses <strong>in the order they were presented
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Skill.interval"><code class="docutils literal notranslate"><span class="pre">Skill.interval()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.calibration"><code class="docutils literal notranslate"><span class="pre">calibration()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.data_dir"><code class="docutils literal notranslate"><span class="pre">data_dir()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.difficulty_from_rank"><code class="docutils literal notranslate"><span class="pre">difficulty_from_rank()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimate_store"><code class="docutils literal notranslate"><span class="pre">estimate_store()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.expit"><code class="docutils literal notranslate"><span class="pre">expit()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.label_separation"><code class="docutils literal notranslate"><span class="pre">label_separation()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.logit"><code class="docutils literal notranslate"><span class="pre">logit()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.mark_not_reached"><code class="docutils literal notranslate"><span class="pre">mark_not_reached()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.prequential"><code class="docutils literal notranslate"><span class="pre">prequential()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.response_log"><code class="docutils literal notranslate"><span class="pre">response_log()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.restrict_labels"><code class="docutils literal notranslate"><span class="pre">restrict_labels()</span></code></a></li>
 </ul>
   </nav></div>
 

@@ -1,4 +1,4 @@
-> built 2026-09-20 10:05 UTC from 765482c (main) · learny 0.0.1. Details: build_info.json
+> built 2026-09-22 12:55 UTC from 2700ae1 (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -64,6 +64,16 @@ model = LearnerModel(
 
 **No student’s data ever informs another’s estimate.** Pooling happens across *labels within one student*: a label carries only a deviation from that student’s overall skill, so their first paper gives every label a usable prior. The single-student case is the default path, not a degenerate one.
 
+### When to believe it
+
+```python
+model.separation('ada').distinguishable     # can her labels be told apart at all?
+model.weakest('ada', n=3, credible_below=1.0)  # only labels credibly below her own level
+model.calibration()                          # prequential: are the probabilities honest?
+```
+
+If every item carries many labels at once, the labels cannot be told apart however much data there is. `restrict_labels(items, keep=...)` projects the bank onto one facet; the library never collapses a taxonomy on its own.
+
 ### The log is the source of truth
 
 Estimates are a cache. `model.replay()` rebuilds them from the log alone, and a test asserts it reproduces live state exactly — which is what lets the estimator be replaced later without migrating any data.
@@ -124,6 +134,224 @@ True
 
 | [`tracing`](_autosummary/learny.tracing.html.md#module-learny.tracing)   | Learner modelling: what a student knows, estimated from what they have answered.   |
 |----------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+
+
+# _autosummary/learny.tracing.diagnostics.html.md
+
+# learny.tracing.diagnostics
+
+Diagnostics: when to believe the model, and how well it has predicted so far.
+
+A learner model that cannot say when it is guessing will eventually be shown to a learner
+while it is guessing. This module answers the two questions that decide whether an
+estimate is fit to show:
+
+**Can its labels be told apart?** [`label_separation()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation) computes the Rasch separation
+index over one student’s label *deviations* — the spread of the deviations that is not
+explained by their own uncertainty, in units of that uncertainty. When labels never vary
+independently of each other (an item tagged with nine labels at once, say), every
+deviation stays near zero, the separation is near zero, and any ranking of the labels is
+noise. The report says so rather than leaving a caller to sort noise and call it a
+diagnosis.
+
+**Are its probabilities honest?** [`calibration()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration) replays the log *prequentially*:
+each response is predicted from the state built from the responses before it, then
+folded in. Nothing is scored on data it was fitted to, so the report measures prediction,
+not fit. For a learner model calibration matters more than discrimination — a 70% that
+comes true 40% of the time is worse than useless when it is shown to a child.
+
+Both are pure functions of data the model already has; neither needs a new seam, and
+neither looks at more than one student at a time unless asked to.
+
+### Module Attributes
+
+| [`DEFAULT_SEPARATION_THRESHOLD`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD)   | Separation at which an ordering of labels is worth believing.   |
+|---------------------------------------------------------------------------------|-----------------------------------------------------------------|
+| [`DEFAULT_N_BINS`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.DEFAULT_N_BINS)                 | Equal-width probability bins for the reliability table.         |
+
+### Functions
+
+| [`label_separation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation)(state, \*[, min_n, threshold])   | Separation of one student's label deviations, from their estimator state.     |
+|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`prequential`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)      | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
+| [`calibration`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...])     | Prequential calibration of `estimator` over the students in `log`.            |
+
+### Classes
+
+| [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)(n_labels, observed_sd, rmse)    | How distinguishable one student's labels are from each other.                |
+|--------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`CalibrationBin`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationBin)(lo, hi, n, mean_predicted, ...)  | One row of a reliability table: predictions in `[lo, hi)` and what happened. |
+| [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)(n, log_loss, brier, ece, ...) | Prequential scores for a set of predictions.                                 |
+
+### *class* learny.tracing.diagnostics.CalibrationBin(lo, hi, n, mean_predicted, observed_rate)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One row of a reliability table: predictions in `[lo, hi)` and what happened.
+
+#### *property* gap *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+positive means the model was too pessimistic.
+
+* **Type:**
+  Observed minus predicted
+
+### *class* learny.tracing.diagnostics.CalibrationReport(n, log_loss, brier, ece, base_log_loss, bins)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Prequential scores for a set of predictions.
+
+`log_loss` and `brier` are proper scoring rules (lower is better). `ece` is the
+expected calibration error: the count-weighted mean absolute gap across bins.
+`base_log_loss` is what always predicting the observed success rate would score,
+so `log_loss < base_log_loss` means the model beats knowing only the average.
+
+#### *classmethod* from_pairs(pairs, , n_bins=10)
+
+Build a report from `(predicted, observed)` pairs, observed in `{0, 1}`.
+
+* **Return type:**
+  [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+
+```pycon
+>>> r = CalibrationReport.from_pairs([(0.9, 1), (0.9, 1), (0.1, 0), (0.1, 1)])
+>>> r.n, round(r.brier, 3), round(r.ece, 3)
+(4, 0.21, 0.25)
+>>> [(b.n, b.observed_rate) for b in r.bins]
+[(2, 0.5), (2, 1.0)]
+```
+
+### learny.tracing.diagnostics.DEFAULT_N_BINS *= 10*
+
+Equal-width probability bins for the reliability table.
+
+### learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD *= 2.0*
+
+Separation at which an ordering of labels is worth believing. `G = 2` is reliability
+0.8, about three distinguishable strata (Wright’s `(4G + 1) / 3`) — the usual Rasch
+bar for a ranking one acts on. Below `G = 1` (reliability 0.5) the spread of the
+estimates is mostly their own noise.
+
+### *class* learny.tracing.diagnostics.LabelSeparation(n_labels, observed_sd, rmse, threshold=2.0)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+How distinguishable one student’s labels are from each other.
+
+`separation` is the Rasch separation index *G*: the “true” spread of the label
+deviations (observed variance minus mean error variance) divided by their root-mean
+error. `reliability` is `G² / (1 + G²)`, the share of observed spread that is
+signal. `distinguishable` is the verdict a caller should act on.
+
+```pycon
+>>> s = LabelSeparation(n_labels=4, observed_sd=0.75, rmse=0.3)
+>>> round(s.true_sd, 3), round(s.separation, 3), round(s.reliability, 3)
+(0.687, 2.291, 0.84)
+>>> round(s.strata, 2)
+3.39
+>>> s.distinguishable
+True
+>>> LabelSeparation(n_labels=4, observed_sd=0.1, rmse=0.3).distinguishable
+False
+```
+
+#### *property* distinguishable *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+Whether an ordering of these labels (`weakest()`, say) is worth believing.
+
+#### *property* reliability *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+the share of the observed spread that is not noise.
+
+* **Type:**
+  `G² / (1 + G²)`
+
+#### *property* separation *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+Signal-to-noise of the label spread (Rasch *G*). 0 when it is all noise.
+
+#### *property* strata *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+roughly how many levels the labels fall into.
+
+* **Type:**
+  Wright’s `(4G + 1) / 3`
+
+#### *property* true_sd *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+Spread of the deviations with their measurement error removed.
+
+### learny.tracing.diagnostics.calibration(log, , items, estimator, students=None, n_bins=10)
+
+Prequential calibration of `estimator` over the students in `log`.
+
+Each student is replayed on their own — no student’s responses inform another’s
+predictions, exactly as in live use — and only then are the scored predictions
+pooled into one table. Skips are replayed (they move the state) but not scored:
+there is no right answer to compare them to.
+
+* **Return type:**
+  [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+
+```pycon
+>>> from learny.tracing.estimators import RaschEstimator
+>>> items = {f'q{i}': Item(f'q{i}', labels=('x',), difficulty=0.5) for i in range(4)}
+>>> log = {'a': [Response('a', f'q{i}', 'correct') for i in range(4)]}
+>>> report = calibration(log, items=items, estimator=RaschEstimator())
+>>> report.n
+4
+>>> report.log_loss < math.log(2)   # beats a coin flip once it has learned
+True
+```
+
+### learny.tracing.diagnostics.label_separation(state, , min_n=1, threshold=2.0)
+
+Separation of one student’s label deviations, from their estimator state.
+
+Works on any state that stores labels as `{label: {"mu", "var", "n"}}` — the
+[`RaschEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator) layout. Only labels with at least
+`min_n` observations are counted; a label nobody has evidence on is not a label
+that can be told apart from anything.
+
+Deviations, not mastery, are what is measured: the question is whether the labels
+differ *from each other*, and every label shares the same global skill.
+
+* **Return type:**
+  [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
+
+```pycon
+>>> state = {"labels": {
+...     "fractions": {"mu": 0.9, "var": 0.02, "n": 30},
+...     "area":      {"mu": -0.8, "var": 0.02, "n": 30},
+... }}
+>>> label_separation(state).distinguishable
+True
+>>> blurred = {"labels": {k: {"mu": 0.01 * i, "var": 0.2, "n": 3}
+...                       for i, k in enumerate("abcdefghi")}}
+>>> label_separation(blurred).distinguishable   # nine labels, all noise
+False
+```
+
+### learny.tracing.diagnostics.prequential(responses, , items, estimator)
+
+Yield `(response, p)` where `p` was predicted *before* the response was seen.
+
+Pass one student’s responses in log order. Each prediction uses only the responses
+that came before it, so this is the honest out-of-sample stream that calibration,
+and any later hyperparameter fit, should be scored on. Every response is yielded,
+skips included; filter on `response.outcome.is_scored` to score.
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+
+```pycon
+>>> from learny.tracing.estimators import RaschEstimator
+>>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
+>>> rs = [Response('a', 'q', 'correct'), Response('a', 'q', 'correct')]
+>>> [round(p, 3) for _, p in prequential(rs, items=items, estimator=RaschEstimator())]
+[0.5, 0.607]
+```
 
 
 # _autosummary/learny.tracing.estimators.html.md
@@ -512,27 +740,73 @@ True
 
 ### Functions
 
-| [`estimate_store`](_autosummary/learny.tracing.html.md#learny.tracing.estimate_store)(\*[, rootdir])       | Per-student mastery estimates, keyed by student.                                                                   |
-|--------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| [`response_log`](_autosummary/learny.tracing.html.md#learny.tracing.response_log)(\*[, rootdir])         | The default response log, under `~/.local/share/learny/responses/`.                                                |
-| [`data_dir`](_autosummary/learny.tracing.html.md#learny.tracing.data_dir)([kind, app_name])          | The per-kind data directory, created on demand.                                                                    |
-| [`difficulty_from_rank`](_autosummary/learny.tracing.html.md#learny.tracing.difficulty_from_rank)(rank, n_ranks) | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
-| [`mark_not_reached`](_autosummary/learny.tracing.html.md#learny.tracing.mark_not_reached)(responses)         | Flag the trailing run of blanks in one sitting as *not reached*.                                                   |
-| [`expit`](_autosummary/learny.tracing.html.md#learny.tracing.expit)(x)                            | The logistic function, overflow-safe at the tails.                                                                 |
-| [`logit`](_autosummary/learny.tracing.html.md#learny.tracing.logit)(p, \*[, eps])                 | Inverse of [`expit()`](_autosummary/learny.tracing.html.md#learny.tracing.expit), clamped away from 0 and 1 so it stays finite. |
+| [`estimate_store`](_autosummary/learny.tracing.html.md#learny.tracing.estimate_store)(\*[, rootdir])                   | Per-student mastery estimates, keyed by student.                                                                   |
+|--------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [`response_log`](_autosummary/learny.tracing.html.md#learny.tracing.response_log)(\*[, rootdir])                     | The default response log, under `~/.local/share/learny/responses/`.                                                |
+| [`data_dir`](_autosummary/learny.tracing.html.md#learny.tracing.data_dir)([kind, app_name])                      | The per-kind data directory, created on demand.                                                                    |
+| [`label_separation`](_autosummary/learny.tracing.html.md#learny.tracing.label_separation)(state, \*[, min_n, threshold]) | Separation of one student's label deviations, from their estimator state.                                          |
+| [`calibration`](_autosummary/learny.tracing.html.md#learny.tracing.calibration)(log, \*, items, estimator[, ...])   | Prequential calibration of `estimator` over the students in `log`.                                                 |
+| [`prequential`](_autosummary/learny.tracing.html.md#learny.tracing.prequential)(responses, \*, items, estimator)    | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                      |
+| [`restrict_labels`](_autosummary/learny.tracing.html.md#learny.tracing.restrict_labels)(items, \*, keep[, ...])         | Project an item bank onto a subset of its labels — one facet, say.                                                 |
+| [`difficulty_from_rank`](_autosummary/learny.tracing.html.md#learny.tracing.difficulty_from_rank)(rank, n_ranks)             | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
+| [`mark_not_reached`](_autosummary/learny.tracing.html.md#learny.tracing.mark_not_reached)(responses)                     | Flag the trailing run of blanks in one sitting as *not reached*.                                                   |
+| [`expit`](_autosummary/learny.tracing.html.md#learny.tracing.expit)(x)                                        | The logistic function, overflow-safe at the tails.                                                                 |
+| [`logit`](_autosummary/learny.tracing.html.md#learny.tracing.logit)(p, \*[, eps])                             | Inverse of [`expit()`](_autosummary/learny.tracing.html.md#learny.tracing.expit), clamped away from 0 and 1 so it stays finite. |
 
 ### Classes
 
-| [`LearnerModel`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel)(\*[, items, estimator, log, ...])    | What a student knows, estimated from what they have answered.               |
-|----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| [`Item`](_autosummary/learny.tracing.html.md#learny.tracing.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty. |
-| [`Outcome`](_autosummary/learny.tracing.html.md#learny.tracing.Outcome)(\*values)                                 | What happened when a student met an item.                                   |
-| [`Response`](_autosummary/learny.tracing.html.md#learny.tracing.Response)(student, item, outcome[, at, meta])      | One student meeting one item, once.                                         |
-| [`Mastery`](_autosummary/learny.tracing.html.md#learny.tracing.Mastery)(label, skill[, prior_var])                | What the model believes about one student and one label.                    |
-| [`Skill`](_autosummary/learny.tracing.html.md#learny.tracing.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                      |
-| [`Estimator`](_autosummary/learny.tracing.html.md#learny.tracing.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                   |
-| [`RaschEstimator`](_autosummary/learny.tracing.html.md#learny.tracing.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                     |
-| [`ResponseLog`](_autosummary/learny.tracing.html.md#learny.tracing.ResponseLog)(\*[, rootdir])                        | The append-only record of every response.                                   |
+| [`LearnerModel`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel)(\*[, items, estimator, log, ...])    | What a student knows, estimated from what they have answered.                |
+|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`Item`](_autosummary/learny.tracing.html.md#learny.tracing.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty.  |
+| [`Outcome`](_autosummary/learny.tracing.html.md#learny.tracing.Outcome)(\*values)                                 | What happened when a student met an item.                                    |
+| [`Response`](_autosummary/learny.tracing.html.md#learny.tracing.Response)(student, item, outcome[, at, meta])      | One student meeting one item, once.                                          |
+| [`Mastery`](_autosummary/learny.tracing.html.md#learny.tracing.Mastery)(label, skill[, prior_var])                | What the model believes about one student and one label.                     |
+| [`Skill`](_autosummary/learny.tracing.html.md#learny.tracing.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                       |
+| [`Estimator`](_autosummary/learny.tracing.html.md#learny.tracing.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                    |
+| [`RaschEstimator`](_autosummary/learny.tracing.html.md#learny.tracing.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                      |
+| [`ResponseLog`](_autosummary/learny.tracing.html.md#learny.tracing.ResponseLog)(\*[, rootdir])                        | The append-only record of every response.                                    |
+| [`LabelSeparation`](_autosummary/learny.tracing.html.md#learny.tracing.LabelSeparation)(n_labels, observed_sd, rmse)      | How distinguishable one student's labels are from each other.                |
+| [`CalibrationReport`](_autosummary/learny.tracing.html.md#learny.tracing.CalibrationReport)(n, log_loss, brier, ece, ...)   | Prequential scores for a set of predictions.                                 |
+| [`CalibrationBin`](_autosummary/learny.tracing.html.md#learny.tracing.CalibrationBin)(lo, hi, n, mean_predicted, ...)    | One row of a reliability table: predictions in `[lo, hi)` and what happened. |
+
+### *class* learny.tracing.CalibrationBin(lo, hi, n, mean_predicted, observed_rate)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One row of a reliability table: predictions in `[lo, hi)` and what happened.
+
+#### *property* gap *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+positive means the model was too pessimistic.
+
+* **Type:**
+  Observed minus predicted
+
+### *class* learny.tracing.CalibrationReport(n, log_loss, brier, ece, base_log_loss, bins)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Prequential scores for a set of predictions.
+
+`log_loss` and `brier` are proper scoring rules (lower is better). `ece` is the
+expected calibration error: the count-weighted mean absolute gap across bins.
+`base_log_loss` is what always predicting the observed success rate would score,
+so `log_loss < base_log_loss` means the model beats knowing only the average.
+
+#### *classmethod* from_pairs(pairs, , n_bins=10)
+
+Build a report from `(predicted, observed)` pairs, observed in `{0, 1}`.
+
+* **Return type:**
+  [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+
+```pycon
+>>> r = CalibrationReport.from_pairs([(0.9, 1), (0.9, 1), (0.1, 0), (0.1, 1)])
+>>> r.n, round(r.brier, 3), round(r.ece, 3)
+(4, 0.21, 0.25)
+>>> [(b.n, b.observed_rate) for b in r.bins]
+[(2, 0.5), (2, 1.0)]
+```
 
 ### *class* learny.tracing.Estimator(\*args, \*\*kwargs)
 
@@ -596,6 +870,55 @@ Leave it `None` when nothing observed is available.
 
 Labels as a `{label: weight}` mapping, whichever form they were given in.
 
+### *class* learny.tracing.LabelSeparation(n_labels, observed_sd, rmse, threshold=2.0)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+How distinguishable one student’s labels are from each other.
+
+`separation` is the Rasch separation index *G*: the “true” spread of the label
+deviations (observed variance minus mean error variance) divided by their root-mean
+error. `reliability` is `G² / (1 + G²)`, the share of observed spread that is
+signal. `distinguishable` is the verdict a caller should act on.
+
+```pycon
+>>> s = LabelSeparation(n_labels=4, observed_sd=0.75, rmse=0.3)
+>>> round(s.true_sd, 3), round(s.separation, 3), round(s.reliability, 3)
+(0.687, 2.291, 0.84)
+>>> round(s.strata, 2)
+3.39
+>>> s.distinguishable
+True
+>>> LabelSeparation(n_labels=4, observed_sd=0.1, rmse=0.3).distinguishable
+False
+```
+
+#### *property* distinguishable *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
+
+Whether an ordering of these labels (`weakest()`, say) is worth believing.
+
+#### *property* reliability *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+the share of the observed spread that is not noise.
+
+* **Type:**
+  `G² / (1 + G²)`
+
+#### *property* separation *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+Signal-to-noise of the label spread (Rasch *G*). 0 when it is all noise.
+
+#### *property* strata *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+roughly how many levels the labels fall into.
+
+* **Type:**
+  Wright’s `(4G + 1) / 3`
+
+#### *property* true_sd *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+Spread of the deviations with their measurement error removed.
+
 ### *class* learny.tracing.LearnerModel(, items=None, estimator=None, log=None, estimates=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -625,6 +948,15 @@ exercises than a student who has answered nothing:
 >>> model.mastery('ada')['area'].mu < model.mastery('ada')['fractions'].mu
 True
 ```
+
+#### calibration(students=None, , n_bins=10)
+
+Prequential calibration over the log; see [`calibration()`](_autosummary/learny.tracing.html.md#learny.tracing.calibration).
+
+Reads the log only; the estimate cache is neither used nor changed.
+
+* **Return type:**
+  [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
 
 #### mastery(student)
 
@@ -668,12 +1000,27 @@ state that live recording produced.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-#### weakest(student, n=5)
+#### separation(student, , threshold=2.0)
+
+How distinguishable this student’s labels are; see [`label_separation()`](_autosummary/learny.tracing.html.md#learny.tracing.label_separation).
+
+Check `.distinguishable` before acting on an ordering from [`weakest()`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel.weakest).
+
+* **Return type:**
+  [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
+
+#### weakest(student, n=5, , credible_below=None)
 
 The `n` labels this student looks weakest on — what to practise next.
 
 Labels with no evidence are not included: the model has nothing to say about
 them, and saying it anyway is how a learner model loses trust.
+
+`credible_below=z` goes one step further and keeps only labels whose deviation
+from the student’s own global skill is credibly negative — its upper bound
+`mu + z * sd` below zero. With labels that cannot be told apart that returns
+nothing, which is the honest answer. `None` (the default) ranks every label
+with evidence; check [`separation()`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel.separation) before believing that ranking.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
@@ -984,6 +1331,29 @@ A credible interval on the logit scale.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
+### learny.tracing.calibration(log, , items, estimator, students=None, n_bins=10)
+
+Prequential calibration of `estimator` over the students in `log`.
+
+Each student is replayed on their own — no student’s responses inform another’s
+predictions, exactly as in live use — and only then are the scored predictions
+pooled into one table. Skips are replayed (they move the state) but not scored:
+there is no right answer to compare them to.
+
+* **Return type:**
+  [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+
+```pycon
+>>> from learny.tracing.estimators import RaschEstimator
+>>> items = {f'q{i}': Item(f'q{i}', labels=('x',), difficulty=0.5) for i in range(4)}
+>>> log = {'a': [Response('a', f'q{i}', 'correct') for i in range(4)]}
+>>> report = calibration(log, items=items, estimator=RaschEstimator())
+>>> report.n
+4
+>>> report.log_loss < math.log(2)   # beats a coin flip once it has learned
+True
+```
+
 ### learny.tracing.data_dir(kind='', , app_name='learny')
 
 The per-kind data directory, created on demand.
@@ -1050,6 +1420,34 @@ The logistic function, overflow-safe at the tails.
 0.0
 ```
 
+### learny.tracing.label_separation(state, , min_n=1, threshold=2.0)
+
+Separation of one student’s label deviations, from their estimator state.
+
+Works on any state that stores labels as `{label: {"mu", "var", "n"}}` — the
+[`RaschEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator) layout. Only labels with at least
+`min_n` observations are counted; a label nobody has evidence on is not a label
+that can be told apart from anything.
+
+Deviations, not mastery, are what is measured: the question is whether the labels
+differ *from each other*, and every label shares the same global skill.
+
+* **Return type:**
+  [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
+
+```pycon
+>>> state = {"labels": {
+...     "fractions": {"mu": 0.9, "var": 0.02, "n": 30},
+...     "area":      {"mu": -0.8, "var": 0.02, "n": 30},
+... }}
+>>> label_separation(state).distinguishable
+True
+>>> blurred = {"labels": {k: {"mu": 0.01 * i, "var": 0.2, "n": 3}
+...                       for i, k in enumerate("abcdefghi")}}
+>>> label_separation(blurred).distinguishable   # nine labels, all noise
+False
+```
+
 ### learny.tracing.logit(p, , eps=1e-06)
 
 Inverse of [`expit()`](_autosummary/learny.tracing.html.md#learny.tracing.expit), clamped away from 0 and 1 so it stays finite.
@@ -1085,6 +1483,26 @@ student. Pass one sitting’s responses **in the order they were presented**.
 [False, False, False, True, True]
 ```
 
+### learny.tracing.prequential(responses, , items, estimator)
+
+Yield `(response, p)` where `p` was predicted *before* the response was seen.
+
+Pass one student’s responses in log order. Each prediction uses only the responses
+that came before it, so this is the honest out-of-sample stream that calibration,
+and any later hyperparameter fit, should be scored on. Every response is yielded,
+skips included; filter on `response.outcome.is_scored` to score.
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+
+```pycon
+>>> from learny.tracing.estimators import RaschEstimator
+>>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
+>>> rs = [Response('a', 'q', 'correct'), Response('a', 'q', 'correct')]
+>>> [round(p, 3) for _, p in prequential(rs, items=items, estimator=RaschEstimator())]
+[0.5, 0.607]
+```
+
 ### learny.tracing.response_log(, rootdir=None)
 
 The default response log, under `~/.local/share/learny/responses/`.
@@ -1092,13 +1510,44 @@ The default response log, under `~/.local/share/learny/responses/`.
 * **Return type:**
   [`ResponseLog`](_autosummary/learny.tracing.stores.html.md#learny.tracing.stores.ResponseLog)
 
+### learny.tracing.restrict_labels(items, , keep, drop_unlabelled=False)
+
+Project an item bank onto a subset of its labels — one facet, say.
+
+Labels that never vary independently of each other cannot be told apart: tag every
+item with nine labels and each label’s deviation stays at the student’s global
+skill, whatever the data. Modelling one facet at a time is often what makes labels
+separable ([`label_separation()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation) measures it).
+*Which* labels belong together is a judgement about the taxonomy, so the library
+never collapses anything by itself; this is the explicit, opt-in way to do it.
+
+`keep` is a collection of labels or a predicate on a label. Weights are preserved.
+An item left with no labels still carries its difficulty and still informs the
+student’s global skill, so it is kept unless `drop_unlabelled=True`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Item`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Item)]
+
+```pycon
+>>> bank = {
+...     'q1': Item('q1', labels={'topic:fractions': 1.0, 'trap:units': 0.6}),
+...     'q2': Item('q2', labels=('trap:units',), difficulty=0.7),
+... }
+>>> topics = restrict_labels(bank, keep=lambda label: label.startswith('topic:'))
+>>> topics['q1'].weights, topics['q2'].weights, topics['q2'].difficulty
+({'topic:fractions': 1.0}, {}, 0.7)
+>>> sorted(restrict_labels(bank, keep={'topic:fractions'}, drop_unlabelled=True))
+['q1']
+```
+
 ### Modules
 
-| [`estimators`](_autosummary/learny.tracing.estimators.html.md#module-learny.tracing.estimators)   | Estimators: how one response changes what we believe about a student.                |
-|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| [`model`](_autosummary/learny.tracing.model.html.md#module-learny.tracing.model)             | The facade: one object that records responses and answers questions about a student. |
-| [`records`](_autosummary/learny.tracing.records.html.md#module-learny.tracing.records)         | Core data types for learner modelling: items, outcomes, and responses.               |
-| [`stores`](_autosummary/learny.tracing.stores.html.md#module-learny.tracing.stores)           | Where learner data lives, and how code reaches it.                                   |
+| [`diagnostics`](_autosummary/learny.tracing.diagnostics.html.md#module-learny.tracing.diagnostics)   | Diagnostics: when to believe the model, and how well it has predicted so far.        |
+|--------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [`estimators`](_autosummary/learny.tracing.estimators.html.md#module-learny.tracing.estimators)     | Estimators: how one response changes what we believe about a student.                |
+| [`model`](_autosummary/learny.tracing.model.html.md#module-learny.tracing.model)               | The facade: one object that records responses and answers questions about a student. |
+| [`records`](_autosummary/learny.tracing.records.html.md#module-learny.tracing.records)           | Core data types for learner modelling: items, outcomes, and responses.               |
+| [`stores`](_autosummary/learny.tracing.stores.html.md#module-learny.tracing.stores)             | Where learner data lives, and how code reaches it.                                   |
 
 
 # _autosummary/learny.tracing.model.html.md
@@ -1152,6 +1601,15 @@ exercises than a student who has answered nothing:
 True
 ```
 
+#### calibration(students=None, , n_bins=10)
+
+Prequential calibration over the log; see [`calibration()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.calibration).
+
+Reads the log only; the estimate cache is neither used nor changed.
+
+* **Return type:**
+  [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+
 #### mastery(student)
 
 Per-label mastery for one student, weakest first when sorted by skill.
@@ -1194,12 +1652,27 @@ state that live recording produced.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-#### weakest(student, n=5)
+#### separation(student, , threshold=2.0)
+
+How distinguishable this student’s labels are; see `label_separation()`.
+
+Check `.distinguishable` before acting on an ordering from [`weakest()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.weakest).
+
+* **Return type:**
+  [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
+
+#### weakest(student, n=5, , credible_below=None)
 
 The `n` labels this student looks weakest on — what to practise next.
 
 Labels with no evidence are not included: the model has nothing to say about
 them, and saying it anyway is how a learner model loses trust.
+
+`credible_below=z` goes one step further and keeps only labels whose deviation
+from the student’s own global skill is credibly negative — its upper bound
+`mu + z * sd` below zero. With labels that cannot be told apart that returns
+nothing, which is the honest answer. `None` (the default) ranks every label
+with evidence; check [`separation()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.separation) before believing that ranking.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
@@ -1226,6 +1699,11 @@ the log records what happened.
 
 | [`LabelWeights`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.LabelWeights)   | A mapping from label to the weight that label carries for an item.   |
 |-----------------------------------------------------------------|----------------------------------------------------------------------|
+
+### Functions
+
+| [`restrict_labels`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.restrict_labels)(items, \*, keep[, ...])   | Project an item bank onto a subset of its labels — one facet, say.   |
+|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
 
 ### Classes
 
@@ -1330,6 +1808,36 @@ A JSON-ready dict. `Outcome` is a `str` enum, so it needs no encoding.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
+### learny.tracing.records.restrict_labels(items, , keep, drop_unlabelled=False)
+
+Project an item bank onto a subset of its labels — one facet, say.
+
+Labels that never vary independently of each other cannot be told apart: tag every
+item with nine labels and each label’s deviation stays at the student’s global
+skill, whatever the data. Modelling one facet at a time is often what makes labels
+separable ([`label_separation()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation) measures it).
+*Which* labels belong together is a judgement about the taxonomy, so the library
+never collapses anything by itself; this is the explicit, opt-in way to do it.
+
+`keep` is a collection of labels or a predicate on a label. Weights are preserved.
+An item left with no labels still carries its difficulty and still informs the
+student’s global skill, so it is kept unless `drop_unlabelled=True`.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Item`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Item)]
+
+```pycon
+>>> bank = {
+...     'q1': Item('q1', labels={'topic:fractions': 1.0, 'trap:units': 0.6}),
+...     'q2': Item('q2', labels=('trap:units',), difficulty=0.7),
+... }
+>>> topics = restrict_labels(bank, keep=lambda label: label.startswith('topic:'))
+>>> topics['q1'].weights, topics['q2'].weights, topics['q2'].difficulty
+({'topic:fractions': 1.0}, {}, 0.7)
+>>> sorted(restrict_labels(bank, keep={'topic:fractions'}, drop_unlabelled=True))
+['q1']
+```
 
 
 # _autosummary/learny.tracing.stores.html.md
@@ -1453,7 +1961,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-09-20 10:05 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/765482cda51c7eec03512c20ea0382795895295d"><code>765482c</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-22 12:55 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/2700ae1f71b7b6778e669b3ae859ac437bc92bb1"><code>2700ae1</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -1462,7 +1970,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/765482cda51c7eec03512c20ea0382795895295d"><code>765482cda51c7eec03512c20ea0382795895295d</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/2700ae1f71b7b6778e669b3ae859ac437bc92bb1"><code>2700ae1f71b7b6778e669b3ae859ac437bc92bb1</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -1473,9 +1981,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/35504028576">35504028576</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/35730020477">35730020477</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>765482cda51c7eec03512c20ea0382795895295d</code> (in the history of the built commit) |
+| Event commit | <code>2700ae1f71b7b6778e669b3ae859ac437bc92bb1</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -1506,7 +2014,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout 765482cda51c7eec03512c20ea0382795895295d
+git checkout 2700ae1f71b7b6778e669b3ae859ac437bc92bb1
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

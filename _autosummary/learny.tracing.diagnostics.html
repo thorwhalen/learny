@@ -1,0 +1,769 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="alternate" type="text/markdown" href="learny.tracing.diagnostics.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+<link rel="alternate" type="text/markdown" href="learny.tracing.diagnostics.html.md">
+<link rel="describedby" href="llms.txt">
+    <title>learny.tracing.diagnostics &#8212; learny</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/epythet.css?v=1ba707ae" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+
+    <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_autosummary/learny.tracing.diagnostics';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="learny.tracing.estimators" href="learny.tracing.estimators.html" />
+    <link rel="prev" title="learny.tracing" href="learny.tracing.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.1" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">learny</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/thorwhalen/learny" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/thorwhalen/learny" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="learny.html">learny</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="learny.tracing.html">learny.tracing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">learny.tracing.diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.estimators.html">learny.tracing.estimators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.model.html">learny.tracing.model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.records.html">learny.tracing.records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.stores.html">learny.tracing.stores</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../api.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="learny.html" class="nav-link">learny</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="learny.tracing.html" class="nav-link">learny.tracing</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">learny.tracing.diagnostics</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-learny.tracing.diagnostics">
+<span id="learny-tracing-diagnostics"></span><h1>learny.tracing.diagnostics<a class="headerlink" href="#module-learny.tracing.diagnostics" title="Link to this heading">#</a></h1>
+<p>Diagnostics: when to believe the model, and how well it has predicted so far.</p>
+<p>A learner model that cannot say when it is guessing will eventually be shown to a learner
+while it is guessing. This module answers the two questions that decide whether an
+estimate is fit to show:</p>
+<p><strong>Can its labels be told apart?</strong> <a class="reference internal" href="#learny.tracing.diagnostics.label_separation" title="learny.tracing.diagnostics.label_separation"><code class="xref py py-func docutils literal notranslate"><span class="pre">label_separation()</span></code></a> computes the Rasch separation
+index over one student’s label <em>deviations</em> — the spread of the deviations that is not
+explained by their own uncertainty, in units of that uncertainty. When labels never vary
+independently of each other (an item tagged with nine labels at once, say), every
+deviation stays near zero, the separation is near zero, and any ranking of the labels is
+noise. The report says so rather than leaving a caller to sort noise and call it a
+diagnosis.</p>
+<p><strong>Are its probabilities honest?</strong> <a class="reference internal" href="#learny.tracing.diagnostics.calibration" title="learny.tracing.diagnostics.calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">calibration()</span></code></a> replays the log <em>prequentially</em>:
+each response is predicted from the state built from the responses before it, then
+folded in. Nothing is scored on data it was fitted to, so the report measures prediction,
+not fit. For a learner model calibration matters more than discrimination — a 70% that
+comes true 40% of the time is worse than useless when it is shown to a child.</p>
+<p>Both are pure functions of data the model already has; neither needs a new seam, and
+neither looks at more than one student at a time unless asked to.</p>
+<p class="rubric">Module Attributes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD" title="learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_SEPARATION_THRESHOLD</span></code></a></p></td>
+<td><p>Separation at which an ordering of labels is worth believing.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.DEFAULT_N_BINS" title="learny.tracing.diagnostics.DEFAULT_N_BINS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_N_BINS</span></code></a></p></td>
+<td><p>Equal-width probability bins for the reliability table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.label_separation" title="learny.tracing.diagnostics.label_separation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">label_separation</span></code></a>(state, *[, min_n, threshold])</p></td>
+<td><p>Separation of one student's label deviations, from their estimator state.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.prequential" title="learny.tracing.diagnostics.prequential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prequential</span></code></a>(responses, *, items, estimator)</p></td>
+<td><p>Yield <code class="docutils literal notranslate"><span class="pre">(response,</span> <span class="pre">p)</span></code> where <code class="docutils literal notranslate"><span class="pre">p</span></code> was predicted <em>before</em> the response was seen.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.calibration" title="learny.tracing.diagnostics.calibration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibration</span></code></a>(log, *, items, estimator[, ...])</p></td>
+<td><p>Prequential calibration of <code class="docutils literal notranslate"><span class="pre">estimator</span></code> over the students in <code class="docutils literal notranslate"><span class="pre">log</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.LabelSeparation" title="learny.tracing.diagnostics.LabelSeparation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a>(n_labels, observed_sd, rmse)</p></td>
+<td><p>How distinguishable one student's labels are from each other.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.CalibrationBin" title="learny.tracing.diagnostics.CalibrationBin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CalibrationBin</span></code></a>(lo, hi, n, mean_predicted, ...)</p></td>
+<td><p>One row of a reliability table: predictions in <code class="docutils literal notranslate"><span class="pre">[lo,</span> <span class="pre">hi)</span></code> and what happened.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.CalibrationReport" title="learny.tracing.diagnostics.CalibrationReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a>(n, log_loss, brier, ece, ...)</p></td>
+<td><p>Prequential scores for a set of predictions.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.CalibrationBin">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">CalibrationBin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_predicted</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observed_rate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#CalibrationBin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.CalibrationBin" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>One row of a reliability table: predictions in <code class="docutils literal notranslate"><span class="pre">[lo,</span> <span class="pre">hi)</span></code> and what happened.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.CalibrationBin.gap">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">gap</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.diagnostics.CalibrationBin.gap" title="Link to this definition">#</a></dt>
+<dd><p>positive means the model was too pessimistic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Observed minus predicted</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.CalibrationReport">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">CalibrationReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ece</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_log_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#CalibrationReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.CalibrationReport" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Prequential scores for a set of predictions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">log_loss</span></code> and <code class="docutils literal notranslate"><span class="pre">brier</span></code> are proper scoring rules (lower is better). <code class="docutils literal notranslate"><span class="pre">ece</span></code> is the
+expected calibration error: the count-weighted mean absolute gap across bins.
+<code class="docutils literal notranslate"><span class="pre">base_log_loss</span></code> is what always predicting the observed success rate would score,
+so <code class="docutils literal notranslate"><span class="pre">log_loss</span> <span class="pre">&lt;</span> <span class="pre">base_log_loss</span></code> means the model beats knowing only the average.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.CalibrationReport.from_pairs">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pairs</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#CalibrationReport.from_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.CalibrationReport.from_pairs" title="Link to this definition">#</a></dt>
+<dd><p>Build a report from <code class="docutils literal notranslate"><span class="pre">(predicted,</span> <span class="pre">observed)</span></code> pairs, observed in <code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">1}</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#learny.tracing.diagnostics.CalibrationReport" title="learny.tracing.diagnostics.CalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">CalibrationReport</span><span class="o">.</span><span class="n">from_pairs</span><span class="p">([(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">brier</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">ece</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">(4, 0.21, 0.25)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">b</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">observed_rate</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">bins</span><span class="p">]</span>
+<span class="go">[(2, 0.5), (2, 1.0)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.DEFAULT_N_BINS">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_N_BINS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></span><a class="headerlink" href="#learny.tracing.diagnostics.DEFAULT_N_BINS" title="Link to this definition">#</a></dt>
+<dd><p>Equal-width probability bins for the reliability table.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_SEPARATION_THRESHOLD</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2.0</span></span><a class="headerlink" href="#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD" title="Link to this definition">#</a></dt>
+<dd><p>Separation at which an ordering of labels is worth believing. <code class="docutils literal notranslate"><span class="pre">G</span> <span class="pre">=</span> <span class="pre">2</span></code> is reliability
+0.8, about three distinguishable strata (Wright’s <code class="docutils literal notranslate"><span class="pre">(4G</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">3</span></code>) — the usual Rasch
+bar for a ranking one acts on. Below <code class="docutils literal notranslate"><span class="pre">G</span> <span class="pre">=</span> <span class="pre">1</span></code> (reliability 0.5) the spread of the
+estimates is mostly their own noise.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.LabelSeparation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">LabelSeparation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observed_sd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rmse</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#LabelSeparation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.LabelSeparation" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>How distinguishable one student’s labels are from each other.</p>
+<p><code class="docutils literal notranslate"><span class="pre">separation</span></code> is the Rasch separation index <em>G</em>: the “true” spread of the label
+deviations (observed variance minus mean error variance) divided by their root-mean
+error. <code class="docutils literal notranslate"><span class="pre">reliability</span></code> is <code class="docutils literal notranslate"><span class="pre">G²</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">G²)</span></code>, the share of observed spread that is
+signal. <code class="docutils literal notranslate"><span class="pre">distinguishable</span></code> is the verdict a caller should act on.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">LabelSeparation</span><span class="p">(</span><span class="n">n_labels</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">observed_sd</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">rmse</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">true_sd</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">separation</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">reliability</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">(0.687, 2.291, 0.84)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">strata</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3.39</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">distinguishable</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LabelSeparation</span><span class="p">(</span><span class="n">n_labels</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">observed_sd</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">rmse</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span><span class="o">.</span><span class="n">distinguishable</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.LabelSeparation.distinguishable">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">distinguishable</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#learny.tracing.diagnostics.LabelSeparation.distinguishable" title="Link to this definition">#</a></dt>
+<dd><p>Whether an ordering of these labels (<code class="docutils literal notranslate"><span class="pre">weakest()</span></code>, say) is worth believing.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.LabelSeparation.reliability">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">reliability</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.diagnostics.LabelSeparation.reliability" title="Link to this definition">#</a></dt>
+<dd><p>the share of the observed spread that is not noise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">G²</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">G²)</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.LabelSeparation.separation">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">separation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.diagnostics.LabelSeparation.separation" title="Link to this definition">#</a></dt>
+<dd><p>Signal-to-noise of the label spread (Rasch <em>G</em>). 0 when it is all noise.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.LabelSeparation.strata">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">strata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.diagnostics.LabelSeparation.strata" title="Link to this definition">#</a></dt>
+<dd><p>roughly how many levels the labels fall into.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Wright’s <code class="docutils literal notranslate"><span class="pre">(4G</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">3</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.LabelSeparation.true_sd">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">true_sd</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.diagnostics.LabelSeparation.true_sd" title="Link to this definition">#</a></dt>
+<dd><p>Spread of the deviations with their measurement error removed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.calibration">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.calibration" title="Link to this definition">#</a></dt>
+<dd><p>Prequential calibration of <code class="docutils literal notranslate"><span class="pre">estimator</span></code> over the students in <code class="docutils literal notranslate"><span class="pre">log</span></code>.</p>
+<p>Each student is replayed on their own — no student’s responses inform another’s
+predictions, exactly as in live use — and only then are the scored predictions
+pooled into one table. Skips are replayed (they move the state) but not scored:
+there is no right answer to compare them to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#learny.tracing.diagnostics.CalibrationReport" title="learny.tracing.diagnostics.CalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">RaschEstimator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'x'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">report</span> <span class="o">=</span> <span class="n">calibration</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">RaschEstimator</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">report</span><span class="o">.</span><span class="n">n</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">report</span><span class="o">.</span><span class="n">log_loss</span> <span class="o">&lt;</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>   <span class="c1"># beats a coin flip once it has learned</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.label_separation">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">label_separation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#label_separation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.label_separation" title="Link to this definition">#</a></dt>
+<dd><p>Separation of one student’s label deviations, from their estimator state.</p>
+<p>Works on any state that stores labels as <code class="docutils literal notranslate"><span class="pre">{label:</span> <span class="pre">{&quot;mu&quot;,</span> <span class="pre">&quot;var&quot;,</span> <span class="pre">&quot;n&quot;}}</span></code> — the
+<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.RaschEstimator" title="learny.tracing.estimators.RaschEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a> layout. Only labels with at least
+<code class="docutils literal notranslate"><span class="pre">min_n</span></code> observations are counted; a label nobody has evidence on is not a label
+that can be told apart from anything.</p>
+<p>Deviations, not mastery, are what is measured: the question is whether the labels
+differ <em>from each other</em>, and every label shares the same global skill.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#learny.tracing.diagnostics.LabelSeparation" title="learny.tracing.diagnostics.LabelSeparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a></span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">state</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"labels"</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">"fractions"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"mu"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span> <span class="s2">"var"</span><span class="p">:</span> <span class="mf">0.02</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">:</span> <span class="mi">30</span><span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">"area"</span><span class="p">:</span>      <span class="p">{</span><span class="s2">"mu"</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.8</span><span class="p">,</span> <span class="s2">"var"</span><span class="p">:</span> <span class="mf">0.02</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">:</span> <span class="mi">30</span><span class="p">},</span>
+<span class="gp">... </span><span class="p">}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">label_separation</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">distinguishable</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">blurred</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"labels"</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">{</span><span class="s2">"mu"</span><span class="p">:</span> <span class="mf">0.01</span> <span class="o">*</span> <span class="n">i</span><span class="p">,</span> <span class="s2">"var"</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
+<span class="gp">... </span>                      <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="s2">"abcdefghi"</span><span class="p">)}}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">label_separation</span><span class="p">(</span><span class="n">blurred</span><span class="p">)</span><span class="o">.</span><span class="n">distinguishable</span>   <span class="c1"># nine labels, all noise</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.prequential">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">prequential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">responses</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#prequential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.prequential" title="Link to this definition">#</a></dt>
+<dd><p>Yield <code class="docutils literal notranslate"><span class="pre">(response,</span> <span class="pre">p)</span></code> where <code class="docutils literal notranslate"><span class="pre">p</span></code> was predicted <em>before</em> the response was seen.</p>
+<p>Pass one student’s responses in log order. Each prediction uses only the responses
+that came before it, so this is the honest out-of-sample stream that calibration,
+and any later hyperparameter fit, should be scored on. Every response is yielded,
+skips included; filter on <code class="docutils literal notranslate"><span class="pre">response.outcome.is_scored</span></code> to score.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Response" title="learny.tracing.records.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]</span></p>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">RaschEstimator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'q'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'x'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'q'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">),</span> <span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'q'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">prequential</span><span class="p">(</span><span class="n">rs</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">RaschEstimator</span><span class="p">())]</span>
+<span class="go">[0.5, 0.607]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="learny.tracing.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">learny.tracing</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="learny.tracing.estimators.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">learny.tracing.estimators</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.CalibrationBin"><code class="docutils literal notranslate"><span class="pre">CalibrationBin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.CalibrationBin.gap"><code class="docutils literal notranslate"><span class="pre">CalibrationBin.gap</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.CalibrationReport"><code class="docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.CalibrationReport.from_pairs"><code class="docutils literal notranslate"><span class="pre">CalibrationReport.from_pairs()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.DEFAULT_N_BINS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_N_BINS</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD"><code class="docutils literal notranslate"><span class="pre">DEFAULT_SEPARATION_THRESHOLD</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.LabelSeparation"><code class="docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.LabelSeparation.distinguishable"><code class="docutils literal notranslate"><span class="pre">LabelSeparation.distinguishable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.LabelSeparation.reliability"><code class="docutils literal notranslate"><span class="pre">LabelSeparation.reliability</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.LabelSeparation.separation"><code class="docutils literal notranslate"><span class="pre">LabelSeparation.separation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.LabelSeparation.strata"><code class="docutils literal notranslate"><span class="pre">LabelSeparation.strata</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.LabelSeparation.true_sd"><code class="docutils literal notranslate"><span class="pre">LabelSeparation.true_sd</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.calibration"><code class="docutils literal notranslate"><span class="pre">calibration()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.label_separation"><code class="docutils literal notranslate"><span class="pre">label_separation()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.prequential"><code class="docutils literal notranslate"><span class="pre">prequential()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/_autosummary/learny.tracing.diagnostics.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

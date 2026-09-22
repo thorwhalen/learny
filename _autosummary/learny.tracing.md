@@ -6,7 +6,7 @@ The shape of this subpackage in one paragraph: responses go into an **append-onl
 which is the single source of truth; everything else — per-student mastery estimates
 included — is a cache that can be rebuilt by replaying that log. That constraint is what
 lets the estimator be replaced later without a data migration, and it is why
-[`replay()`](learny.tracing.model.html.md#learny.tracing.model.LearnerModel.replay) exists and is tested.
+[`replay()`](learny.tracing.model.md#learny.tracing.model.LearnerModel.replay) exists and is tested.
 
 ```pycon
 >>> from learny.tracing import Item, LearnerModel
@@ -77,7 +77,7 @@ so `log_loss < base_log_loss` means the model beats knowing only the average.
 Build a report from `(predicted, observed)` pairs, observed in `{0, 1}`.
 
 * **Return type:**
-  [`CalibrationReport`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+  [`CalibrationReport`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.CalibrationReport)
 
 ```pycon
 >>> r = CalibrationReport.from_pairs([(0.9, 1), (0.9, 1), (0.1, 0), (0.1, 1)])
@@ -109,7 +109,7 @@ A fresh state for a student who has answered nothing.
 Per-label mastery, for showing the model to the learner.
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.md#learny.tracing.estimators.Mastery)]
 
 #### observe(state, response, item)
 
@@ -235,14 +235,14 @@ Prequential calibration over the log; see [`calibration()`](#learny.tracing.cali
 Reads the log only; the estimate cache is neither used nor changed.
 
 * **Return type:**
-  [`CalibrationReport`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+  [`CalibrationReport`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.CalibrationReport)
 
 #### mastery(student)
 
 Per-label mastery for one student, weakest first when sorted by skill.
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.md#learny.tracing.estimators.Mastery)]
 
 #### predict(student, item)
 
@@ -286,7 +286,7 @@ How distinguishable this student’s labels are; see [`label_separation()`](#lea
 Check `.distinguishable` before acting on an ordering from [`weakest()`](#learny.tracing.LearnerModel.weakest).
 
 * **Return type:**
-  [`LabelSeparation`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
+  [`LabelSeparation`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.LabelSeparation)
 
 #### weakest(student, n=5, , credible_below=None)
 
@@ -302,7 +302,7 @@ nothing, which is the honest answer. `None` (the default) ranks every label
 with evidence; check [`separation()`](#learny.tracing.LearnerModel.separation) before believing that ranking.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Mastery`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Mastery`](learny.tracing.estimators.md#learny.tracing.estimators.Mastery)]
 
 ### *class* learny.tracing.Mastery(label, skill, prior_var=1.0)
 
@@ -449,7 +449,7 @@ observations from drifting away from what the student’s whole record says.
 Per-label mastery: the student’s global skill adjusted by each label.
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.md#learny.tracing.estimators.Mastery)]
 
 #### observe(state, response, item)
 
@@ -497,7 +497,7 @@ roughly, “this student is within ±2 logits of the reference population”.
 The student’s global skill, independent of any label.
 
 * **Return type:**
-  [`Skill`](learny.tracing.estimators.html.md#learny.tracing.estimators.Skill)
+  [`Skill`](learny.tracing.estimators.md#learny.tracing.estimators.Skill)
 
 #### update_difficulty *: [bool](https://docs.python.org/3/builtins/functions.html#bool)* *= False*
 
@@ -531,7 +531,7 @@ True only for an outright correct answer; a skip is not a correct answer.
 Inverse of [`to_dict()`](#learny.tracing.Response.to_dict), tolerant of unknown keys from a future version.
 
 * **Return type:**
-  [`Response`](learny.tracing.records.html.md#learny.tracing.records.Response)
+  [`Response`](learny.tracing.records.md#learny.tracing.records.Response)
 
 #### to_dict()
 
@@ -620,7 +620,7 @@ pooled into one table. Skips are replayed (they move the state) but not scored:
 there is no right answer to compare them to.
 
 * **Return type:**
-  [`CalibrationReport`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+  [`CalibrationReport`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.CalibrationReport)
 
 ```pycon
 >>> from learny.tracing.estimators import RaschEstimator
@@ -704,7 +704,7 @@ The logistic function, overflow-safe at the tails.
 Separation of one student’s label deviations, from their estimator state.
 
 Works on any state that stores labels as `{label: {"mu", "var", "n"}}` — the
-[`RaschEstimator`](learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator) layout. Only labels with at least
+[`RaschEstimator`](learny.tracing.estimators.md#learny.tracing.estimators.RaschEstimator) layout. Only labels with at least
 `min_n` observations are counted; a label nobody has evidence on is not a label
 that can be told apart from anything.
 
@@ -712,7 +712,7 @@ Deviations, not mastery, are what is measured: the question is whether the label
 differ *from each other*, and every label shares the same global skill.
 
 * **Return type:**
-  [`LabelSeparation`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
+  [`LabelSeparation`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.LabelSeparation)
 
 ```pycon
 >>> state = {"labels": {
@@ -752,7 +752,7 @@ questions after it is a decision to skip. Only the second is evidence about the
 student. Pass one sitting’s responses **in the order they were presented**.
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Response`](learny.tracing.records.html.md#learny.tracing.records.Response)]
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Response`](learny.tracing.records.md#learny.tracing.records.Response)]
 
 ```pycon
 >>> from learny.tracing.records import Response, Outcome
@@ -772,7 +772,7 @@ and any later hyperparameter fit, should be scored on. Every response is yielded
 skips included; filter on `response.outcome.is_scored` to score.
 
 * **Return type:**
-  [`Iterator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Response`](learny.tracing.records.html.md#learny.tracing.records.Response), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+  [`Iterator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Response`](learny.tracing.records.md#learny.tracing.records.Response), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
 
 ```pycon
 >>> from learny.tracing.estimators import RaschEstimator
@@ -787,7 +787,7 @@ skips included; filter on `response.outcome.is_scored` to score.
 The default response log, under `~/.local/share/learny/responses/`.
 
 * **Return type:**
-  [`ResponseLog`](learny.tracing.stores.html.md#learny.tracing.stores.ResponseLog)
+  [`ResponseLog`](learny.tracing.stores.md#learny.tracing.stores.ResponseLog)
 
 ### learny.tracing.restrict_labels(items, , keep, drop_unlabelled=False)
 
@@ -796,7 +796,7 @@ Project an item bank onto a subset of its labels — one facet, say.
 Labels that never vary independently of each other cannot be told apart: tag every
 item with nine labels and each label’s deviation stays at the student’s global
 skill, whatever the data. Modelling one facet at a time is often what makes labels
-separable ([`label_separation()`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation) measures it).
+separable ([`label_separation()`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.label_separation) measures it).
 *Which* labels belong together is a judgement about the taxonomy, so the library
 never collapses anything by itself; this is the explicit, opt-in way to do it.
 
@@ -805,7 +805,7 @@ An item left with no labels still carries its difficulty and still informs the
 student’s global skill, so it is kept unless `drop_unlabelled=True`.
 
 * **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Item`](learny.tracing.records.html.md#learny.tracing.records.Item)]
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Item`](learny.tracing.records.md#learny.tracing.records.Item)]
 
 ```pycon
 >>> bank = {
@@ -821,9 +821,9 @@ student’s global skill, so it is kept unless `drop_unlabelled=True`.
 
 ### Modules
 
-| [`diagnostics`](learny.tracing.diagnostics.html.md#module-learny.tracing.diagnostics)   | Diagnostics: when to believe the model, and how well it has predicted so far.        |
+| [`diagnostics`](learny.tracing.diagnostics.md#module-learny.tracing.diagnostics)   | Diagnostics: when to believe the model, and how well it has predicted so far.        |
 |--------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| [`estimators`](learny.tracing.estimators.html.md#module-learny.tracing.estimators)     | Estimators: how one response changes what we believe about a student.                |
-| [`model`](learny.tracing.model.html.md#module-learny.tracing.model)               | The facade: one object that records responses and answers questions about a student. |
-| [`records`](learny.tracing.records.html.md#module-learny.tracing.records)           | Core data types for learner modelling: items, outcomes, and responses.               |
-| [`stores`](learny.tracing.stores.html.md#module-learny.tracing.stores)             | Where learner data lives, and how code reaches it.                                   |
+| [`estimators`](learny.tracing.estimators.md#module-learny.tracing.estimators)     | Estimators: how one response changes what we believe about a student.                |
+| [`model`](learny.tracing.model.md#module-learny.tracing.model)               | The facade: one object that records responses and answers questions about a student. |
+| [`records`](learny.tracing.records.md#module-learny.tracing.records)           | Core data types for learner modelling: items, outcomes, and responses.               |
+| [`stores`](learny.tracing.stores.md#module-learny.tracing.stores)             | Where learner data lives, and how code reaches it.                                   |
