@@ -181,7 +181,7 @@ class Mastery:
     label: str
     skill: Skill
     prior_var: float = 1.0
-    deviation: Skill | None = field(default=None, kw_only=True)
+    deviation: Skill | None = field(default=None, kw_only=True, compare=False)
 
     @property
     def mu(self) -> float:
@@ -228,7 +228,14 @@ class Estimator(Protocol):
         """Probability this student answers this item correctly."""
 
     def mastery(self, state: Mapping[str, Any]) -> dict[str, Mastery]:
-        """Per-label mastery, for showing the model to the learner."""
+        """Per-label mastery, for showing the model to the learner.
+
+        Fill each :attr:`Mastery.deviation` (the label relative to the student's global
+        skill) if you can: :meth:`LearnerModel.weakest
+        <learny.tracing.model.LearnerModel.weakest>` gates on it by default and raises
+        ``TypeError`` for an estimator that leaves it ``None`` (callers can still pass
+        ``credible_below=None``).
+        """
 
 
 @dataclass

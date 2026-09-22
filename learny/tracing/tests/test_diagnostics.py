@@ -325,6 +325,18 @@ class TestWeakestContract:
         with pytest.raises(ValueError):
             model.weakest("s", credible_below=float("nan"))
 
+    def test_non_positive_n_is_refused(self, split_items):
+        model = _model(split_items, [])
+        for bad in (0, -1, 1.5):
+            with pytest.raises(ValueError, match="n must be"):
+                model.weakest("s", n=bad)
+
+    def test_deviation_does_not_change_mastery_equality(self, split_items):
+        model = _model(split_items, [])
+        model.record("s", "q1", "wrong")
+        m = model.mastery("s")["area"]
+        assert m == Mastery(m.label, m.skill, m.prior_var)
+
     def test_zero_z_is_the_posterior_mean_below_zero(self, split_items):
         model = _model(split_items, [])
         for i in range(40):

@@ -33,8 +33,11 @@ __all__ = ["LearnerModel", "Weakest", "DEFAULT_CREDIBLE_BELOW"]
 
 #: How many posterior standard deviations below the student's own level a label's
 #: deviation must be before :meth:`LearnerModel.weakest` calls it a weakness. 1.0 is a
-#: one-sided ~84% credible bound: strict enough that indistinguishable labels are not
-#: ranked as if they were, loose enough to fire on a few papers of real evidence.
+#: one-sided ~84% credible bound *per label*. It stops a set of labels that never vary
+#: independently (many labels on every item) from being ranked at all, and fires on a few
+#: papers of real evidence. It is **not** corrected for testing many labels at once: a
+#: student with no real weakness and six separable labels gets at least one label flagged
+#: more often than not. Raise ``credible_below`` when a false "practise this" is costly.
 DEFAULT_CREDIBLE_BELOW = 1.0
 
 WeakestReason = Literal["no_evidence", "no_credible_weakness"]
@@ -45,7 +48,9 @@ class Weakest(list):
 
     It *is* a list — it compares, iterates, slices and serialises like one — so callers
     that treat the result as a list keep working. ``reason`` is ``None`` when the list is
-    non-empty and says why it is empty otherwise; see :meth:`LearnerModel.weakest`.
+    non-empty and says why it is empty otherwise; see :meth:`LearnerModel.weakest`. It
+    describes the answer as returned: slicing gives a plain list, and a caller that
+    mutates the result owns keeping ``reason`` meaningful.
 
     >>> w = Weakest(reason='no_evidence')
     >>> w == [], w.reason
@@ -156,7 +161,9 @@ class LearnerModel:
         zero, with ``z = credible_below`` (default :data:`DEFAULT_CREDIBLE_BELOW`). The
         survivors are ranked worst first and the first ``n`` returned. ``z = 0`` keeps
         every label whose deviation is merely below zero on average; larger ``z``
-        demands more certainty. ``credible_below=None`` switches the gate off and ranks
+        demands more certainty. The bound is per label, with no correction for how many
+        labels are tested (see :data:`DEFAULT_CREDIBLE_BELOW`), so with several separable
+        labels a label or two can pass by chance. ``credible_below=None`` switches the gate off and ranks
         every label with evidence by posterior mean — check :meth:`separation` before
         believing that ranking.
 
@@ -198,6 +205,8 @@ class LearnerModel:
         >>> [m.label for m in model.weakest('ada', credible_below=None)]  # plain ranking
         ['area', 'sums']
         """
+        if not (isinstance(n, int) and n >= 1):
+            raise ValueError(f"n must be a positive integer, got {n!r}")
         if credible_below is not None and not credible_below >= 0:
             raise ValueError(
                 f"credible_below must be >= 0 (or None to rank without a gate), got "
