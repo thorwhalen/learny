@@ -60,6 +60,16 @@ model = LearnerModel(
 
 **No student's data ever informs another's estimate.** Pooling happens across *labels within one student*: a label carries only a deviation from that student's overall skill, so their first paper gives every label a usable prior. The single-student case is the default path, not a degenerate one.
 
+### When to believe it
+
+```python
+model.separation('ada').distinguishable     # can her labels be told apart at all?
+model.weakest('ada', n=3, credible_below=1.0)  # only labels credibly below her own level
+model.calibration()                          # prequential: are the probabilities honest?
+```
+
+If every item carries many labels at once, the labels cannot be told apart however much data there is. `restrict_labels(items, keep=...)` projects the bank onto one facet; the library never collapses a taxonomy on its own.
+
 ### The log is the source of truth
 
 Estimates are a cache. `model.replay()` rebuilds them from the log alone, and a test asserts it reproduces live state exactly — which is what lets the estimator be replaced later without migrating any data.
