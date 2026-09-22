@@ -1,4 +1,4 @@
-> built 2026-09-22 14:29 UTC from 5ba87ae (main) · learny 0.0.1. Details: build_info.json
+> built 2026-09-22 15:08 UTC from e42fc6b (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -163,17 +163,16 @@ neither looks at more than one student at a time unless asked to.
 
 ### Module Attributes
 
-| [`DEFAULT_SEPARATION_THRESHOLD`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD)   | Separation at which an ordering of labels is worth believing.                                                                                                                                  |
-|---------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`DEFAULT_LABEL_PRIOR_VAR`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.DEFAULT_LABEL_PRIOR_VAR)        | The prior variance [`label_separation()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation) assumes the label deviations were shrunk with — the default estimator's, so the two cannot drift apart. |
-| [`DEFAULT_N_BINS`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.DEFAULT_N_BINS)                 | Equal-width probability bins for the reliability table.                                                                                                                                        |
+| [`DEFAULT_SEPARATION_THRESHOLD`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD)   | Separation at which an ordering of labels is worth believing.   |
+|---------------------------------------------------------------------------------|-----------------------------------------------------------------|
+| [`DEFAULT_N_BINS`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.DEFAULT_N_BINS)                 | Equal-width probability bins for the reliability table.         |
 
 ### Functions
 
-| [`label_separation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation)(state, \*[, min_n, ...])     | Separation of one student's label deviations, from their estimator state.     |
-|------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`prequential`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)  | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
-| [`calibration`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...]) | Prequential calibration of `estimator` over the students in `log`.            |
+| [`label_separation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation)(state, \*[, min_n, threshold])   | Separation of one student's label deviations, from their estimator state.     |
+|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`prequential`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)      | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
+| [`calibration`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...])     | Prequential calibration of `estimator` over the students in `log`.            |
 
 ### Classes
 
@@ -220,11 +219,6 @@ Build a report from `(predicted, observed)` pairs, observed in `{0, 1}`.
 >>> [(b.n, b.observed_rate) for b in r.bins]
 [(2, 0.5), (2, 1.0)]
 ```
-
-### learny.tracing.diagnostics.DEFAULT_LABEL_PRIOR_VAR *= 0.25*
-
-The prior variance [`label_separation()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation) assumes the label deviations were shrunk
-with — the default estimator’s, so the two cannot drift apart.
 
 ### learny.tracing.diagnostics.DEFAULT_N_BINS *= 10*
 
@@ -309,7 +303,7 @@ there is no right answer to compare them to.
 True
 ```
 
-### learny.tracing.diagnostics.label_separation(state, , min_n=1, threshold=2.0, label_prior_var=0.25)
+### learny.tracing.diagnostics.label_separation(state, , min_n=1, threshold=2.0)
 
 Separation of one student’s label deviations, from their estimator state.
 
@@ -321,16 +315,17 @@ that can be told apart from anything.
 Deviations, not mastery, are what is measured: the question is whether the labels
 differ *from each other*, and every label shares the same global skill.
 
-The Rasch formula assumes unshrunk (likelihood-only) measures, but the state holds
-*posteriors*, pulled toward zero by a `N(0, label_prior_var)` prior. Fed shrunk
-means and posterior variances directly, it reads roughly `G² - 1` instead of
-`G²` even when the prior is right, and much less at moderate data — labels that
-are separable get called noise. So each label is first de-shrunk to the estimate
-its evidence alone supports: error variance `s² = 1 / (1/var - 1/label_prior_var)`
-and measure `mu * s² / var`. A label with no evidence beyond the prior
-(`var >= label_prior_var`) is left out. Pass the estimator’s own
-`label_prior_var` ([`LearnerModel.separation`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.separation) does); `None` treats the state as
-already unshrunk.
+The state holds *posteriors* (means `mu` shrunk toward zero, variances `var`),
+not the likelihood-only measures the classical Rasch formula assumes. So this is the
+posterior (EAP) form of the index: the signal is the spread of the posterior means,
+the noise their mean posterior variance, `G = sd(mu) / sqrt(mean(var))`, i.e.
+reliability `var(mu) / (var(mu) + mean(var))`. In the normal-normal case with a
+correctly specified prior it equals the likelihood-based `G` in expectation,
+without having to know the prior. It also stays honest when the estimator has
+re-opened a stale label’s variance without moving its mean (`forget_per_week`):
+that only adds noise, so it can only lower `G` – whereas undoing a presumed
+shrinkage there would attribute a whole history’s mean to the little evidence the
+variance still shows, and call noise distinguishable.
 
 * **Return type:**
   [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
@@ -765,18 +760,18 @@ True
 
 ### Functions
 
-| [`estimate_store`](_autosummary/learny.tracing.html.md#learny.tracing.estimate_store)(\*[, rootdir])                 | Per-student mastery estimates, keyed by student.                                                                   |
-|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| [`response_log`](_autosummary/learny.tracing.html.md#learny.tracing.response_log)(\*[, rootdir])                   | The default response log, under `~/.local/share/learny/responses/`.                                                |
-| [`data_dir`](_autosummary/learny.tracing.html.md#learny.tracing.data_dir)([kind, app_name])                    | The per-kind data directory, created on demand.                                                                    |
-| [`label_separation`](_autosummary/learny.tracing.html.md#learny.tracing.label_separation)(state, \*[, min_n, ...])     | Separation of one student's label deviations, from their estimator state.                                          |
-| [`calibration`](_autosummary/learny.tracing.html.md#learny.tracing.calibration)(log, \*, items, estimator[, ...]) | Prequential calibration of `estimator` over the students in `log`.                                                 |
-| [`prequential`](_autosummary/learny.tracing.html.md#learny.tracing.prequential)(responses, \*, items, estimator)  | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                      |
-| [`restrict_labels`](_autosummary/learny.tracing.html.md#learny.tracing.restrict_labels)(items, \*, keep[, ...])       | Project an item bank onto a subset of its labels — one facet, say.                                                 |
-| [`difficulty_from_rank`](_autosummary/learny.tracing.html.md#learny.tracing.difficulty_from_rank)(rank, n_ranks)           | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
-| [`mark_not_reached`](_autosummary/learny.tracing.html.md#learny.tracing.mark_not_reached)(responses)                   | Flag the trailing run of blanks in one sitting as *not reached*.                                                   |
-| [`expit`](_autosummary/learny.tracing.html.md#learny.tracing.expit)(x)                                      | The logistic function, overflow-safe at the tails.                                                                 |
-| [`logit`](_autosummary/learny.tracing.html.md#learny.tracing.logit)(p, \*[, eps])                           | Inverse of [`expit()`](_autosummary/learny.tracing.html.md#learny.tracing.expit), clamped away from 0 and 1 so it stays finite. |
+| [`estimate_store`](_autosummary/learny.tracing.html.md#learny.tracing.estimate_store)(\*[, rootdir])                   | Per-student mastery estimates, keyed by student.                                                                   |
+|--------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [`response_log`](_autosummary/learny.tracing.html.md#learny.tracing.response_log)(\*[, rootdir])                     | The default response log, under `~/.local/share/learny/responses/`.                                                |
+| [`data_dir`](_autosummary/learny.tracing.html.md#learny.tracing.data_dir)([kind, app_name])                      | The per-kind data directory, created on demand.                                                                    |
+| [`label_separation`](_autosummary/learny.tracing.html.md#learny.tracing.label_separation)(state, \*[, min_n, threshold]) | Separation of one student's label deviations, from their estimator state.                                          |
+| [`calibration`](_autosummary/learny.tracing.html.md#learny.tracing.calibration)(log, \*, items, estimator[, ...])   | Prequential calibration of `estimator` over the students in `log`.                                                 |
+| [`prequential`](_autosummary/learny.tracing.html.md#learny.tracing.prequential)(responses, \*, items, estimator)    | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                      |
+| [`restrict_labels`](_autosummary/learny.tracing.html.md#learny.tracing.restrict_labels)(items, \*, keep[, ...])         | Project an item bank onto a subset of its labels — one facet, say.                                                 |
+| [`difficulty_from_rank`](_autosummary/learny.tracing.html.md#learny.tracing.difficulty_from_rank)(rank, n_ranks)             | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
+| [`mark_not_reached`](_autosummary/learny.tracing.html.md#learny.tracing.mark_not_reached)(responses)                     | Flag the trailing run of blanks in one sitting as *not reached*.                                                   |
+| [`expit`](_autosummary/learny.tracing.html.md#learny.tracing.expit)(x)                                        | The logistic function, overflow-safe at the tails.                                                                 |
+| [`logit`](_autosummary/learny.tracing.html.md#learny.tracing.logit)(p, \*[, eps])                             | Inverse of [`expit()`](_autosummary/learny.tracing.html.md#learny.tracing.expit), clamped away from 0 and 1 so it stays finite. |
 
 ### Classes
 
@@ -1036,7 +1031,6 @@ state that live recording produced.
 How distinguishable this student’s labels are; see [`label_separation()`](_autosummary/learny.tracing.html.md#learny.tracing.label_separation).
 
 Check `.distinguishable` before acting on an ordering from [`weakest()`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel.weakest).
-The deviations are de-shrunk with this model’s own estimator prior.
 
 * **Return type:**
   [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
@@ -1518,7 +1512,7 @@ The logistic function, overflow-safe at the tails.
 0.0
 ```
 
-### learny.tracing.label_separation(state, , min_n=1, threshold=2.0, label_prior_var=0.25)
+### learny.tracing.label_separation(state, , min_n=1, threshold=2.0)
 
 Separation of one student’s label deviations, from their estimator state.
 
@@ -1530,16 +1524,17 @@ that can be told apart from anything.
 Deviations, not mastery, are what is measured: the question is whether the labels
 differ *from each other*, and every label shares the same global skill.
 
-The Rasch formula assumes unshrunk (likelihood-only) measures, but the state holds
-*posteriors*, pulled toward zero by a `N(0, label_prior_var)` prior. Fed shrunk
-means and posterior variances directly, it reads roughly `G² - 1` instead of
-`G²` even when the prior is right, and much less at moderate data — labels that
-are separable get called noise. So each label is first de-shrunk to the estimate
-its evidence alone supports: error variance `s² = 1 / (1/var - 1/label_prior_var)`
-and measure `mu * s² / var`. A label with no evidence beyond the prior
-(`var >= label_prior_var`) is left out. Pass the estimator’s own
-`label_prior_var` ([`LearnerModel.separation`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.separation) does); `None` treats the state as
-already unshrunk.
+The state holds *posteriors* (means `mu` shrunk toward zero, variances `var`),
+not the likelihood-only measures the classical Rasch formula assumes. So this is the
+posterior (EAP) form of the index: the signal is the spread of the posterior means,
+the noise their mean posterior variance, `G = sd(mu) / sqrt(mean(var))`, i.e.
+reliability `var(mu) / (var(mu) + mean(var))`. In the normal-normal case with a
+correctly specified prior it equals the likelihood-based `G` in expectation,
+without having to know the prior. It also stays honest when the estimator has
+re-opened a stale label’s variance without moving its mean (`forget_per_week`):
+that only adds noise, so it can only lower `G` – whereas undoing a presumed
+shrinkage there would attribute a whole history’s mean to the little evidence the
+variance still shows, and call noise distinguishable.
 
 * **Return type:**
   [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
@@ -1782,7 +1777,6 @@ state that live recording produced.
 How distinguishable this student’s labels are; see `label_separation()`.
 
 Check `.distinguishable` before acting on an ordering from [`weakest()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.weakest).
-The deviations are de-shrunk with this model’s own estimator prior.
 
 * **Return type:**
   [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
@@ -2148,7 +2142,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-09-22 14:29 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/5ba87ae5e6d6e788a5983b225481e9511e3cc6f3"><code>5ba87ae</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-22 15:08 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/e42fc6b801f17c1f84837d20e04fae9c103a1f10"><code>e42fc6b</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -2157,7 +2151,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/5ba87ae5e6d6e788a5983b225481e9511e3cc6f3"><code>5ba87ae5e6d6e788a5983b225481e9511e3cc6f3</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/e42fc6b801f17c1f84837d20e04fae9c103a1f10"><code>e42fc6b801f17c1f84837d20e04fae9c103a1f10</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -2168,9 +2162,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/35740455867">35740455867</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/35745070824">35745070824</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>5ba87ae5e6d6e788a5983b225481e9511e3cc6f3</code> (in the history of the built commit) |
+| Event commit | <code>e42fc6b801f17c1f84837d20e04fae9c103a1f10</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2201,7 +2195,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout 5ba87ae5e6d6e788a5983b225481e9511e3cc6f3
+git checkout e42fc6b801f17c1f84837d20e04fae9c103a1f10
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

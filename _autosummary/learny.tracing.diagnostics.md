@@ -25,17 +25,16 @@ neither looks at more than one student at a time unless asked to.
 
 ### Module Attributes
 
-| [`DEFAULT_SEPARATION_THRESHOLD`](#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD)   | Separation at which an ordering of labels is worth believing.                                                                                                                                  |
-|---------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`DEFAULT_LABEL_PRIOR_VAR`](#learny.tracing.diagnostics.DEFAULT_LABEL_PRIOR_VAR)        | The prior variance [`label_separation()`](#learny.tracing.diagnostics.label_separation) assumes the label deviations were shrunk with — the default estimator's, so the two cannot drift apart. |
-| [`DEFAULT_N_BINS`](#learny.tracing.diagnostics.DEFAULT_N_BINS)                 | Equal-width probability bins for the reliability table.                                                                                                                                        |
+| [`DEFAULT_SEPARATION_THRESHOLD`](#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD)   | Separation at which an ordering of labels is worth believing.   |
+|---------------------------------------------------------------------------------|-----------------------------------------------------------------|
+| [`DEFAULT_N_BINS`](#learny.tracing.diagnostics.DEFAULT_N_BINS)                 | Equal-width probability bins for the reliability table.         |
 
 ### Functions
 
-| [`label_separation`](#learny.tracing.diagnostics.label_separation)(state, \*[, min_n, ...])     | Separation of one student's label deviations, from their estimator state.     |
-|------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`prequential`](#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)  | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
-| [`calibration`](#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...]) | Prequential calibration of `estimator` over the students in `log`.            |
+| [`label_separation`](#learny.tracing.diagnostics.label_separation)(state, \*[, min_n, threshold])   | Separation of one student's label deviations, from their estimator state.     |
+|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`prequential`](#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)      | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
+| [`calibration`](#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...])     | Prequential calibration of `estimator` over the students in `log`.            |
 
 ### Classes
 
@@ -82,11 +81,6 @@ Build a report from `(predicted, observed)` pairs, observed in `{0, 1}`.
 >>> [(b.n, b.observed_rate) for b in r.bins]
 [(2, 0.5), (2, 1.0)]
 ```
-
-### learny.tracing.diagnostics.DEFAULT_LABEL_PRIOR_VAR *= 0.25*
-
-The prior variance [`label_separation()`](#learny.tracing.diagnostics.label_separation) assumes the label deviations were shrunk
-with — the default estimator’s, so the two cannot drift apart.
 
 ### learny.tracing.diagnostics.DEFAULT_N_BINS *= 10*
 
@@ -171,7 +165,7 @@ there is no right answer to compare them to.
 True
 ```
 
-### learny.tracing.diagnostics.label_separation(state, , min_n=1, threshold=2.0, label_prior_var=0.25)
+### learny.tracing.diagnostics.label_separation(state, , min_n=1, threshold=2.0)
 
 Separation of one student’s label deviations, from their estimator state.
 
@@ -183,16 +177,17 @@ that can be told apart from anything.
 Deviations, not mastery, are what is measured: the question is whether the labels
 differ *from each other*, and every label shares the same global skill.
 
-The Rasch formula assumes unshrunk (likelihood-only) measures, but the state holds
-*posteriors*, pulled toward zero by a `N(0, label_prior_var)` prior. Fed shrunk
-means and posterior variances directly, it reads roughly `G² - 1` instead of
-`G²` even when the prior is right, and much less at moderate data — labels that
-are separable get called noise. So each label is first de-shrunk to the estimate
-its evidence alone supports: error variance `s² = 1 / (1/var - 1/label_prior_var)`
-and measure `mu * s² / var`. A label with no evidence beyond the prior
-(`var >= label_prior_var`) is left out. Pass the estimator’s own
-`label_prior_var` ([`LearnerModel.separation`](learny.tracing.model.md#learny.tracing.model.LearnerModel.separation) does); `None` treats the state as
-already unshrunk.
+The state holds *posteriors* (means `mu` shrunk toward zero, variances `var`),
+not the likelihood-only measures the classical Rasch formula assumes. So this is the
+posterior (EAP) form of the index: the signal is the spread of the posterior means,
+the noise their mean posterior variance, `G = sd(mu) / sqrt(mean(var))`, i.e.
+reliability `var(mu) / (var(mu) + mean(var))`. In the normal-normal case with a
+correctly specified prior it equals the likelihood-based `G` in expectation,
+without having to know the prior. It also stays honest when the estimator has
+re-opened a stale label’s variance without moving its mean (`forget_per_week`):
+that only adds noise, so it can only lower `G` – whereas undoing a presumed
+shrinkage there would attribute a whole history’s mean to the little evidence the
+variance still shows, and call noise distinguishable.
 
 * **Return type:**
   [`LabelSeparation`](#learny.tracing.diagnostics.LabelSeparation)

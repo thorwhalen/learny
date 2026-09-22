@@ -119,7 +119,6 @@ state that live recording produced.
 How distinguishable this student’s labels are; see `label_separation()`.
 
 Check `.distinguishable` before acting on an ordering from [`weakest()`](#learny.tracing.model.LearnerModel.weakest).
-The deviations are de-shrunk with this model’s own estimator prior.
 
 * **Return type:**
   [`LabelSeparation`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)

@@ -742,7 +742,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">Estimator</span><span class="p">,</span> <span class="n">RaschEstimator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">Estimator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Outcome</span><span class="p">,</span> <span class="n">Response</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
@@ -753,7 +753,6 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"CalibrationReport"</span><span class="p">,</span>
     <span class="s2">"calibration"</span><span class="p">,</span>
     <span class="s2">"DEFAULT_SEPARATION_THRESHOLD"</span><span class="p">,</span>
-    <span class="s2">"DEFAULT_LABEL_PRIOR_VAR"</span><span class="p">,</span>
     <span class="s2">"DEFAULT_N_BINS"</span><span class="p">,</span>
 <span class="p">]</span>
 
@@ -762,10 +761,6 @@ window.runMermaid = runMermaid;</script>
 <span class="c1">#: bar for a ranking one acts on. Below ``G = 1`` (reliability 0.5) the spread of the</span>
 <span class="c1">#: estimates is mostly their own noise.</span>
 <span class="n">DEFAULT_SEPARATION_THRESHOLD</span> <span class="o">=</span> <span class="mf">2.0</span>
-
-<span class="c1">#: The prior variance :func:`label_separation` assumes the label deviations were shrunk</span>
-<span class="c1">#: with — the default estimator's, so the two cannot drift apart.</span>
-<span class="n">DEFAULT_LABEL_PRIOR_VAR</span> <span class="o">=</span> <span class="n">RaschEstimator</span><span class="o">.</span><span class="n">label_prior_var</span>
 
 <span class="c1">#: Equal-width probability bins for the reliability table.</span>
 <span class="n">DEFAULT_N_BINS</span> <span class="o">=</span> <span class="mi">10</span>
@@ -840,7 +835,6 @@ window.runMermaid = runMermaid;</script>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">min_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_SEPARATION_THRESHOLD</span><span class="p">,</span>
-    <span class="n">label_prior_var</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">DEFAULT_LABEL_PRIOR_VAR</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelSeparation</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Separation of one student's label deviations, from their estimator state.</span>
 
@@ -852,17 +846,17 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    Deviations, not mastery, are what is measured: the question is whether the labels</span>
 <span class="sd">    differ *from each other*, and every label shares the same global skill.</span>
 
-<span class="sd">    The Rasch formula assumes unshrunk (likelihood-only) measures, but the state holds</span>
-<span class="sd">    *posteriors*, pulled toward zero by a ``N(0, label_prior_var)`` prior. Fed shrunk</span>
-<span class="sd">    means and posterior variances directly, it reads roughly ``G² - 1`` instead of</span>
-<span class="sd">    ``G²`` even when the prior is right, and much less at moderate data — labels that</span>
-<span class="sd">    are separable get called noise. So each label is first de-shrunk to the estimate</span>
-<span class="sd">    its evidence alone supports: error variance ``s² = 1 / (1/var - 1/label_prior_var)``</span>
-<span class="sd">    and measure ``mu * s² / var``. A label with no evidence beyond the prior</span>
-<span class="sd">    (``var &gt;= label_prior_var``) is left out. Pass the estimator's own</span>
-<span class="sd">    ``label_prior_var`` (:meth:`LearnerModel.separation</span>
-<span class="sd">    &lt;learny.tracing.model.LearnerModel.separation&gt;` does); ``None`` treats the state as</span>
-<span class="sd">    already unshrunk.</span>
+<span class="sd">    The state holds *posteriors* (means ``mu`` shrunk toward zero, variances ``var``),</span>
+<span class="sd">    not the likelihood-only measures the classical Rasch formula assumes. So this is the</span>
+<span class="sd">    posterior (EAP) form of the index: the signal is the spread of the posterior means,</span>
+<span class="sd">    the noise their mean posterior variance, ``G = sd(mu) / sqrt(mean(var))``, i.e.</span>
+<span class="sd">    reliability ``var(mu) / (var(mu) + mean(var))``. In the normal-normal case with a</span>
+<span class="sd">    correctly specified prior it equals the likelihood-based ``G`` in expectation,</span>
+<span class="sd">    without having to know the prior. It also stays honest when the estimator has</span>
+<span class="sd">    re-opened a stale label's variance without moving its mean (``forget_per_week``):</span>
+<span class="sd">    that only adds noise, so it can only lower ``G`` -- whereas undoing a presumed</span>
+<span class="sd">    shrinkage there would attribute a whole history's mean to the little evidence the</span>
+<span class="sd">    variance still shows, and call noise distinguishable.</span>
 
 <span class="sd">    &gt;&gt;&gt; state = {"labels": {</span>
 <span class="sd">    ...     "fractions": {"mu": 0.9, "var": 0.02, "n": 30},</span>
@@ -875,35 +869,23 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    &gt;&gt;&gt; label_separation(blurred).distinguishable   # nine labels, all noise</span>
 <span class="sd">    False</span>
 <span class="sd">    """</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">measure</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""``(measure, error variance)`` with the prior's shrinkage undone."""</span>
-        <span class="n">mu</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"mu"</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"var"</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">label_prior_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">mu</span><span class="p">,</span> <span class="n">var</span>
-        <span class="n">evidence_precision</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">var</span> <span class="o">-</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">label_prior_var</span>
-        <span class="k">if</span> <span class="n">evidence_precision</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>  <span class="c1"># nothing but the prior: no measure to separate</span>
-        <span class="n">error_var</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">evidence_precision</span>
-        <span class="k">return</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">error_var</span> <span class="o">/</span> <span class="n">var</span><span class="p">,</span> <span class="n">error_var</span>
-
-    <span class="n">measures</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">m</span>
-        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"labels"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">min_n</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span> <span class="o">:=</span> <span class="n">measure</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"labels"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">min_n</span>
     <span class="p">]</span>
-    <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">measures</span><span class="p">)</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">LabelSeparation</span><span class="p">(</span>
             <span class="n">n_labels</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">observed_sd</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rmse</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span>
         <span class="p">)</span>
-    <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">measures</span><span class="p">]</span>
-    <span class="n">mean</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="o">/</span> <span class="n">k</span>
-    <span class="n">observed_var</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mf">0.0</span>
-    <span class="n">mse</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">measures</span><span class="p">)</span> <span class="o">/</span> <span class="n">k</span>
+    <span class="n">mus</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="s2">"mu"</span><span class="p">])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">]</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">mus</span><span class="p">)</span> <span class="o">/</span> <span class="n">k</span>
+    <span class="n">signal_var</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">m</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mus</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="n">mse</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="s2">"var"</span><span class="p">])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">)</span> <span class="o">/</span> <span class="n">k</span>
+    <span class="c1"># ``LabelSeparation`` reads true variance as observed minus error; in the posterior</span>
+    <span class="c1"># form the signal is ``var(mu)`` itself, so "observed" is signal plus error.</span>
     <span class="k">return</span> <span class="n">LabelSeparation</span><span class="p">(</span>
         <span class="n">n_labels</span><span class="o">=</span><span class="n">k</span><span class="p">,</span>
-        <span class="n">observed_sd</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">observed_var</span><span class="p">),</span>
+        <span class="n">observed_sd</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">signal_var</span> <span class="o">+</span> <span class="n">mse</span><span class="p">),</span>
         <span class="n">rmse</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mse</span><span class="p">),</span>
         <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
     <span class="p">)</span></div>
