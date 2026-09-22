@@ -29,7 +29,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from learny.tracing.estimators import Estimator, RaschEstimator
+from learny.tracing.estimators import Estimator
 from learny.tracing.records import Item, Outcome, Response
 
 __all__ = [
@@ -40,7 +40,6 @@ __all__ = [
     "CalibrationReport",
     "calibration",
     "DEFAULT_SEPARATION_THRESHOLD",
-    "DEFAULT_LABEL_PRIOR_VAR",
     "DEFAULT_N_BINS",
 ]
 
@@ -49,10 +48,6 @@ __all__ = [
 #: bar for a ranking one acts on. Below ``G = 1`` (reliability 0.5) the spread of the
 #: estimates is mostly their own noise.
 DEFAULT_SEPARATION_THRESHOLD = 2.0
-
-#: The prior variance :func:`label_separation` assumes the label deviations were shrunk
-#: with — the default estimator's, so the two cannot drift apart.
-DEFAULT_LABEL_PRIOR_VAR = RaschEstimator.label_prior_var
 
 #: Equal-width probability bins for the reliability table.
 DEFAULT_N_BINS = 10
@@ -122,7 +117,6 @@ def label_separation(
     *,
     min_n: int = 1,
     threshold: float = DEFAULT_SEPARATION_THRESHOLD,
-    label_prior_var: float | None = DEFAULT_LABEL_PRIOR_VAR,
 ) -> LabelSeparation:
     """Separation of one student's label deviations, from their estimator state.
 
@@ -134,17 +128,17 @@ def label_separation(
     Deviations, not mastery, are what is measured: the question is whether the labels
     differ *from each other*, and every label shares the same global skill.
 
-    The Rasch formula assumes unshrunk (likelihood-only) measures, but the state holds
-    *posteriors*, pulled toward zero by a ``N(0, label_prior_var)`` prior. Fed shrunk
-    means and posterior variances directly, it reads roughly ``G² - 1`` instead of
-    ``G²`` even when the prior is right, and much less at moderate data — labels that
-    are separable get called noise. So each label is first de-shrunk to the estimate
-    its evidence alone supports: error variance ``s² = 1 / (1/var - 1/label_prior_var)``
-    and measure ``mu * s² / var``. A label with no evidence beyond the prior
-    (``var >= label_prior_var``) is left out. Pass the estimator's own
-    ``label_prior_var`` (:meth:`LearnerModel.separation
-    <learny.tracing.model.LearnerModel.separation>` does); ``None`` treats the state as
-    already unshrunk.
+    The state holds *posteriors* (means ``mu`` shrunk toward zero, variances ``var``),
+    not the likelihood-only measures the classical Rasch formula assumes. So this is the
+    posterior (EAP) form of the index: the signal is the spread of the posterior means,
+    the noise their mean posterior variance, ``G = sd(mu) / sqrt(mean(var))``, i.e.
+    reliability ``var(mu) / (var(mu) + mean(var))``. In the normal-normal case with a
+    correctly specified prior it equals the likelihood-based ``G`` in expectation,
+    without having to know the prior. It also stays honest when the estimator has
+    re-opened a stale label's variance without moving its mean (``forget_per_week``):
+    that only adds noise, so it can only lower ``G`` -- whereas undoing a presumed
+    shrinkage there would attribute a whole history's mean to the little evidence the
+    variance still shows, and call noise distinguishable.
 
     >>> state = {"labels": {
     ...     "fractions": {"mu": 0.9, "var": 0.02, "n": 30},
@@ -157,35 +151,23 @@ def label_separation(
     >>> label_separation(blurred).distinguishable   # nine labels, all noise
     False
     """
-
-    def measure(entry: Mapping[str, Any]) -> tuple[float, float] | None:
-        """``(measure, error variance)`` with the prior's shrinkage undone."""
-        mu, var = float(entry["mu"]), float(entry["var"])
-        if label_prior_var is None:
-            return mu, var
-        evidence_precision = 1.0 / var - 1.0 / label_prior_var
-        if evidence_precision <= 0:
-            return None  # nothing but the prior: no measure to separate
-        error_var = 1.0 / evidence_precision
-        return mu * error_var / var, error_var
-
-    measures = [
-        m
-        for e in state.get("labels", {}).values()
-        if int(e.get("n", 0)) >= min_n and (m := measure(e)) is not None
+    entries = [
+        e for e in state.get("labels", {}).values() if int(e.get("n", 0)) >= min_n
     ]
-    k = len(measures)
+    k = len(entries)
     if k == 0:
         return LabelSeparation(
             n_labels=0, observed_sd=0.0, rmse=0.0, threshold=threshold
         )
-    xs = [x for x, _ in measures]
-    mean = sum(xs) / k
-    observed_var = sum((x - mean) ** 2 for x in xs) / (k - 1) if k > 1 else 0.0
-    mse = sum(v for _, v in measures) / k
+    mus = [float(e["mu"]) for e in entries]
+    mean = sum(mus) / k
+    signal_var = sum((m - mean) ** 2 for m in mus) / (k - 1) if k > 1 else 0.0
+    mse = sum(float(e["var"]) for e in entries) / k
+    # ``LabelSeparation`` reads true variance as observed minus error; in the posterior
+    # form the signal is ``var(mu)`` itself, so "observed" is signal plus error.
     return LabelSeparation(
         n_labels=k,
-        observed_sd=math.sqrt(observed_var),
+        observed_sd=math.sqrt(signal_var + mse),
         rmse=math.sqrt(mse),
         threshold=threshold,
     )

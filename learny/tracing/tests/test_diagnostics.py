@@ -5,6 +5,7 @@ labels cannot be told apart, and the model must be able to *say* so. All data he
 synthetic.
 """
 
+import dataclasses
 import math
 import random
 
@@ -249,8 +250,8 @@ class TestRestrictLabels:
         assert (out.id, out.difficulty, dict(out.meta)) == ("q", 0.4, {"src": "x"})
 
 
-class TestSeparationUndoesShrinkage:
-    """The Rasch formula needs unshrunk measures; the state holds posteriors."""
+class TestSeparationOfPosteriors:
+    """The state holds posteriors; the separation must be read accordingly."""
 
     PRIOR = 0.25
 
@@ -259,32 +260,21 @@ class TestSeparationUndoesShrinkage:
         var = 1.0 / (1.0 / self.PRIOR + 1.0 / s2)
         return {"mu": x * var / s2, "var": var, "n": 10}
 
-    def test_recovers_the_likelihood_measures_exactly(self):
-        xs, s2 = [-1.5, -0.5, 0.0, 0.5, 1.5], 0.1
-        state = {"labels": {f"l{i}": self._posterior(x, s2) for i, x in enumerate(xs)}}
-        sep = label_separation(state, label_prior_var=self.PRIOR)
-        assert sep.rmse == pytest.approx(math.sqrt(s2))
-        mean = sum(xs) / len(xs)
-        sd = math.sqrt(sum((x - mean) ** 2 for x in xs) / (len(xs) - 1))
-        assert sep.observed_sd == pytest.approx(sd)
-
-    def test_shrunk_reading_calls_separable_labels_noise(self):
-        # True G = sqrt(2.5 / 0.4 - 1) ~ 2.3: separable. Read without undoing the
-        # prior's shrinkage, the same state looks like noise.
-        xs, s2 = [-2.0, -1.0, 0.0, 1.0, 2.0], 0.4
-        state = {"labels": {f"l{i}": self._posterior(x, s2) for i, x in enumerate(xs)}}
-        assert label_separation(state, label_prior_var=self.PRIOR).distinguishable
-        assert not label_separation(state, label_prior_var=None).distinguishable
-
-    def test_a_label_with_only_its_prior_is_left_out(self):
+    def test_matches_the_likelihood_separation_under_a_correct_prior(self):
+        # True deviations drawn from the prior, measured with error s2: the likelihood
+        # separation is sqrt(PRIOR / s2). Read off the posteriors, it must come back.
+        rng = random.Random(0)
+        s2 = 0.05
         state = {
             "labels": {
-                "a": self._posterior(1.0, 0.05),
-                "b": self._posterior(-1.0, 0.05),
-                "c": {"mu": 0.0, "var": self.PRIOR, "n": 1},  # e.g. forgotten back
+                f"l{i}": self._posterior(
+                    rng.gauss(0, math.sqrt(self.PRIOR)) + rng.gauss(0, math.sqrt(s2)), s2
+                )
+                for i in range(4000)
             }
         }
-        assert label_separation(state, label_prior_var=self.PRIOR).n_labels == 2
+        expected = math.sqrt(self.PRIOR / s2)
+        assert label_separation(state).separation == pytest.approx(expected, rel=0.05)
 
     def test_no_true_spread_is_not_distinguishable(self):
         items = {
@@ -296,16 +286,38 @@ class TestSeparationUndoesShrinkage:
             model = _model(items, _simulate(items, flat, n=300, seed=seed))
             assert not model.separation("s").distinguishable
 
-    def test_model_uses_its_own_estimator_prior(self, true_dev):
+    @pytest.mark.parametrize("days_between_responses", [1, 7])
+    def test_forgetting_does_not_make_noise_distinguishable(self, days_between_responses):
+        """Timestamped responses let ``forget_per_week`` re-open a label's variance while
+        keeping its mean. Undoing a presumed prior shrinkage (#11) then blew each mean up
+        by ``1 / (1 - var / label_prior_var)`` and called pure noise distinguishable in
+        most runs."""
         items = {
             f"q{i}": Item(f"q{i}", labels=(LABELS[i % 9],), difficulty=0.5)
             for i in range(45)
         }
-        est = RaschEstimator(label_prior_var=1.0)
-        model = LearnerModel(items=items, estimator=est, log={}, estimates={})
-        model.record_many(_simulate(items, true_dev, n=300))
-        state = model.estimates["s"]
-        assert model.separation("s") == label_separation(state, label_prior_var=1.0)
+        flat = {label: 0.0 for label in LABELS}
+        gap = days_between_responses * 86400
+        for seed in range(10):
+            responses = [
+                dataclasses.replace(r, at=i * gap)
+                for i, r in enumerate(_simulate(items, flat, n=300, seed=seed))
+            ]
+            model = _model(items, responses)
+            assert not model.separation("s").distinguishable
+
+    def test_forgetting_does_not_inflate_real_separation(self, true_dev):
+        items = {
+            f"q{i}": Item(f"q{i}", labels=(LABELS[i % 9],), difficulty=0.5)
+            for i in range(45)
+        }
+        responses = _simulate(items, true_dev, n=400)
+        untimed = _model(items, responses).separation("s")
+        timed = _model(
+            items, [dataclasses.replace(r, at=i * 86400) for i, r in enumerate(responses)]
+        ).separation("s")
+        assert untimed.distinguishable
+        assert timed.separation <= untimed.separation
 
 
 class TestWeakestContract:
