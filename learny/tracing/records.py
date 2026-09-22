@@ -15,7 +15,7 @@ the log records what happened.
 from __future__ import annotations
 
 from collections.abc import Callable, Collection, Mapping, Sequence
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, replace
 from enum import Enum
 from typing import Any
 
@@ -210,11 +210,16 @@ def restrict_labels(
     >>> sorted(restrict_labels(bank, keep={'topic:fractions'}, drop_unlabelled=True))
     ['q1']
     """
+    if isinstance(keep, str):  # a str is a Collection of characters: never meant
+        raise TypeError(
+            f"keep={keep!r} is a single string; pass a collection such as {{{keep!r}}}, "
+            "or a predicate such as lambda label: label.startswith(...)"
+        )
     wanted = keep if callable(keep) else frozenset(keep).__contains__
 
     def project(item: Item) -> Item:
         weights = {label: w for label, w in item.weights.items() if wanted(label)}
-        return Item(item.id, labels=weights, difficulty=item.difficulty, meta=item.meta)
+        return replace(item, labels=weights)
 
     projected = {key: project(item) for key, item in items.items()}
     if drop_unlabelled:
