@@ -14,12 +14,12 @@ the log records what happened.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, field, asdict
 from enum import Enum
 from typing import Any
 
-__all__ = ["Outcome", "Item", "Response", "LabelWeights"]
+__all__ = ["Outcome", "Item", "Response", "LabelWeights", "restrict_labels"]
 
 #: Spellings seen in real answer keys, mapped to the canonical three. Extend by passing
 #: your own mapping at the adapter boundary rather than editing this.
@@ -179,3 +179,44 @@ class Response:
         """Inverse of :meth:`to_dict`, tolerant of unknown keys from a future version."""
         known = {f for f in ("student", "item", "outcome", "at", "meta")}
         return cls(**{k: v for k, v in d.items() if k in known})
+
+
+def restrict_labels(
+    items: Mapping[str, Item],
+    *,
+    keep: Collection[str] | Callable[[str], bool],
+    drop_unlabelled: bool = False,
+) -> dict[str, Item]:
+    """Project an item bank onto a subset of its labels — one facet, say.
+
+    Labels that never vary independently of each other cannot be told apart: tag every
+    item with nine labels and each label's deviation stays at the student's global
+    skill, whatever the data. Modelling one facet at a time is often what makes labels
+    separable (:func:`~learny.tracing.diagnostics.label_separation` measures it).
+    *Which* labels belong together is a judgement about the taxonomy, so the library
+    never collapses anything by itself; this is the explicit, opt-in way to do it.
+
+    ``keep`` is a collection of labels or a predicate on a label. Weights are preserved.
+    An item left with no labels still carries its difficulty and still informs the
+    student's global skill, so it is kept unless ``drop_unlabelled=True``.
+
+    >>> bank = {
+    ...     'q1': Item('q1', labels={'topic:fractions': 1.0, 'trap:units': 0.6}),
+    ...     'q2': Item('q2', labels=('trap:units',), difficulty=0.7),
+    ... }
+    >>> topics = restrict_labels(bank, keep=lambda label: label.startswith('topic:'))
+    >>> topics['q1'].weights, topics['q2'].weights, topics['q2'].difficulty
+    ({'topic:fractions': 1.0}, {}, 0.7)
+    >>> sorted(restrict_labels(bank, keep={'topic:fractions'}, drop_unlabelled=True))
+    ['q1']
+    """
+    wanted = keep if callable(keep) else frozenset(keep).__contains__
+
+    def project(item: Item) -> Item:
+        weights = {label: w for label, w in item.weights.items() if wanted(label)}
+        return Item(item.id, labels=weights, difficulty=item.difficulty, meta=item.meta)
+
+    projected = {key: project(item) for key, item in items.items()}
+    if drop_unlabelled:
+        projected = {key: item for key, item in projected.items() if item.weights}
+    return projected

@@ -17,6 +17,14 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import Any
 
+from learny.tracing.diagnostics import (
+    DEFAULT_N_BINS,
+    DEFAULT_SEPARATION_THRESHOLD,
+    CalibrationReport,
+    LabelSeparation,
+    calibration,
+    label_separation,
+)
 from learny.tracing.estimators import RaschEstimator, Estimator, Mastery
 from learny.tracing.records import Item, Outcome, Response
 from learny.tracing.stores import ResponseLog, estimate_store, response_log
@@ -106,14 +114,54 @@ class LearnerModel:
         """Per-label mastery for one student, weakest first when sorted by skill."""
         return self.estimator.mastery(self._state(student))
 
-    def weakest(self, student: str, n: int = 5) -> list[Mastery]:
+    def weakest(
+        self, student: str, n: int = 5, *, credible_below: float | None = None
+    ) -> list[Mastery]:
         """The ``n`` labels this student looks weakest on — what to practise next.
 
         Labels with no evidence are not included: the model has nothing to say about
         them, and saying it anyway is how a learner model loses trust.
+
+        ``credible_below=z`` goes one step further and keeps only labels whose deviation
+        from the student's own global skill is credibly negative — its upper bound
+        ``mu + z * sd`` below zero. With labels that cannot be told apart that returns
+        nothing, which is the honest answer. ``None`` (the default) ranks every label
+        with evidence; check :meth:`separation` before believing that ranking.
         """
         ranked = sorted(self.mastery(student).values(), key=lambda m: m.mu)
-        return ranked[:n]
+        if credible_below is None:
+            return ranked[:n]
+        deviations = self._state(student).get("labels", {})
+
+        def upper(label: str) -> float:
+            entry = deviations.get(label)
+            if entry is None:  # an estimator with another state layout: not credible
+                return float("inf")
+            return float(entry["mu"]) + credible_below * float(entry["var"]) ** 0.5
+
+        return [m for m in ranked if upper(m.label) < 0.0][:n]
+
+    # -- when to believe it --------------------------------------------------------
+
+    def separation(
+        self, student: str, *, threshold: float = DEFAULT_SEPARATION_THRESHOLD
+    ) -> LabelSeparation:
+        """How distinguishable this student's labels are; see :func:`label_separation`.
+
+        Check ``.distinguishable`` before acting on an ordering from :meth:`weakest`.
+        """
+        return label_separation(self._state(student), threshold=threshold)
+
+    def calibration(
+        self, students: Iterable[str] | None = None, *, n_bins: int = DEFAULT_N_BINS
+    ) -> CalibrationReport:
+        """Prequential calibration over the log; see :func:`calibration`.
+
+        Reads the log only; the estimate cache is neither used nor changed.
+        """
+        names = list(students) if students is not None else self._students()
+        log = {name: self._responses(name) for name in names}
+        return calibration(log, items=self.items, estimator=self.estimator, n_bins=n_bins)
 
     # -- the contract that makes the estimator replaceable ------------------------
 
@@ -159,3 +207,4 @@ class LearnerModel:
             return dict(self.estimates[student])
         except KeyError:
             return self.estimator.init()
+

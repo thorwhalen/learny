@@ -117,8 +117,37 @@ Before each update, a skill's variance grows with the time since it was last see
 
 - **Scheduling / spaced repetition.** A *retention* clock ("when should this come back?") and a *proficiency* clock ("how likely, right now?") are different models and should stay distinct. v1 is the proficiency clock only. When the retention clock is wanted, `t/kodokan/kodokan/learning.py` already implements `Leitner`, `SM2`, `FSRSLite` and `ConfusionWeighted` in Python behind a common interface, and already rebuilds state by replaying a history log — the same contract used here.
 - **Item taxonomy, tagging and inter-rater agreement.** A different package: this one consumes a taxonomy, it does not define one.
-- **Calibration reporting.** For a learner model, calibration matters more than AUC, and a model whose calibration you cannot plot should not be shown to a learner. v1 does not compute one. **This is the most important named next step**, and the prequential machinery for it is cheap: replay the log, score each prediction *before* its update, bin against observed frequency.
-- **Hyperparameter refitting.** The same prequential replay would fit `prior_var`, `label_prior_var`, `forget_per_week` and `abstain_weight` over a small grid. Out of scope now; it needs no new seam when it arrives.
+- **Hyperparameter refitting.** The prequential replay in `learny.tracing.diagnostics` (`prequential()`) would fit `prior_var`, `label_prior_var`, `forget_per_week` and `abstain_weight` over a small grid. Out of scope now; it needs no new seam when it arrives.
+
+## Decisions of 2026-09-22 (issue #5): label dimensionality, pooling, scope
+
+### 7. Model labels as given; measure whether they can be told apart; never collapse silently
+
+The real-data finding — nine labels per item left every label indistinguishable from overall skill, one facet (~1.7 labels per item) gave four times the separation — is structural, not only a matter of sample size. In `_aggregate` each of an item's *k* labels gets share `1/k`, so it receives `1/k²` of the item's information per response. At nine labels that is 1/81; at 1.7 it is about 1/3. More data does not fix a design in which the labels never vary independently.
+
+- **Default: labels are modelled exactly as the item bank gives them.** Whether a taxonomy should be collapsed for modelling is a judgement about that taxonomy, and auto-collapsing would silently change what a label means.
+- **The model now says when its ordering is noise.** `LearnerModel.separation(student)` returns the Rasch separation index over the label *deviations* (`G = true SD / RMSE`, reliability `G²/(1+G²)`, strata `(4G+1)/3`). `distinguishable` is `G ≥ 2` — reliability 0.8, about three strata, the usual bar for a ranking one acts on.
+- **Projection is explicit and opt-in.** `restrict_labels(items, keep=...)` projects a bank onto one facet. It lives here, not in an item-bank package, because its signature is `Mapping[str, Item] -> Mapping[str, Item]` and needs no knowledge of any taxonomy.
+- **`weakest(..., credible_below=z)`** returns only labels whose deviation is credibly below the student's own global skill; with indistinguishable labels it returns nothing, which is the honest answer. **The default is unchanged** (`None`, rank every label with evidence), because an existing consumer relies on it. Flipping the default to `credible_below=1.0` is the recommended next step, to be taken together with that consumer.
+
+### 8. Cross-student pooling: never implicit; if ever wanted, an exported, versioned prior
+
+Confirmed as the shape, and nothing is built now — it needs a population, which is outside the regime this package is designed for. When it is wanted, a population artifact has two halves with two different homes:
+
+- **Item difficulties** already enter through the `items=` seam, as an aggregate.
+- **A population prior on label deviations** (`{label: (mu, var)}`) is a prior, so it enters as **one keyword argument on the estimator, `RaschEstimator(label_priors=...)`**, replacing the constant `Skill(0, label_prior_var)` a label starts from.
+
+Either way the artifact is produced by a deliberate export step, versioned, and reviewable — what crosses between students is visible — never a side effect of fitting.
+
+### 9. Scope: `learny.tracing` is the learner model; the item bank is a separate package
+
+Item-label mapping, agent tagging, inter-rater agreement, per-label resource scoring and a faceted frontend belong to an **item-bank package that does not exist yet**. The contract between them is the one `learny` already has: the bank produces a `Mapping[str, Item]`, `Item(id, labels: Sequence[str] | Mapping[str, float], difficulty: float | None)`, with label weights carrying tagging reliability. **Dependency direction:** the bank may import `learny.tracing.records.Item`; `learny` never imports the bank.
+
+The 11+ vocabulary game assets (`learny/eleven_plus`) currently ship in the same distribution as the library. They should move out of the wheel before any first PyPI release; whether and when that release happens is the owner's decision.
+
+### Calibration reporting (was "the most important next step")
+
+Built: `LearnerModel.calibration()` / `diagnostics.calibration()` replays the log prequentially — each prediction is made from the state before its own response — and reports log loss against the know-only-the-base-rate baseline, Brier score, expected calibration error and a reliability table. Each student is replayed alone, exactly as in live use; only the scored pairs are pooled.
 
 ## Data, and the line it does not cross
 

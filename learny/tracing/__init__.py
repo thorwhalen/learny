@@ -14,6 +14,14 @@ lets the estimator be replaced later without a data migration, and it is why
 True
 """
 
+from learny.tracing.diagnostics import (
+    CalibrationBin,
+    CalibrationReport,
+    LabelSeparation,
+    calibration,
+    label_separation,
+    prequential,
+)
 from learny.tracing.estimators import (
     Estimator,
     Mastery,
@@ -25,7 +33,7 @@ from learny.tracing.estimators import (
     mark_not_reached,
 )
 from learny.tracing.model import LearnerModel
-from learny.tracing.records import Item, LabelWeights, Outcome, Response
+from learny.tracing.records import Item, LabelWeights, Outcome, Response, restrict_labels
 from learny.tracing.stores import ResponseLog, data_dir, estimate_store, response_log
 
 __all__ = [
@@ -45,7 +53,15 @@ __all__ = [
     "estimate_store",
     "response_log",
     "data_dir",
+    # when to believe it
+    "LabelSeparation",
+    "label_separation",
+    "CalibrationReport",
+    "CalibrationBin",
+    "calibration",
+    "prequential",
     # helpers
+    "restrict_labels",
     "difficulty_from_rank",
     "mark_not_reached",
     "expit",
