@@ -165,6 +165,12 @@ class Mastery:
     what makes two labels comparable. ``confidence`` is a genuine posterior quantity, not
     a heuristic: it falls out of the variance.
 
+    ``deviation`` is the label's posterior *relative to the student's own global skill*,
+    when the estimator has one (``None`` otherwise). It is what "credibly weaker than
+    their own level" is judged on (:meth:`LearnerModel.weakest
+    <learny.tracing.model.LearnerModel.weakest>`), so an estimator provides it through
+    this field rather than a caller reading the estimator's private state.
+
     >>> m = Mastery('fractions', Skill(mu=0.5, var=0.25, n=4), prior_var=1.0)
     >>> round(m.probability, 3)
     0.622
@@ -175,6 +181,7 @@ class Mastery:
     label: str
     skill: Skill
     prior_var: float = 1.0
+    deviation: Skill | None = field(default=None, kw_only=True)
 
     @property
     def mu(self) -> float:
@@ -493,6 +500,7 @@ class RaschEstimator:
                     mu=glob.mu + dev.mu, var=glob.var + dev.var, n=dev.n, t=dev.t
                 ),
                 prior_var=self.prior_var + self.label_prior_var,
+                deviation=dev,
             )
         return out
 

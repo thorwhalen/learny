@@ -15,7 +15,7 @@ and every part can be replaced without touching the others:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from typing import Any
+from typing import Any, Literal
 
 from learny.tracing.diagnostics import (
     DEFAULT_N_BINS,
@@ -29,7 +29,34 @@ from learny.tracing.estimators import RaschEstimator, Estimator, Mastery
 from learny.tracing.records import Item, Outcome, Response
 from learny.tracing.stores import ResponseLog, estimate_store, response_log
 
-__all__ = ["LearnerModel"]
+__all__ = ["LearnerModel", "Weakest", "DEFAULT_CREDIBLE_BELOW"]
+
+#: How many posterior standard deviations below the student's own level a label's
+#: deviation must be before :meth:`LearnerModel.weakest` calls it a weakness. 1.0 is a
+#: one-sided ~84% credible bound: strict enough that indistinguishable labels are not
+#: ranked as if they were, loose enough to fire on a few papers of real evidence.
+DEFAULT_CREDIBLE_BELOW = 1.0
+
+WeakestReason = Literal["no_evidence", "no_credible_weakness"]
+
+
+class Weakest(list):
+    """What :meth:`LearnerModel.weakest` returns: a list of ``Mastery``, plus why.
+
+    It *is* a list — it compares, iterates, slices and serialises like one — so callers
+    that treat the result as a list keep working. ``reason`` is ``None`` when the list is
+    non-empty and says why it is empty otherwise; see :meth:`LearnerModel.weakest`.
+
+    >>> w = Weakest(reason='no_evidence')
+    >>> w == [], w.reason
+    (True, 'no_evidence')
+    """
+
+    def __init__(
+        self, masteries: Iterable[Mastery] = (), *, reason: WeakestReason | None = None
+    ):
+        super().__init__(masteries)
+        self.reason = reason
 
 
 class LearnerModel:
@@ -115,31 +142,87 @@ class LearnerModel:
         return self.estimator.mastery(self._state(student))
 
     def weakest(
-        self, student: str, n: int = 5, *, credible_below: float | None = None
-    ) -> list[Mastery]:
-        """The ``n`` labels this student looks weakest on — what to practise next.
+        self,
+        student: str,
+        n: int = 5,
+        *,
+        credible_below: float | None = DEFAULT_CREDIBLE_BELOW,
+    ) -> Weakest:
+        """The labels this student is credibly weakest on — what to practise next.
 
-        Labels with no evidence are not included: the model has nothing to say about
+        By default a label is returned only when its deviation from the student's *own*
+        global skill is credibly negative: the upper bound ``mu + z * sd`` of
+        :attr:`Mastery.deviation <learny.tracing.estimators.Mastery.deviation>` is below
+        zero, with ``z = credible_below`` (default :data:`DEFAULT_CREDIBLE_BELOW`). The
+        survivors are ranked worst first and the first ``n`` returned. ``z = 0`` keeps
+        every label whose deviation is merely below zero on average; larger ``z``
+        demands more certainty. ``credible_below=None`` switches the gate off and ranks
+        every label with evidence by posterior mean — check :meth:`separation` before
+        believing that ranking.
+
+        Labels with no evidence are never included: the model has nothing to say about
         them, and saying it anyway is how a learner model loses trust.
 
-        ``credible_below=z`` goes one step further and keeps only labels whose deviation
-        from the student's own global skill is credibly negative — its upper bound
-        ``mu + z * sd`` below zero. With labels that cannot be told apart that returns
-        nothing, which is the honest answer. ``None`` (the default) ranks every label
-        with evidence; check :meth:`separation` before believing that ranking.
+        **An empty answer is common and says why.** The result is a list (a
+        :class:`Weakest`) whose ``reason`` is ``None`` when it holds labels, and
+        otherwise one of:
+
+        * ``"no_evidence"`` — the student has answered nothing that carries a label;
+        * ``"no_credible_weakness"`` — there is evidence, but no label is credibly
+          below the student's own level. That is a statement about *relative*
+          weakness, not "nothing to practise": practise at the student's overall level
+          (``model.estimator.skill(state)`` for the default estimator).
+
+        With the default estimator the split between "globally weak" and "weak on this
+        label" comes from the priors, so part of a uniform shortfall is attributed to
+        every label: a student who gets nearly everything wrong can see several labels
+        returned here, in an order that means little. :meth:`separation` says whether
+        an order among the returned labels is worth believing.
+
+        Raises ``ValueError`` for a negative ``credible_below`` (which would admit labels
+        credibly *above* the student's level), and ``TypeError`` when the gate is on but
+        the estimator's :class:`~learny.tracing.estimators.Mastery` values carry no
+        ``deviation`` — rather than silently returning nothing.
+
+        >>> items = {f'q{i}': Item(f'q{i}', labels=('area' if i % 2 else 'sums',))
+        ...          for i in range(40)}
+        >>> model = LearnerModel(items=items, log={}, estimates={})
+        >>> model.weakest('ada')
+        []
+        >>> model.weakest('ada').reason
+        'no_evidence'
+        >>> for i in range(40):  # right on every sum, wrong on every area question
+        ...     model.record('ada', f'q{i}', 'wrong' if i % 2 else 'correct')
+        >>> [m.label for m in model.weakest('ada')]
+        ['area']
+        >>> [m.label for m in model.weakest('ada', credible_below=None)]  # plain ranking
+        ['area', 'sums']
         """
+        if credible_below is not None and not credible_below >= 0:
+            raise ValueError(
+                f"credible_below must be >= 0 (or None to rank without a gate), got "
+                f"{credible_below!r}: a negative z admits labels credibly above the "
+                "student's own level."
+            )
         ranked = sorted(self.mastery(student).values(), key=lambda m: m.mu)
+        if not ranked:
+            return Weakest(reason="no_evidence")
         if credible_below is None:
-            return ranked[:n]
-        deviations = self._state(student).get("labels", {})
-
-        def upper(label: str) -> float:
-            entry = deviations.get(label)
-            if entry is None:  # an estimator with another state layout: not credible
-                return float("inf")
-            return float(entry["mu"]) + credible_below * float(entry["var"]) ** 0.5
-
-        return [m for m in ranked if upper(m.label) < 0.0][:n]
+            return Weakest(ranked[:n])
+        if any(m.deviation is None for m in ranked):
+            raise TypeError(
+                f"weakest(credible_below={credible_below!r}) needs each Mastery to carry "
+                f"a .deviation (the label relative to the student's global skill), and "
+                f"{type(self.estimator).__name__}.mastery() does not provide one. Fill "
+                "Mastery.deviation in the estimator, or pass credible_below=None to rank "
+                "by posterior mean without the gate."
+            )
+        credible = [
+            m for m in ranked if m.deviation.mu + credible_below * m.deviation.sd < 0.0
+        ]
+        if not credible:
+            return Weakest(reason="no_credible_weakness")
+        return Weakest(credible[:n])
 
     # -- when to believe it --------------------------------------------------------
 

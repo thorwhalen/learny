@@ -266,21 +266,21 @@ class TestLearning:
 
     def test_weakest_returns_labels_with_evidence_only(self, model):
         model.record("ada", "q1", "wrong")  # q1 is labelled ('fractions',)
-        assert [m.label for m in model.weakest("ada")] == ["fractions"]
+        assert [m.label for m in model.weakest("ada", credible_below=None)] == ["fractions"]
 
     def test_weakest_orders_several_labels_worst_first(self, model):
         """Regression: sorting must use the posterior mean, not the Skill object."""
         for i in range(12):
             good = "area" not in model.items[f"q{i}"].weights
             model.record("ada", f"q{i}", "correct" if good else "wrong")
-        ranked = model.weakest("ada", n=2)
+        ranked = model.weakest("ada", n=2, credible_below=None)
         assert [m.label for m in ranked] == ["area", "fractions"]
         assert ranked[0].mu < ranked[1].mu
 
     def test_weakest_respects_n(self, model):
         for i in range(12):
             model.record("ada", f"q{i}", "correct")
-        assert len(model.weakest("ada", n=1)) == 1
+        assert len(model.weakest("ada", n=1, credible_below=None)) == 1
 
     def test_mastery_reports_a_credible_interval(self, model):
         model.record("ada", "q1", "correct")

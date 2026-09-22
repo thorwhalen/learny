@@ -11,8 +11,10 @@ import random
 import pytest
 
 from learny.tracing import (
+    DEFAULT_CREDIBLE_BELOW,
     Item,
     LearnerModel,
+    Mastery,
     RaschEstimator,
     Response,
     calibration,
@@ -100,13 +102,24 @@ class TestSeparation:
 
 
 class TestCredibleWeakest:
-    def test_default_is_unchanged(self, true_dev):
+    def test_none_ranks_every_label_with_evidence(self, true_dev):
         items = {
             f"q{i}": Item(f"q{i}", labels=tuple(LABELS), difficulty=0.5)
             for i in range(40)
         }
         model = _model(items, _simulate(items, true_dev, n=100))
-        assert len(model.weakest("s", n=9)) == 9
+        assert len(model.weakest("s", n=9, credible_below=None)) == 9
+
+    def test_the_gate_is_the_default(self, true_dev):
+        items = {
+            f"q{i}": Item(f"q{i}", labels=tuple(LABELS), difficulty=0.5)
+            for i in range(40)
+        }
+        model = _model(items, _simulate(items, true_dev, n=100))
+        assert model.weakest("s", n=9) == model.weakest(
+            "s", n=9, credible_below=DEFAULT_CREDIBLE_BELOW
+        )
+        assert model.weakest("s", n=9).reason == "no_credible_weakness"
 
     def test_noise_yields_no_credible_weakness(self, true_dev):
         items = {
@@ -293,3 +306,77 @@ class TestSeparationUndoesShrinkage:
         model.record_many(_simulate(items, true_dev, n=300))
         state = model.estimates["s"]
         assert model.separation("s") == label_separation(state, label_prior_var=1.0)
+
+
+class TestWeakestContract:
+    """The concerns raised on #7 before the gate became the default."""
+
+    @pytest.fixture
+    def split_items(self):
+        return {
+            f"q{i}": Item(f"q{i}", labels=("area" if i % 2 else "sums",))
+            for i in range(40)
+        }
+
+    def test_negative_z_is_refused(self, split_items):
+        model = _model(split_items, [])
+        with pytest.raises(ValueError, match="credible_below"):
+            model.weakest("s", credible_below=-0.5)
+        with pytest.raises(ValueError):
+            model.weakest("s", credible_below=float("nan"))
+
+    def test_zero_z_is_the_posterior_mean_below_zero(self, split_items):
+        model = _model(split_items, [])
+        for i in range(40):
+            model.record("s", f"q{i}", "wrong" if i % 2 else "correct")
+        assert [m.label for m in model.weakest("s", credible_below=0.0)] == ["area"]
+
+    def test_no_evidence_says_so(self, split_items):
+        result = _model(split_items, []).weakest("s")
+        assert result == [] and result.reason == "no_evidence"
+        assert _model(split_items, []).weakest("s", credible_below=None).reason == (
+            "no_evidence"
+        )
+
+    def test_labels_level_with_the_student_are_no_credible_weakness(self, split_items):
+        model = _model(split_items, [])
+        for i in range(40):  # half right on each label: nothing stands out
+            model.record("s", f"q{i}", "correct" if i % 4 < 2 else "wrong")
+        result = model.weakest("s")
+        assert result == [] and result.reason == "no_credible_weakness"
+        assert len(model.weakest("s", credible_below=None)) == 2
+
+    def test_a_non_empty_result_has_no_reason(self, split_items):
+        model = _model(split_items, [])
+        for i in range(40):
+            model.record("s", f"q{i}", "wrong" if i % 2 else "correct")
+        result = model.weakest("s")
+        assert [m.label for m in result] == ["area"] and result.reason is None
+        assert isinstance(result, list)
+
+    def test_default_estimator_fills_the_deviation(self, split_items):
+        model = _model(split_items, [])
+        model.record("s", "q1", "wrong")
+        m = model.mastery("s")["area"]
+        state = model.estimates["s"]
+        assert m.deviation.mu == pytest.approx(state["labels"]["area"]["mu"])
+        assert m.deviation.var == pytest.approx(state["labels"]["area"]["var"])
+        assert m.mu == pytest.approx(state["global"]["mu"] + m.deviation.mu)
+
+    def test_an_estimator_without_deviation_is_an_error_not_silence(self, split_items):
+        class NoDeviation(RaschEstimator):
+            def mastery(self, state):
+                return {
+                    k: Mastery(v.label, v.skill, v.prior_var)
+                    for k, v in super().mastery(state).items()
+                }
+
+        model = LearnerModel(
+            items=split_items, estimator=NoDeviation(), log={}, estimates={}
+        )
+        model.record("s", "q1", "wrong")
+        with pytest.raises(TypeError, match="deviation"):
+            model.weakest("s")
+        assert [m.label for m in model.weakest("s", credible_below=None)] == ["area"]
+        # no evidence at all is still an answer, not an error
+        assert model.weakest("t").reason == "no_evidence"
