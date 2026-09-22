@@ -32,13 +32,15 @@ from learny.tracing.estimators import (
     logit,
     mark_not_reached,
 )
-from learny.tracing.model import LearnerModel
+from learny.tracing.model import DEFAULT_CREDIBLE_BELOW, LearnerModel, Weakest
 from learny.tracing.records import Item, LabelWeights, Outcome, Response, restrict_labels
 from learny.tracing.stores import ResponseLog, data_dir, estimate_store, response_log
 
 __all__ = [
     # the facade most callers want
     "LearnerModel",
+    "Weakest",
+    "DEFAULT_CREDIBLE_BELOW",
     # the vocabulary
     "Item",
     "Outcome",
