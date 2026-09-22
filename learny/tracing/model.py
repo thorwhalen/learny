@@ -149,8 +149,13 @@ class LearnerModel:
         """How distinguishable this student's labels are; see :func:`label_separation`.
 
         Check ``.distinguishable`` before acting on an ordering from :meth:`weakest`.
+        The deviations are de-shrunk with this model's own estimator prior.
         """
-        return label_separation(self._state(student), threshold=threshold)
+        return label_separation(
+            self._state(student),
+            threshold=threshold,
+            label_prior_var=getattr(self.estimator, "label_prior_var", None),
+        )
 
     def calibration(
         self, students: Iterable[str] | None = None, *, n_bins: int = DEFAULT_N_BINS

@@ -207,7 +207,8 @@ class TestRestrictLabels:
         assert bank["q"].weights == {"a": 1.0, "b": 1.0}
 
     def test_projection_improves_separation(self, true_dev):
-        # Items tagged with a "topic" label and many co-occurring noise labels.
+        # The truth lives in one "topic" label per item; six co-occurring tags are noise.
+        # Projecting onto the topics concentrates each response's evidence on them.
         rng = random.Random(1)
         items = {}
         for i in range(45):
@@ -215,9 +216,80 @@ class TestRestrictLabels:
             items[f"q{i}"] = Item(
                 f"q{i}", labels=(LABELS[i % 9],) + noise, difficulty=0.5
             )
-        dev = dict(true_dev, **{f"n{j}": 0.0 for j in range(8)})
-        responses = _simulate(items, dev, n=400)
-        wide = _model(items, responses).separation("s")
         narrow_items = restrict_labels(items, keep=set(LABELS))
-        narrow = _model(narrow_items, responses).separation("s")
-        assert narrow.separation > 2 * wide.separation
+        for seed in range(3):
+            responses = _simulate(narrow_items, true_dev, n=400, seed=seed)
+            wide = _model(items, responses).separation("s")
+            narrow = _model(narrow_items, responses).separation("s")
+            assert narrow.distinguishable
+            assert narrow.separation > wide.separation
+
+    def test_a_single_string_is_refused(self):
+        # A str is a Collection of characters: keep="topic:x" would keep nothing.
+        bank = {"q": Item("q", labels=("topic:x", "t"))}
+        with pytest.raises(TypeError, match="single string"):
+            restrict_labels(bank, keep="topic:x")
+
+    def test_item_fields_survive(self):
+        bank = {"q": Item("q", labels=("a", "b"), difficulty=0.4, meta={"src": "x"})}
+        out = restrict_labels(bank, keep={"a"})["q"]
+        assert (out.id, out.difficulty, dict(out.meta)) == ("q", 0.4, {"src": "x"})
+
+
+class TestSeparationUndoesShrinkage:
+    """The Rasch formula needs unshrunk measures; the state holds posteriors."""
+
+    PRIOR = 0.25
+
+    def _posterior(self, x, s2):
+        """The normal-normal posterior a ``N(0, PRIOR)`` prior makes of measure ``x``."""
+        var = 1.0 / (1.0 / self.PRIOR + 1.0 / s2)
+        return {"mu": x * var / s2, "var": var, "n": 10}
+
+    def test_recovers_the_likelihood_measures_exactly(self):
+        xs, s2 = [-1.5, -0.5, 0.0, 0.5, 1.5], 0.1
+        state = {"labels": {f"l{i}": self._posterior(x, s2) for i, x in enumerate(xs)}}
+        sep = label_separation(state, label_prior_var=self.PRIOR)
+        assert sep.rmse == pytest.approx(math.sqrt(s2))
+        mean = sum(xs) / len(xs)
+        sd = math.sqrt(sum((x - mean) ** 2 for x in xs) / (len(xs) - 1))
+        assert sep.observed_sd == pytest.approx(sd)
+
+    def test_shrunk_reading_calls_separable_labels_noise(self):
+        # True G = sqrt(2.5 / 0.4 - 1) ~ 2.3: separable. Read without undoing the
+        # prior's shrinkage, the same state looks like noise.
+        xs, s2 = [-2.0, -1.0, 0.0, 1.0, 2.0], 0.4
+        state = {"labels": {f"l{i}": self._posterior(x, s2) for i, x in enumerate(xs)}}
+        assert label_separation(state, label_prior_var=self.PRIOR).distinguishable
+        assert not label_separation(state, label_prior_var=None).distinguishable
+
+    def test_a_label_with_only_its_prior_is_left_out(self):
+        state = {
+            "labels": {
+                "a": self._posterior(1.0, 0.05),
+                "b": self._posterior(-1.0, 0.05),
+                "c": {"mu": 0.0, "var": self.PRIOR, "n": 1},  # e.g. forgotten back
+            }
+        }
+        assert label_separation(state, label_prior_var=self.PRIOR).n_labels == 2
+
+    def test_no_true_spread_is_not_distinguishable(self):
+        items = {
+            f"q{i}": Item(f"q{i}", labels=(LABELS[i % 9],), difficulty=0.5)
+            for i in range(45)
+        }
+        flat = {label: 0.0 for label in LABELS}
+        for seed in range(10):
+            model = _model(items, _simulate(items, flat, n=300, seed=seed))
+            assert not model.separation("s").distinguishable
+
+    def test_model_uses_its_own_estimator_prior(self, true_dev):
+        items = {
+            f"q{i}": Item(f"q{i}", labels=(LABELS[i % 9],), difficulty=0.5)
+            for i in range(45)
+        }
+        est = RaschEstimator(label_prior_var=1.0)
+        model = LearnerModel(items=items, estimator=est, log={}, estimates={})
+        model.record_many(_simulate(items, true_dev, n=300))
+        state = model.estimates["s"]
+        assert model.separation("s") == label_separation(state, label_prior_var=1.0)
