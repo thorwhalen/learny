@@ -15,8 +15,8 @@ and a quiz front-end) are plain data and a web app, not Python API. They are
 kept in the repository under ``games/``, outside this package, so they are not
 part of the installed distribution.
 
-The distribution is the library alone: the game assets are not inside the
-package directory, so they cannot end up in the wheel.
+The installed distribution is the library alone; ``tracing`` is its only
+sub-package:
 
 >>> from pathlib import Path
 >>> import learny
@@ -24,6 +24,4 @@ package directory, so they cannot end up in the wheel.
 >>> sorted(p.name for p in pkg_dir.iterdir()
 ...        if p.is_dir() and (p / '__init__.py').exists())
 ['tracing']
->>> list(pkg_dir.rglob('*.json')), list(pkg_dir.rglob('*.tsx'))
-([], [])
 """

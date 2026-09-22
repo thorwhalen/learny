@@ -86,4 +86,4 @@ Learner responses are personal data. They are written under `~/.local/share/lear
 
 ## Games
 
-[`games/eleven_plus/`](games/eleven_plus/) holds vocabulary material and a quiz app for the UK 11+ exam. It lives in this repository but outside the `learny` package, so `pip install learny` installs the library only. The game-parameter JSON files are plain data and can be loaded by any front-end.
+[`games/eleven_plus/`](https://github.com/thorwhalen/learny/tree/main/games/eleven_plus) holds vocabulary material and a quiz app for the UK 11+ exam. It lives in this repository but outside the `learny` package, so `pip install learny` installs the library only. The game-parameter JSON files are plain data and can be loaded by any front-end.

@@ -14,10 +14,9 @@ license = "MIT"
 keywords = [
     "education",
     "learning",
-    "quiz",
-    "vocabulary",
-    "eleven-plus",
-    "games",
+    "learner-model",
+    "knowledge-tracing",
+    "rasch",
 ]
 authors = [
     { name = "Thor Whalen" },
