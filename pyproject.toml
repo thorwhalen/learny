@@ -53,6 +53,7 @@ exclude = [
 
 [tool.hatch.build.targets.sdist]
 exclude = [
+    "games/**",
     "**/node_modules/**",
     "**/dist/**",
     "**/.DS_Store",
@@ -155,7 +156,7 @@ exclude_paths = [
     "examples",
     "scrap",
     "docsrc",
-    "learny/eleven_plus/quiz-test",
+    "games",
 ]
 test_on_windows = true
 

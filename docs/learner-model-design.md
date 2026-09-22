@@ -143,7 +143,7 @@ Either way the artifact is produced by a deliberate export step, versioned, and 
 
 Item-label mapping, agent tagging, inter-rater agreement, per-label resource scoring and a faceted frontend belong to an **item-bank package that does not exist yet**. The contract between them is the one `learny` already has: the bank produces a `Mapping[str, Item]`, `Item(id, labels: Sequence[str] | Mapping[str, float], difficulty: float | None)`, with label weights carrying tagging reliability. **Dependency direction:** the bank may import `learny.tracing.records.Item`; `learny` never imports the bank.
 
-The 11+ vocabulary game assets (`learny/eleven_plus`) currently ship in the same distribution as the library. They should move out of the wheel before any first PyPI release; whether and when that release happens is the owner's decision.
+The 11+ vocabulary game assets live in the repository under `games/eleven_plus/`, outside the package, so they are not part of the distribution (they were moved out of `learny/` before any first PyPI release). Whether and when that release happens is the owner's decision.
 
 ### Calibration reporting (was "the most important next step")
 
