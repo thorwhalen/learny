@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "built_at": "2026-09-22T14:01:17Z",
+  "built_at": "2026-09-22T14:22:16Z",
   "package": {
     "name": "learny",
     "version": "0.0.1",
@@ -9,24 +9,24 @@
   },
   "git": {
     "available": true,
-    "commit": "b38cab35b8f158b30bafd0e5b7d67de592a1e962",
-    "short_commit": "b38cab3",
+    "commit": "d8a2251479d0f9a5712cdf0eb0bd37ba00fd2ec2",
+    "short_commit": "d8a2251",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/learny",
-    "commit_url": "https://github.com/thorwhalen/learny/commit/b38cab35b8f158b30bafd0e5b7d67de592a1e962",
+    "commit_url": "https://github.com/thorwhalen/learny/commit/d8a2251479d0f9a5712cdf0eb0bd37ba00fd2ec2",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/learny",
-    "sha": "b38cab35b8f158b30bafd0e5b7d67de592a1e962",
+    "sha": "d8a2251479d0f9a5712cdf0eb0bd37ba00fd2ec2",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "35737207539",
-    "run_url": "https://github.com/thorwhalen/learny/actions/runs/35737207539",
+    "run_id": "35739664891",
+    "run_url": "https://github.com/thorwhalen/learny/actions/runs/35739664891",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -64,7 +64,7 @@
     "relation": "unknown",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/learny && cd learny\ngit checkout b38cab35b8f158b30bafd0e5b7d67de592a1e962\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/learny && cd learny\ngit checkout d8a2251479d0f9a5712cdf0eb0bd37ba00fd2ec2\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,
