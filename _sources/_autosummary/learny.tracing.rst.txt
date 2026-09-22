@@ -25,6 +25,7 @@ learny.tracing
    .. autosummary::
    
       LearnerModel
+      Weakest
       Item
       Outcome
       Response

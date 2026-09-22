@@ -728,7 +728,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.diagnostics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DEFAULT_N_BINS</span><span class="p">,</span>
@@ -742,7 +742,42 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Outcome</span><span class="p">,</span> <span class="n">Response</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.stores</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResponseLog</span><span class="p">,</span> <span class="n">estimate_store</span><span class="p">,</span> <span class="n">response_log</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"LearnerModel"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"LearnerModel"</span><span class="p">,</span> <span class="s2">"Weakest"</span><span class="p">,</span> <span class="s2">"DEFAULT_CREDIBLE_BELOW"</span><span class="p">]</span>
+
+<span class="c1">#: How many posterior standard deviations below the student's own level a label's</span>
+<span class="c1">#: deviation must be before :meth:`LearnerModel.weakest` calls it a weakness. 1.0 is a</span>
+<span class="c1">#: one-sided ~84% credible bound *per label*. It stops a set of labels that never vary</span>
+<span class="c1">#: independently (many labels on every item) from being ranked at all, and fires on a few</span>
+<span class="c1">#: papers of real evidence. It is **not** corrected for testing many labels at once: a</span>
+<span class="c1">#: student with no real weakness and six separable labels gets at least one label flagged</span>
+<span class="c1">#: more often than not. Raise ``credible_below`` when a false "practise this" is costly.</span>
+<span class="n">DEFAULT_CREDIBLE_BELOW</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="n">WeakestReason</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"no_evidence"</span><span class="p">,</span> <span class="s2">"no_credible_weakness"</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Weakest">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.model.html#learny.tracing.Weakest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Weakest</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""What :meth:`LearnerModel.weakest` returns: a list of ``Mastery``, plus why.</span>
+
+<span class="sd">    It *is* a list — it compares, iterates, slices and serialises like one — so callers</span>
+<span class="sd">    that treat the result as a list keep working. ``reason`` is ``None`` when the list is</span>
+<span class="sd">    non-empty and says why it is empty otherwise; see :meth:`LearnerModel.weakest`. It</span>
+<span class="sd">    describes the answer as returned: slicing gives a plain list, and a caller that</span>
+<span class="sd">    mutates the result owns keeping ``reason`` meaningful.</span>
+
+<span class="sd">    &gt;&gt;&gt; w = Weakest(reason='no_evidence')</span>
+<span class="sd">    &gt;&gt;&gt; w == [], w.reason</span>
+<span class="sd">    (True, 'no_evidence')</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">masteries</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Mastery</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="o">*</span><span class="p">,</span> <span class="n">reason</span><span class="p">:</span> <span class="n">WeakestReason</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">masteries</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="n">reason</span></div>
+
 
 
 <div class="viewcode-block" id="LearnerModel">
@@ -844,31 +879,91 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="LearnerModel.weakest">
 <a class="viewcode-back" href="../../../_autosummary/learny.tracing.model.html#learny.tracing.LearnerModel.weakest">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">weakest</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">student</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">credible_below</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Mastery</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""The ``n`` labels this student looks weakest on — what to practise next.</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">student</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">credible_below</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">DEFAULT_CREDIBLE_BELOW</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Weakest</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The labels this student is credibly weakest on — what to practise next.</span>
 
-<span class="sd">        Labels with no evidence are not included: the model has nothing to say about</span>
+<span class="sd">        By default a label is returned only when its deviation from the student's *own*</span>
+<span class="sd">        global skill is credibly negative: the upper bound ``mu + z * sd`` of</span>
+<span class="sd">        :attr:`Mastery.deviation &lt;learny.tracing.estimators.Mastery.deviation&gt;` is below</span>
+<span class="sd">        zero, with ``z = credible_below`` (default :data:`DEFAULT_CREDIBLE_BELOW`). The</span>
+<span class="sd">        survivors are ranked worst first and the first ``n`` returned. ``z = 0`` keeps</span>
+<span class="sd">        every label whose deviation is merely below zero on average; larger ``z``</span>
+<span class="sd">        demands more certainty. The bound is per label, with no correction for how many</span>
+<span class="sd">        labels are tested (see :data:`DEFAULT_CREDIBLE_BELOW`), so with several separable</span>
+<span class="sd">        labels a label or two can pass by chance. ``credible_below=None`` switches the gate off and ranks</span>
+<span class="sd">        every label with evidence by posterior mean — check :meth:`separation` before</span>
+<span class="sd">        believing that ranking.</span>
+
+<span class="sd">        Labels with no evidence are never included: the model has nothing to say about</span>
 <span class="sd">        them, and saying it anyway is how a learner model loses trust.</span>
 
-<span class="sd">        ``credible_below=z`` goes one step further and keeps only labels whose deviation</span>
-<span class="sd">        from the student's own global skill is credibly negative — its upper bound</span>
-<span class="sd">        ``mu + z * sd`` below zero. With labels that cannot be told apart that returns</span>
-<span class="sd">        nothing, which is the honest answer. ``None`` (the default) ranks every label</span>
-<span class="sd">        with evidence; check :meth:`separation` before believing that ranking.</span>
+<span class="sd">        **An empty answer is common and says why.** The result is a list (a</span>
+<span class="sd">        :class:`Weakest`) whose ``reason`` is ``None`` when it holds labels, and</span>
+<span class="sd">        otherwise one of:</span>
+
+<span class="sd">        * ``"no_evidence"`` — the student has answered nothing that carries a label;</span>
+<span class="sd">        * ``"no_credible_weakness"`` — there is evidence, but no label is credibly</span>
+<span class="sd">          below the student's own level. That is a statement about *relative*</span>
+<span class="sd">          weakness, not "nothing to practise": practise at the student's overall level</span>
+<span class="sd">          (``model.estimator.skill(state)`` for the default estimator).</span>
+
+<span class="sd">        With the default estimator the split between "globally weak" and "weak on this</span>
+<span class="sd">        label" comes from the priors, so part of a uniform shortfall is attributed to</span>
+<span class="sd">        every label: a student who gets nearly everything wrong can see several labels</span>
+<span class="sd">        returned here, in an order that means little. :meth:`separation` says whether</span>
+<span class="sd">        an order among the returned labels is worth believing.</span>
+
+<span class="sd">        Raises ``ValueError`` for a negative ``credible_below`` (which would admit labels</span>
+<span class="sd">        credibly *above* the student's level), and ``TypeError`` when the gate is on but</span>
+<span class="sd">        the estimator's :class:`~learny.tracing.estimators.Mastery` values carry no</span>
+<span class="sd">        ``deviation`` — rather than silently returning nothing.</span>
+
+<span class="sd">        &gt;&gt;&gt; items = {f'q{i}': Item(f'q{i}', labels=('area' if i % 2 else 'sums',))</span>
+<span class="sd">        ...          for i in range(40)}</span>
+<span class="sd">        &gt;&gt;&gt; model = LearnerModel(items=items, log={}, estimates={})</span>
+<span class="sd">        &gt;&gt;&gt; model.weakest('ada')</span>
+<span class="sd">        []</span>
+<span class="sd">        &gt;&gt;&gt; model.weakest('ada').reason</span>
+<span class="sd">        'no_evidence'</span>
+<span class="sd">        &gt;&gt;&gt; for i in range(40):  # right on every sum, wrong on every area question</span>
+<span class="sd">        ...     model.record('ada', f'q{i}', 'wrong' if i % 2 else 'correct')</span>
+<span class="sd">        &gt;&gt;&gt; [m.label for m in model.weakest('ada')]</span>
+<span class="sd">        ['area']</span>
+<span class="sd">        &gt;&gt;&gt; [m.label for m in model.weakest('ada', credible_below=None)]  # plain ranking</span>
+<span class="sd">        ['area', 'sums']</span>
 <span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"n must be a positive integer, got </span><span class="si">{</span><span class="n">n</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">credible_below</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">credible_below</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"credible_below must be &gt;= 0 (or None to rank without a gate), got "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">credible_below</span><span class="si">!r}</span><span class="s2">: a negative z admits labels credibly above the "</span>
+                <span class="s2">"student's own level."</span>
+            <span class="p">)</span>
         <span class="n">ranked</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mastery</span><span class="p">(</span><span class="n">student</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ranked</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Weakest</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">"no_evidence"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">credible_below</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">ranked</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span>
-        <span class="n">deviations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">(</span><span class="n">student</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"labels"</span><span class="p">,</span> <span class="p">{})</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">upper</span><span class="p">(</span><span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-            <span class="n">entry</span> <span class="o">=</span> <span class="n">deviations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># an estimator with another state layout: not credible</span>
-                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">)</span>
-            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"mu"</span><span class="p">])</span> <span class="o">+</span> <span class="n">credible_below</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"var"</span><span class="p">])</span> <span class="o">**</span> <span class="mf">0.5</span>
-
-        <span class="k">return</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ranked</span> <span class="k">if</span> <span class="n">upper</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">][:</span><span class="n">n</span><span class="p">]</span></div>
+            <span class="k">return</span> <span class="n">Weakest</span><span class="p">(</span><span class="n">ranked</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">deviation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ranked</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"weakest(credible_below=</span><span class="si">{</span><span class="n">credible_below</span><span class="si">!r}</span><span class="s2">) needs each Mastery to carry "</span>
+                <span class="sa">f</span><span class="s2">"a .deviation (the label relative to the student's global skill), and "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.mastery() does not provide one. Fill "</span>
+                <span class="s2">"Mastery.deviation in the estimator, or pass credible_below=None to rank "</span>
+                <span class="s2">"by posterior mean without the gate."</span>
+            <span class="p">)</span>
+        <span class="n">credible</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ranked</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">deviation</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="n">credible_below</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">deviation</span><span class="o">.</span><span class="n">sd</span> <span class="o">&lt;</span> <span class="mf">0.0</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">credible</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Weakest</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">"no_credible_weakness"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Weakest</span><span class="p">(</span><span class="n">credible</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span></div>
 
 
     <span class="c1"># -- when to believe it --------------------------------------------------------</span>

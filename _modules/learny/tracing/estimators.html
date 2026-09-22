@@ -898,6 +898,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    what makes two labels comparable. ``confidence`` is a genuine posterior quantity, not</span>
 <span class="sd">    a heuristic: it falls out of the variance.</span>
 
+<span class="sd">    ``deviation`` is the label's posterior *relative to the student's own global skill*,</span>
+<span class="sd">    when the estimator has one (``None`` otherwise). It is what "credibly weaker than</span>
+<span class="sd">    their own level" is judged on (:meth:`LearnerModel.weakest</span>
+<span class="sd">    &lt;learny.tracing.model.LearnerModel.weakest&gt;`), so an estimator provides it through</span>
+<span class="sd">    this field rather than a caller reading the estimator's private state.</span>
+
 <span class="sd">    &gt;&gt;&gt; m = Mastery('fractions', Skill(mu=0.5, var=0.25, n=4), prior_var=1.0)</span>
 <span class="sd">    &gt;&gt;&gt; round(m.probability, 3)</span>
 <span class="sd">    0.622</span>
@@ -908,6 +914,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">skill</span><span class="p">:</span> <span class="n">Skill</span>
     <span class="n">prior_var</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">deviation</span><span class="p">:</span> <span class="n">Skill</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">mu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -971,7 +978,14 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="Estimator.mastery">
 <a class="viewcode-back" href="../../../_autosummary/learny.tracing.estimators.html#learny.tracing.Estimator.mastery">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">mastery</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mastery</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Per-label mastery, for showing the model to the learner."""</span></div>
+<span class="w">        </span><span class="sd">"""Per-label mastery, for showing the model to the learner.</span>
+
+<span class="sd">        Fill each :attr:`Mastery.deviation` (the label relative to the student's global</span>
+<span class="sd">        skill) if you can: :meth:`LearnerModel.weakest</span>
+<span class="sd">        &lt;learny.tracing.model.LearnerModel.weakest&gt;` gates on it by default and raises</span>
+<span class="sd">        ``TypeError`` for an estimator that leaves it ``None`` (callers can still pass</span>
+<span class="sd">        ``credible_below=None``).</span>
+<span class="sd">        """</span></div>
 </div>
 
 
@@ -1258,6 +1272,7 @@ window.runMermaid = runMermaid;</script>
                     <span class="n">mu</span><span class="o">=</span><span class="n">glob</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="n">dev</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="n">glob</span><span class="o">.</span><span class="n">var</span> <span class="o">+</span> <span class="n">dev</span><span class="o">.</span><span class="n">var</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">dev</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="n">dev</span><span class="o">.</span><span class="n">t</span>
                 <span class="p">),</span>
                 <span class="n">prior_var</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prior_var</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_prior_var</span><span class="p">,</span>
+                <span class="n">deviation</span><span class="o">=</span><span class="n">dev</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span></div>
 

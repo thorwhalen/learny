@@ -4,9 +4,16 @@ learny.tracing.model
 .. automodule:: learny.tracing.model
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DEFAULT_CREDIBLE_BELOW
+   
    .. rubric:: Classes
 
    .. autosummary::
    
       LearnerModel
+      Weakest
    

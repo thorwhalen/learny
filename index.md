@@ -24,7 +24,7 @@ model.record('ada', 'q1', 'correct')
 model.record('ada', 'q2', 'wrong')
 
 model.predict('ada', 'q2')      # probability she gets this one right
-model.weakest('ada', n=3)       # the labels to practise next
+model.weakest('ada', n=3)       # labels credibly below her own level: what to practise next
 ```
 
 That is the whole common case. Responses are appended to a log under `~/.local/share/learny/` and the estimates are kept beside it; nothing needs configuring, and no data is written anywhere near your code.
@@ -64,7 +64,8 @@ model = LearnerModel(
 
 ```python
 model.separation('ada').distinguishable     # can her labels be told apart at all?
-model.weakest('ada', n=3, credible_below=1.0)  # only labels credibly below her own level
+model.weakest('ada').reason                  # why it is empty, when it is
+model.weakest('ada', credible_below=None)    # plain ranking, no credibility gate
 model.calibration()                          # prequential: are the probabilities honest?
 ```
 

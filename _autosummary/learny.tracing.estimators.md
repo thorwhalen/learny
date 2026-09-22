@@ -53,7 +53,7 @@ scored as wrong.
 | [`Estimator`](#learny.tracing.estimators.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                |
 |----------------------------------------------------------------------------------------------------|----------------------------------------------------------|
 | [`RaschEstimator`](#learny.tracing.estimators.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                  |
-| [`Mastery`](#learny.tracing.estimators.Mastery)(label, skill[, prior_var])                | What the model believes about one student and one label. |
+| [`Mastery`](#learny.tracing.estimators.Mastery)(label, skill[, prior_var, deviation])     | What the model believes about one student and one label. |
 | [`Skill`](#learny.tracing.estimators.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.   |
 
 ### *class* learny.tracing.estimators.Estimator(\*args, \*\*kwargs)
@@ -77,6 +77,11 @@ A fresh state for a student who has answered nothing.
 
 Per-label mastery, for showing the model to the learner.
 
+Fill each `Mastery.deviation` (the label relative to the student’s global
+skill) if you can: [`LearnerModel.weakest`](learny.tracing.model.md#learny.tracing.model.LearnerModel.weakest) gates on it by default and raises
+`TypeError` for an estimator that leaves it `None` (callers can still pass
+`credible_below=None`).
+
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](#learny.tracing.estimators.Mastery)]
 
@@ -94,7 +99,7 @@ Probability this student answers this item correctly.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* learny.tracing.estimators.Mastery(label, skill, prior_var=1.0)
+### *class* learny.tracing.estimators.Mastery(label, skill, prior_var=1.0, , deviation=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -103,6 +108,11 @@ What the model believes about one student and one label.
 `probability` is the chance of success on an item of *average* difficulty, which is
 what makes two labels comparable. `confidence` is a genuine posterior quantity, not
 a heuristic: it falls out of the variance.
+
+`deviation` is the label’s posterior *relative to the student’s own global skill*,
+when the estimator has one (`None` otherwise). It is what “credibly weaker than
+their own level” is judged on ([`LearnerModel.weakest`](learny.tracing.model.md#learny.tracing.model.LearnerModel.weakest)), so an estimator provides it through
+this field rather than a caller reading the estimator’s private state.
 
 ```pycon
 >>> m = Mastery('fractions', Skill(mu=0.5, var=0.25, n=4), prior_var=1.0)

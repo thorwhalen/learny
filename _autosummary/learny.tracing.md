@@ -34,19 +34,20 @@ True
 
 ### Classes
 
-| [`LearnerModel`](#learny.tracing.LearnerModel)(\*[, items, estimator, log, ...])    | What a student knows, estimated from what they have answered.                |
-|----------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
-| [`Item`](#learny.tracing.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty.  |
-| [`Outcome`](#learny.tracing.Outcome)(\*values)                                 | What happened when a student met an item.                                    |
-| [`Response`](#learny.tracing.Response)(student, item, outcome[, at, meta])      | One student meeting one item, once.                                          |
-| [`Mastery`](#learny.tracing.Mastery)(label, skill[, prior_var])                | What the model believes about one student and one label.                     |
-| [`Skill`](#learny.tracing.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                       |
-| [`Estimator`](#learny.tracing.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                    |
-| [`RaschEstimator`](#learny.tracing.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                      |
-| [`ResponseLog`](#learny.tracing.ResponseLog)(\*[, rootdir])                        | The append-only record of every response.                                    |
-| [`LabelSeparation`](#learny.tracing.LabelSeparation)(n_labels, observed_sd, rmse)      | How distinguishable one student's labels are from each other.                |
-| [`CalibrationReport`](#learny.tracing.CalibrationReport)(n, log_loss, brier, ece, ...)   | Prequential scores for a set of predictions.                                 |
-| [`CalibrationBin`](#learny.tracing.CalibrationBin)(lo, hi, n, mean_predicted, ...)    | One row of a reliability table: predictions in `[lo, hi)` and what happened. |
+| [`LearnerModel`](#learny.tracing.LearnerModel)(\*[, items, estimator, log, ...])    | What a student knows, estimated from what they have answered.                                                        |
+|----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| [`Weakest`](#learny.tracing.Weakest)([masteries, reason])                      | What [`LearnerModel.weakest()`](#learny.tracing.LearnerModel.weakest) returns: a list of `Mastery`, plus why. |
+| [`Item`](#learny.tracing.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty.                                          |
+| [`Outcome`](#learny.tracing.Outcome)(\*values)                                 | What happened when a student met an item.                                                                            |
+| [`Response`](#learny.tracing.Response)(student, item, outcome[, at, meta])      | One student meeting one item, once.                                                                                  |
+| [`Mastery`](#learny.tracing.Mastery)(label, skill[, prior_var, deviation])     | What the model believes about one student and one label.                                                             |
+| [`Skill`](#learny.tracing.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                                                               |
+| [`Estimator`](#learny.tracing.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                                                            |
+| [`RaschEstimator`](#learny.tracing.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                                                              |
+| [`ResponseLog`](#learny.tracing.ResponseLog)(\*[, rootdir])                        | The append-only record of every response.                                                                            |
+| [`LabelSeparation`](#learny.tracing.LabelSeparation)(n_labels, observed_sd, rmse)      | How distinguishable one student's labels are from each other.                                                        |
+| [`CalibrationReport`](#learny.tracing.CalibrationReport)(n, log_loss, brier, ece, ...)   | Prequential scores for a set of predictions.                                                                         |
+| [`CalibrationBin`](#learny.tracing.CalibrationBin)(lo, hi, n, mean_predicted, ...)    | One row of a reliability table: predictions in `[lo, hi)` and what happened.                                         |
 
 ### *class* learny.tracing.CalibrationBin(lo, hi, n, mean_predicted, observed_rate)
 
@@ -107,6 +108,11 @@ A fresh state for a student who has answered nothing.
 #### mastery(state)
 
 Per-label mastery, for showing the model to the learner.
+
+Fill each `Mastery.deviation` (the label relative to the student’s global
+skill) if you can: [`LearnerModel.weakest`](learny.tracing.model.md#learny.tracing.model.LearnerModel.weakest) gates on it by default and raises
+`TypeError` for an estimator that leaves it `None` (callers can still pass
+`credible_below=None`).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.md#learny.tracing.estimators.Mastery)]
@@ -289,23 +295,66 @@ The deviations are de-shrunk with this model’s own estimator prior.
 * **Return type:**
   [`LabelSeparation`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.LabelSeparation)
 
-#### weakest(student, n=5, , credible_below=None)
+#### weakest(student, n=5, , credible_below=1.0)
 
-The `n` labels this student looks weakest on — what to practise next.
+The labels this student is credibly weakest on — what to practise next.
 
-Labels with no evidence are not included: the model has nothing to say about
+By default a label is returned only when its deviation from the student’s *own*
+global skill is credibly negative: the upper bound `mu + z * sd` of
+`Mastery.deviation` is below
+zero, with `z = credible_below` (default `DEFAULT_CREDIBLE_BELOW`). The
+survivors are ranked worst first and the first `n` returned. `z = 0` keeps
+every label whose deviation is merely below zero on average; larger `z`
+demands more certainty. The bound is per label, with no correction for how many
+labels are tested (see `DEFAULT_CREDIBLE_BELOW`), so with several separable
+labels a label or two can pass by chance. `credible_below=None` switches the gate off and ranks
+every label with evidence by posterior mean — check [`separation()`](#learny.tracing.LearnerModel.separation) before
+believing that ranking.
+
+Labels with no evidence are never included: the model has nothing to say about
 them, and saying it anyway is how a learner model loses trust.
 
-`credible_below=z` goes one step further and keeps only labels whose deviation
-from the student’s own global skill is credibly negative — its upper bound
-`mu + z * sd` below zero. With labels that cannot be told apart that returns
-nothing, which is the honest answer. `None` (the default) ranks every label
-with evidence; check [`separation()`](#learny.tracing.LearnerModel.separation) before believing that ranking.
+**An empty answer is common and says why.** The result is a list (a
+[`Weakest`](#learny.tracing.Weakest)) whose `reason` is `None` when it holds labels, and
+otherwise one of:
+
+* `"no_evidence"` — the student has answered nothing that carries a label;
+* `"no_credible_weakness"` — there is evidence, but no label is credibly
+  below the student’s own level. That is a statement about *relative*
+  weakness, not “nothing to practise”: practise at the student’s overall level
+  (`model.estimator.skill(state)` for the default estimator).
+
+With the default estimator the split between “globally weak” and “weak on this
+label” comes from the priors, so part of a uniform shortfall is attributed to
+every label: a student who gets nearly everything wrong can see several labels
+returned here, in an order that means little. [`separation()`](#learny.tracing.LearnerModel.separation) says whether
+an order among the returned labels is worth believing.
+
+Raises `ValueError` for a negative `credible_below` (which would admit labels
+credibly *above* the student’s level), and `TypeError` when the gate is on but
+the estimator’s [`Mastery`](learny.tracing.estimators.md#learny.tracing.estimators.Mastery) values carry no
+`deviation` — rather than silently returning nothing.
+
+```pycon
+>>> items = {f'q{i}': Item(f'q{i}', labels=('area' if i % 2 else 'sums',))
+...          for i in range(40)}
+>>> model = LearnerModel(items=items, log={}, estimates={})
+>>> model.weakest('ada')
+[]
+>>> model.weakest('ada').reason
+'no_evidence'
+>>> for i in range(40):  # right on every sum, wrong on every area question
+...     model.record('ada', f'q{i}', 'wrong' if i % 2 else 'correct')
+>>> [m.label for m in model.weakest('ada')]
+['area']
+>>> [m.label for m in model.weakest('ada', credible_below=None)]  # plain ranking
+['area', 'sums']
+```
 
 * **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Mastery`](learny.tracing.estimators.md#learny.tracing.estimators.Mastery)]
+  [`Weakest`](learny.tracing.model.md#learny.tracing.model.Weakest)
 
-### *class* learny.tracing.Mastery(label, skill, prior_var=1.0)
+### *class* learny.tracing.Mastery(label, skill, prior_var=1.0, , deviation=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -314,6 +363,11 @@ What the model believes about one student and one label.
 `probability` is the chance of success on an item of *average* difficulty, which is
 what makes two labels comparable. `confidence` is a genuine posterior quantity, not
 a heuristic: it falls out of the variance.
+
+`deviation` is the label’s posterior *relative to the student’s own global skill*,
+when the estimator has one (`None` otherwise). It is what “credibly weaker than
+their own level” is judged on ([`LearnerModel.weakest`](learny.tracing.model.md#learny.tracing.model.LearnerModel.weakest)), so an estimator provides it through
+this field rather than a caller reading the estimator’s private state.
 
 ```pycon
 >>> m = Mastery('fractions', Skill(mu=0.5, var=0.25, n=4), prior_var=1.0)
@@ -610,6 +664,24 @@ A credible interval on the logit scale.
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
+### *class* learny.tracing.Weakest(masteries=(), , reason=None)
+
+Bases: [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+What [`LearnerModel.weakest()`](#learny.tracing.LearnerModel.weakest) returns: a list of `Mastery`, plus why.
+
+It *is* a list — it compares, iterates, slices and serialises like one — so callers
+that treat the result as a list keep working. `reason` is `None` when the list is
+non-empty and says why it is empty otherwise; see [`LearnerModel.weakest()`](#learny.tracing.LearnerModel.weakest). It
+describes the answer as returned: slicing gives a plain list, and a caller that
+mutates the result owns keeping `reason` meaningful.
+
+```pycon
+>>> w = Weakest(reason='no_evidence')
+>>> w == [], w.reason
+(True, 'no_evidence')
+```
 
 ### learny.tracing.calibration(log, , items, estimator, students=None, n_bins=10)
 

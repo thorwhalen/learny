@@ -354,7 +354,7 @@
 <span class="n">model</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="s1">'q2'</span><span class="p">,</span> <span class="s1">'wrong'</span><span class="p">)</span>
 
 <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="s1">'q2'</span><span class="p">)</span>      <span class="c1"># probability she gets this one right</span>
-<span class="n">model</span><span class="o">.</span><span class="n">weakest</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>       <span class="c1"># the labels to practise next</span>
+<span class="n">model</span><span class="o">.</span><span class="n">weakest</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>       <span class="c1"># labels credibly below her own level: what to practise next</span>
 </pre></div>
 </div>
 <p>That is the whole common case. Responses are appended to a log under <code class="docutils literal notranslate"><span class="pre">~/.local/share/learny/</span></code> and the estimates are kept beside it; nothing needs configuring, and no data is written anywhere near your code.</p>
@@ -390,7 +390,8 @@
 <section id="when-to-believe-it">
 <h3>When to believe it<a class="headerlink" href="#when-to-believe-it" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">separation</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">)</span><span class="o">.</span><span class="n">distinguishable</span>     <span class="c1"># can her labels be told apart at all?</span>
-<span class="n">model</span><span class="o">.</span><span class="n">weakest</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">credible_below</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># only labels credibly below her own level</span>
+<span class="n">model</span><span class="o">.</span><span class="n">weakest</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">)</span><span class="o">.</span><span class="n">reason</span>                  <span class="c1"># why it is empty, when it is</span>
+<span class="n">model</span><span class="o">.</span><span class="n">weakest</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="n">credible_below</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>    <span class="c1"># plain ranking, no credibility gate</span>
 <span class="n">model</span><span class="o">.</span><span class="n">calibration</span><span class="p">()</span>                          <span class="c1"># prequential: are the probabilities honest?</span>
 </pre></div>
 </div>
@@ -418,7 +419,7 @@
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-22 14:22 UTC from <a href="https://github.com/thorwhalen/learny/commit/d8a2251479d0f9a5712cdf0eb0bd37ba00fd2ec2">d8a2251</a> (main) · learny 0.0.1 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-22 14:29 UTC from <a href="https://github.com/thorwhalen/learny/commit/5ba87ae5e6d6e788a5983b225481e9511e3cc6f3">5ba87ae</a> (main) · learny 0.0.1 · <a href="about-this-build.html">about this build</a></p>
 
                 </article>
               
