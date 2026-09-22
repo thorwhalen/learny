@@ -1,4 +1,4 @@
-> built 2026-09-22 13:12 UTC from d414a18 (main) · learny 0.0.1. Details: build_info.json
+> built 2026-09-22 14:01 UTC from b38cab3 (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -90,7 +90,7 @@ Learner responses are personal data. They are written under `~/.local/share/lear
 
 ## Games
 
-`learny.eleven_plus` holds vocabulary material and a quiz app for the UK 11+ exam. The game-parameter JSON files ship with the package and can be loaded by any front-end.
+[`games/eleven_plus/`](https://github.com/thorwhalen/learny/tree/main/games/eleven_plus) holds vocabulary material and a quiz app for the UK 11+ exam. It lives in this repository but outside the `learny` package, so `pip install learny` installs the library only. The game-parameter JSON files are plain data and can be loaded by any front-end.
 
 <p class="epythet-aggregates">This documentation as a single file: <a href="learny.md">learny.md</a> (Markdown, for agents).</p>
 
@@ -101,33 +101,30 @@ Learner responses are personal data. They are written under `~/.local/share/lear
 
 Turn learning into play — build knowledge with joy.
 
-`learny` collects small, self-contained learning games and the data that
-drives them. Today the package is a container for those assets rather than a
-Python API: each sub-package holds the game parameters (word groups, quiz
-definitions) plus the front-end that renders them.
+`learny` is a Python library for learner modelling: estimating what a student
+knows from what they have answered.
 
 ## Sub-packages
 
-`learny.eleven_plus`
-: Vocabulary material and a quiz app for the UK 11+ exam. The word/quiz
-  parameters are JSON files shipped alongside the package; the player is a
-  Vite/React app (`quiz-test/`) with a dependency-free standalone HTML
-  build for offline use.
+`learny.tracing`
+: A per-student learner model whose priors update from that student’s own
+  data. Start with [`LearnerModel`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel).
 
-The JSON game-parameter files are the interesting, reusable part: they are
-plain data, so they can be loaded by any front-end, notebook, or script.
+The 11+ vocabulary games that used to live here (word lists, game parameters
+and a quiz front-end) are plain data and a web app, not Python API. They are
+kept in the repository under `games/`, outside this package, so they are not
+part of the installed distribution.
 
-Because the value of this distribution *is* its data, the one thing worth
-asserting is that the data actually ships with the package:
+The installed distribution is the library alone; `tracing` is its only
+sub-package:
 
 ```pycon
 >>> from pathlib import Path
 >>> import learny
 >>> pkg_dir = Path(learny.__file__).parent
->>> 'eleven_plus' in {p.name for p in pkg_dir.iterdir() if p.is_dir()}
-True
->>> any(pkg_dir.joinpath('eleven_plus').glob('*.json'))
-True
+>>> sorted(p.name for p in pkg_dir.iterdir()
+...        if p.is_dir() and (p / '__init__.py').exists())
+['tracing']
 ```
 
 ### Modules
@@ -1991,7 +1988,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-09-22 13:12 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/d414a18899f6cc3a8a4a28a8ceb20eb49d4d69ba"><code>d414a18</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-09-22 14:01 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/b38cab35b8f158b30bafd0e5b7d67de592a1e962"><code>b38cab3</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -2000,7 +1997,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/d414a18899f6cc3a8a4a28a8ceb20eb49d4d69ba"><code>d414a18899f6cc3a8a4a28a8ceb20eb49d4d69ba</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/b38cab35b8f158b30bafd0e5b7d67de592a1e962"><code>b38cab35b8f158b30bafd0e5b7d67de592a1e962</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -2011,9 +2008,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/35731837623">35731837623</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/35737207539">35737207539</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>d414a18899f6cc3a8a4a28a8ceb20eb49d4d69ba</code> (in the history of the built commit) |
+| Event commit | <code>b38cab35b8f158b30bafd0e5b7d67de592a1e962</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2044,7 +2041,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout d414a18899f6cc3a8a4a28a8ceb20eb49d4d69ba
+git checkout b38cab35b8f158b30bafd0e5b7d67de592a1e962
 pip install "epythet==0.2.12"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

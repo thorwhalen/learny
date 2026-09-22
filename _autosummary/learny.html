@@ -378,30 +378,27 @@
   <section id="module-learny">
 <span id="learny"></span><h1>learny<a class="headerlink" href="#module-learny" title="Link to this heading">#</a></h1>
 <p>Turn learning into play — build knowledge with joy.</p>
-<p><code class="docutils literal notranslate"><span class="pre">learny</span></code> collects small, self-contained learning games and the data that
-drives them. Today the package is a container for those assets rather than a
-Python API: each sub-package holds the game parameters (word groups, quiz
-definitions) plus the front-end that renders them.</p>
+<p><code class="docutils literal notranslate"><span class="pre">learny</span></code> is a Python library for learner modelling: estimating what a student
+knows from what they have answered.</p>
 <section id="sub-packages">
 <h2>Sub-packages<a class="headerlink" href="#sub-packages" title="Link to this heading">#</a></h2>
 <dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">learny.eleven_plus</span></code></dt><dd><p>Vocabulary material and a quiz app for the UK 11+ exam. The word/quiz
-parameters are JSON files shipped alongside the package; the player is a
-Vite/React app (<code class="docutils literal notranslate"><span class="pre">quiz-test/</span></code>) with a dependency-free standalone HTML
-build for offline use.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">learny.tracing</span></code></dt><dd><p>A per-student learner model whose priors update from that student’s own
+data. Start with <a class="reference internal" href="learny.tracing.model.html#learny.tracing.model.LearnerModel" title="learny.tracing.model.LearnerModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerModel</span></code></a>.</p>
 </dd>
 </dl>
-<p>The JSON game-parameter files are the interesting, reusable part: they are
-plain data, so they can be loaded by any front-end, notebook, or script.</p>
-<p>Because the value of this distribution <em>is</em> its data, the one thing worth
-asserting is that the data actually ships with the package:</p>
+<p>The 11+ vocabulary games that used to live here (word lists, game parameters
+and a quiz front-end) are plain data and a web app, not Python API. They are
+kept in the repository under <code class="docutils literal notranslate"><span class="pre">games/</span></code>, outside this package, so they are not
+part of the installed distribution.</p>
+<p>The installed distribution is the library alone; <code class="docutils literal notranslate"><span class="pre">tracing</span></code> is its only
+sub-package:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">learny</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">learny</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s1">'eleven_plus'</span> <span class="ow">in</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pkg_dir</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()}</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">any</span><span class="p">(</span><span class="n">pkg_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">'eleven_plus'</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">'*.json'</span><span class="p">))</span>
-<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pkg_dir</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span>
+<span class="gp">... </span>       <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">p</span> <span class="o">/</span> <span class="s1">'__init__.py'</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span>
+<span class="go">['tracing']</span>
 </pre></div>
 </div>
 </section>
