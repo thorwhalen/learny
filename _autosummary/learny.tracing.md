@@ -19,18 +19,18 @@ True
 
 ### Functions
 
-| [`estimate_store`](#learny.tracing.estimate_store)(\*[, rootdir])                   | Per-student mastery estimates, keyed by student.                                                                   |
-|--------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| [`response_log`](#learny.tracing.response_log)(\*[, rootdir])                     | The default response log, under `~/.local/share/learny/responses/`.                                                |
-| [`data_dir`](#learny.tracing.data_dir)([kind, app_name])                      | The per-kind data directory, created on demand.                                                                    |
-| [`label_separation`](#learny.tracing.label_separation)(state, \*[, min_n, threshold]) | Separation of one student's label deviations, from their estimator state.                                          |
-| [`calibration`](#learny.tracing.calibration)(log, \*, items, estimator[, ...])   | Prequential calibration of `estimator` over the students in `log`.                                                 |
-| [`prequential`](#learny.tracing.prequential)(responses, \*, items, estimator)    | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                      |
-| [`restrict_labels`](#learny.tracing.restrict_labels)(items, \*, keep[, ...])         | Project an item bank onto a subset of its labels — one facet, say.                                                 |
-| [`difficulty_from_rank`](#learny.tracing.difficulty_from_rank)(rank, n_ranks)             | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
-| [`mark_not_reached`](#learny.tracing.mark_not_reached)(responses)                     | Flag the trailing run of blanks in one sitting as *not reached*.                                                   |
-| [`expit`](#learny.tracing.expit)(x)                                        | The logistic function, overflow-safe at the tails.                                                                 |
-| [`logit`](#learny.tracing.logit)(p, \*[, eps])                             | Inverse of [`expit()`](#learny.tracing.expit), clamped away from 0 and 1 so it stays finite. |
+| [`estimate_store`](#learny.tracing.estimate_store)(\*[, rootdir])                 | Per-student mastery estimates, keyed by student.                                                                   |
+|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [`response_log`](#learny.tracing.response_log)(\*[, rootdir])                   | The default response log, under `~/.local/share/learny/responses/`.                                                |
+| [`data_dir`](#learny.tracing.data_dir)([kind, app_name])                    | The per-kind data directory, created on demand.                                                                    |
+| [`label_separation`](#learny.tracing.label_separation)(state, \*[, min_n, ...])     | Separation of one student's label deviations, from their estimator state.                                          |
+| [`calibration`](#learny.tracing.calibration)(log, \*, items, estimator[, ...]) | Prequential calibration of `estimator` over the students in `log`.                                                 |
+| [`prequential`](#learny.tracing.prequential)(responses, \*, items, estimator)  | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                      |
+| [`restrict_labels`](#learny.tracing.restrict_labels)(items, \*, keep[, ...])       | Project an item bank onto a subset of its labels — one facet, say.                                                 |
+| [`difficulty_from_rank`](#learny.tracing.difficulty_from_rank)(rank, n_ranks)           | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
+| [`mark_not_reached`](#learny.tracing.mark_not_reached)(responses)                   | Flag the trailing run of blanks in one sitting as *not reached*.                                                   |
+| [`expit`](#learny.tracing.expit)(x)                                      | The logistic function, overflow-safe at the tails.                                                                 |
+| [`logit`](#learny.tracing.logit)(p, \*[, eps])                           | Inverse of [`expit()`](#learny.tracing.expit), clamped away from 0 and 1 so it stays finite. |
 
 ### Classes
 
@@ -284,6 +284,7 @@ state that live recording produced.
 How distinguishable this student’s labels are; see [`label_separation()`](#learny.tracing.label_separation).
 
 Check `.distinguishable` before acting on an ordering from [`weakest()`](#learny.tracing.LearnerModel.weakest).
+The deviations are de-shrunk with this model’s own estimator prior.
 
 * **Return type:**
   [`LabelSeparation`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.LabelSeparation)
@@ -699,7 +700,7 @@ The logistic function, overflow-safe at the tails.
 0.0
 ```
 
-### learny.tracing.label_separation(state, , min_n=1, threshold=2.0)
+### learny.tracing.label_separation(state, , min_n=1, threshold=2.0, label_prior_var=0.25)
 
 Separation of one student’s label deviations, from their estimator state.
 
@@ -710,6 +711,17 @@ that can be told apart from anything.
 
 Deviations, not mastery, are what is measured: the question is whether the labels
 differ *from each other*, and every label shares the same global skill.
+
+The Rasch formula assumes unshrunk (likelihood-only) measures, but the state holds
+*posteriors*, pulled toward zero by a `N(0, label_prior_var)` prior. Fed shrunk
+means and posterior variances directly, it reads roughly `G² - 1` instead of
+`G²` even when the prior is right, and much less at moderate data — labels that
+are separable get called noise. So each label is first de-shrunk to the estimate
+its evidence alone supports: error variance `s² = 1 / (1/var - 1/label_prior_var)`
+and measure `mu * s² / var`. A label with no evidence beyond the prior
+(`var >= label_prior_var`) is left out. Pass the estimator’s own
+`label_prior_var` ([`LearnerModel.separation`](learny.tracing.model.md#learny.tracing.model.LearnerModel.separation) does); `None` treats the state as
+already unshrunk.
 
 * **Return type:**
   [`LabelSeparation`](learny.tracing.diagnostics.md#learny.tracing.diagnostics.LabelSeparation)

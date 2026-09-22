@@ -9,6 +9,7 @@ learny.tracing.diagnostics
    .. autosummary::
    
       DEFAULT_SEPARATION_THRESHOLD
+      DEFAULT_LABEL_PRIOR_VAR
       DEFAULT_N_BINS
    
    .. rubric:: Functions

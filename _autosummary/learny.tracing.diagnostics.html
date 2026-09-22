@@ -407,7 +407,10 @@ neither looks at more than one student at a time unless asked to.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD" title="learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_SEPARATION_THRESHOLD</span></code></a></p></td>
 <td><p>Separation at which an ordering of labels is worth believing.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.DEFAULT_N_BINS" title="learny.tracing.diagnostics.DEFAULT_N_BINS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_N_BINS</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.DEFAULT_LABEL_PRIOR_VAR" title="learny.tracing.diagnostics.DEFAULT_LABEL_PRIOR_VAR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_LABEL_PRIOR_VAR</span></code></a></p></td>
+<td><p>The prior variance <a class="reference internal" href="#learny.tracing.diagnostics.label_separation" title="learny.tracing.diagnostics.label_separation"><code class="xref py py-func docutils literal notranslate"><span class="pre">label_separation()</span></code></a> assumes the label deviations were shrunk with — the default estimator's, so the two cannot drift apart.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.DEFAULT_N_BINS" title="learny.tracing.diagnostics.DEFAULT_N_BINS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_N_BINS</span></code></a></p></td>
 <td><p>Equal-width probability bins for the reliability table.</p></td>
 </tr>
 </tbody>
@@ -416,7 +419,7 @@ neither looks at more than one student at a time unless asked to.</p>
 <p class="rubric">Functions</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.label_separation" title="learny.tracing.diagnostics.label_separation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">label_separation</span></code></a>(state, *[, min_n, threshold])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.label_separation" title="learny.tracing.diagnostics.label_separation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">label_separation</span></code></a>(state, *[, min_n, ...])</p></td>
 <td><p>Separation of one student's label deviations, from their estimator state.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.prequential" title="learny.tracing.diagnostics.prequential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prequential</span></code></a>(responses, *, items, estimator)</p></td>
@@ -492,6 +495,13 @@ so <code class="docutils literal notranslate"><span class="pre">log_loss</span> 
 </div>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="learny.tracing.diagnostics.DEFAULT_LABEL_PRIOR_VAR">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_LABEL_PRIOR_VAR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.25</span></span><a class="headerlink" href="#learny.tracing.diagnostics.DEFAULT_LABEL_PRIOR_VAR" title="Link to this definition">#</a></dt>
+<dd><p>The prior variance <a class="reference internal" href="#learny.tracing.diagnostics.label_separation" title="learny.tracing.diagnostics.label_separation"><code class="xref py py-func docutils literal notranslate"><span class="pre">label_separation()</span></code></a> assumes the label deviations were shrunk
+with — the default estimator’s, so the two cannot drift apart.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -600,7 +610,7 @@ there is no right answer to compare them to.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.diagnostics.label_separation">
-<span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">label_separation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#label_separation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.label_separation" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">label_separation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_prior_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#label_separation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.label_separation" title="Link to this definition">#</a></dt>
 <dd><p>Separation of one student’s label deviations, from their estimator state.</p>
 <p>Works on any state that stores labels as <code class="docutils literal notranslate"><span class="pre">{label:</span> <span class="pre">{&quot;mu&quot;,</span> <span class="pre">&quot;var&quot;,</span> <span class="pre">&quot;n&quot;}}</span></code> — the
 <a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.RaschEstimator" title="learny.tracing.estimators.RaschEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a> layout. Only labels with at least
@@ -608,6 +618,16 @@ there is no right answer to compare them to.</p>
 that can be told apart from anything.</p>
 <p>Deviations, not mastery, are what is measured: the question is whether the labels
 differ <em>from each other</em>, and every label shares the same global skill.</p>
+<p>The Rasch formula assumes unshrunk (likelihood-only) measures, but the state holds
+<em>posteriors</em>, pulled toward zero by a <code class="docutils literal notranslate"><span class="pre">N(0,</span> <span class="pre">label_prior_var)</span></code> prior. Fed shrunk
+means and posterior variances directly, it reads roughly <code class="docutils literal notranslate"><span class="pre">G²</span> <span class="pre">-</span> <span class="pre">1</span></code> instead of
+<code class="docutils literal notranslate"><span class="pre">G²</span></code> even when the prior is right, and much less at moderate data — labels that
+are separable get called noise. So each label is first de-shrunk to the estimate
+its evidence alone supports: error variance <code class="docutils literal notranslate"><span class="pre">s²</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">/</span> <span class="pre">(1/var</span> <span class="pre">-</span> <span class="pre">1/label_prior_var)</span></code>
+and measure <code class="docutils literal notranslate"><span class="pre">mu</span> <span class="pre">*</span> <span class="pre">s²</span> <span class="pre">/</span> <span class="pre">var</span></code>. A label with no evidence beyond the prior
+(<code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">&gt;=</span> <span class="pre">label_prior_var</span></code>) is left out. Pass the estimator’s own
+<code class="docutils literal notranslate"><span class="pre">label_prior_var</span></code> (<a class="reference internal" href="learny.tracing.model.html#learny.tracing.model.LearnerModel.separation" title="learny.tracing.model.LearnerModel.separation"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LearnerModel.separation</span></code></a> does); <code class="docutils literal notranslate"><span class="pre">None</span></code> treats the state as
+already unshrunk.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#learny.tracing.diagnostics.LabelSeparation" title="learny.tracing.diagnostics.LabelSeparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a></span></p>
@@ -706,6 +726,7 @@ skips included; filter on <code class="docutils literal notranslate"><span class
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.CalibrationReport.from_pairs"><code class="docutils literal notranslate"><span class="pre">CalibrationReport.from_pairs()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.DEFAULT_LABEL_PRIOR_VAR"><code class="docutils literal notranslate"><span class="pre">DEFAULT_LABEL_PRIOR_VAR</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.DEFAULT_N_BINS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_N_BINS</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD"><code class="docutils literal notranslate"><span class="pre">DEFAULT_SEPARATION_THRESHOLD</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.diagnostics.LabelSeparation"><code class="docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a><ul class="nav section-nav flex-column">

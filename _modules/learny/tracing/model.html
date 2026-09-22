@@ -867,8 +867,13 @@ window.runMermaid = runMermaid;</script>
 <span class="w">        </span><span class="sd">"""How distinguishable this student's labels are; see :func:`label_separation`.</span>
 
 <span class="sd">        Check ``.distinguishable`` before acting on an ordering from :meth:`weakest`.</span>
+<span class="sd">        The deviations are de-shrunk with this model's own estimator prior.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">label_separation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">(</span><span class="n">student</span><span class="p">),</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">label_separation</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">(</span><span class="n">student</span><span class="p">),</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">label_prior_var</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="s2">"label_prior_var"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="LearnerModel.calibration">
