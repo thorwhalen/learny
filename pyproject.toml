@@ -14,10 +14,9 @@ license = "MIT"
 keywords = [
     "education",
     "learning",
-    "quiz",
-    "vocabulary",
-    "eleven-plus",
-    "games",
+    "learner-model",
+    "knowledge-tracing",
+    "rasch",
 ]
 authors = [
     { name = "Thor Whalen" },
@@ -53,6 +52,7 @@ exclude = [
 
 [tool.hatch.build.targets.sdist]
 exclude = [
+    "games/**",
     "**/node_modules/**",
     "**/dist/**",
     "**/.DS_Store",
@@ -155,7 +155,7 @@ exclude_paths = [
     "examples",
     "scrap",
     "docsrc",
-    "learny/eleven_plus/quiz-test",
+    "games",
 ]
 test_on_windows = true
 
