@@ -175,7 +175,7 @@ class TestFamilyGate:
     """weakest() corrects for testing many labels and for a shared shortfall (#14)."""
 
     def test_defaults_are_the_corrected_gate(self):
-        assert (DEFAULT_RELATIVE_TO, DEFAULT_MULTIPLICITY) == ("labels", "sidak")
+        assert (DEFAULT_RELATIVE_TO, DEFAULT_MULTIPLICITY) == ("labels", "bonferroni")
 
     @pytest.mark.parametrize("n_labels", [6, 20])
     def test_no_real_weakness_is_rarely_flagged(self, n_labels):
@@ -234,12 +234,37 @@ class TestFamilyGate:
             "no_credible_weakness"
         )
 
+    @pytest.mark.xfail(
+        strict=True, reason="#23: a heavily weighted label absorbs the shared shortfall"
+    )
+    def test_a_uniform_shortfall_on_weighted_labels_is_not_blamed(self):
+        items = {
+            f"q{i}": Item(f"q{i}", labels={"l0": 0.9, f"l{1 + i % 5}": 0.1})
+            for i in range(30)
+        }
+        keys = sorted(items)
+        flagged = 0
+        for seed in range(20):
+            rng = random.Random(seed)
+            model = LearnerModel(items=items, log={}, estimates={})
+            for _ in range(300):
+                item = items[rng.choice(keys)]
+                p = expit(-2.5 - logit(item.difficulty))
+                model.record("s", item.id, "correct" if rng.random() < p else "wrong")
+            flagged += bool(model.weakest("s", n=6))
+        assert flagged <= 4
+
+    def test_bool_n_is_refused(self):
+        model = _model({"q": Item("q", labels=("a",))}, [])
+        with pytest.raises(ValueError, match="n must be"):
+            model.weakest("s", n=True)
+
     def test_unknown_options_are_refused(self):
         model = _model({"q": Item("q", labels=("a",))}, [])
         with pytest.raises(ValueError, match="relative_to"):
             model.weakest("s", relative_to="others")
         with pytest.raises(ValueError, match="multiplicity"):
-            model.weakest("s", multiplicity="bonferroni")
+            model.weakest("s", multiplicity="sidak")
 
 
 class TestCalibration:

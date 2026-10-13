@@ -41,9 +41,9 @@ __all__ = [
 
 #: How many posterior standard deviations below its comparator a label must be before
 #: :meth:`LearnerModel.weakest` calls it a weakness. 1.0 is a one-sided ~84% credible
-#: bound. With the default ``multiplicity="sidak"`` it is the bound for the *whole set*
-#: of labels tested — a student with no real weakness gets a label flagged at most about
-#: one time in six, however many labels there are — and with ``multiplicity="none"`` it is per
+#: bound. With the default ``multiplicity="bonferroni"`` it is the bound for the *whole
+#: set* of labels tested — a student with no real weakness gets a label flagged at most
+#: about one time in six, however many labels there are — and with ``multiplicity="none"`` it is per
 #: label. It stops a set of labels that never vary independently (many labels on every
 #: item) from being ranked at all. Raise it when a false "practise this" is costly.
 DEFAULT_CREDIBLE_BELOW = 1.0
@@ -57,36 +57,40 @@ DEFAULT_CREDIBLE_BELOW = 1.0
 #: with, so nothing is credibly weak.
 DEFAULT_RELATIVE_TO = "labels"
 
-#: How the bound accounts for testing several labels at once. ``"sidak"`` raises the
-#: per-label z so the chance of *any* false flag is at most ``1 - Phi(credible_below)``
-#: (less in practice: a shrunk posterior's sd overstates how far its mean wanders);
+#: How the bound accounts for testing several labels at once. ``"bonferroni"`` raises the
+#: per-label z so the chance of *any* false flag is at most ``1 - Phi(credible_below)``,
+#: whatever the dependence between labels (far less with little evidence, where a shrunk
+#: posterior's sd overstates how far its mean wanders — the cost is power, see
+#: :meth:`LearnerModel.weakest`);
 #: ``"none"`` applies ``credible_below`` to each label separately, as the original
 #: gate did.
-DEFAULT_MULTIPLICITY = "sidak"
+DEFAULT_MULTIPLICITY = "bonferroni"
 
 WeakestReason = Literal["no_evidence", "no_credible_weakness"]
 RelativeTo = Literal["labels", "global"]
-Multiplicity = Literal["sidak", "none"]
+Multiplicity = Literal["bonferroni", "none"]
 _RELATIVE_TO = ("labels", "global")
-_MULTIPLICITY = ("sidak", "none")
+_MULTIPLICITY = ("bonferroni", "none")
 
 
-def _sidak_z(z: float, m: int) -> float:
+def _bonferroni_z(z: float, m: int) -> float:
     """The per-label z that keeps the chance of any of ``m`` one-sided exceedances at
-    the chance of one at ``z`` (Šidák, exact for independent tests).
+    most the chance of one at ``z``, under any dependence between them (Bonferroni).
 
-    >>> _sidak_z(1.0, 1)
+    The labels' contrasts with each other are slightly negatively correlated, where the
+    Šidák level, exact for independent tests, would be a little too lenient.
+
+    >>> _bonferroni_z(1.0, 1)
     1.0
-    >>> round(_sidak_z(1.0, 6), 2), round(_sidak_z(1.0, 20), 2)
-    (1.91, 2.38)
-    >>> _sidak_z(math.inf, 6)
+    >>> round(_bonferroni_z(1.0, 6), 2), round(_bonferroni_z(1.0, 20), 2)
+    (1.94, 2.41)
+    >>> _bonferroni_z(math.inf, 6)
     inf
     """
     alpha = NormalDist().cdf(-z)  # family-wise one-sided tail, accurate for large z
     if m <= 1 or alpha == 0.0:  # one test, or a tail beyond float resolution
         return z
-    per_label = -math.expm1(math.log1p(-alpha) / m)
-    return -NormalDist().inv_cdf(per_label)
+    return -NormalDist().inv_cdf(alpha / m)
 
 
 def _contrasts(
@@ -236,7 +240,8 @@ class LearnerModel:
         *other* labels: the upper bound ``c + z * sd`` of its contrast ``c`` — its
         :attr:`Mastery.deviation <learny.tracing.estimators.Mastery.deviation>` minus the
         precision-weighted mean deviation of every other label with evidence — is below
-        zero. The survivors are ranked worst first and the first ``n`` returned.
+        zero. The survivors are ranked by posterior mean mastery, worst first, and the
+        first ``n`` returned.
 
         Three keywords set the gate:
 
@@ -246,15 +251,21 @@ class LearnerModel:
           comparator on average. ``None`` switches the gate off and ranks every
           label with evidence by posterior mean — check :meth:`separation` before
           believing that ranking.
-        * ``multiplicity`` — ``"sidak"`` (default) corrects for testing every label with
+        * ``multiplicity`` — ``"bonferroni"`` (default) corrects for testing every label with
           evidence at once, so ``z`` bounds the chance of *any* false flag; ``"none"``
-          applies ``z`` to each label separately, which with six labels and no real
-          weakness flags something more often than not.
+          applies ``z`` to each label separately, which with six labels, a few hundred
+          responses and no real weakness flags something more often than not. The
+          correction is on posterior bounds, which shrinkage already makes cautious
+          when evidence is thin, so in cold start it mostly costs power: with a few
+          responses per label even a large real weakness is rarely returned. Pass
+          ``"none"`` there if a missed weakness costs more than a false one (#22).
         * ``relative_to`` — ``"labels"`` (default) as above; ``"global"`` measures each
           label's deviation against zero, the student's global skill. With the default
           estimator that split comes from the priors, so part of a uniform shortfall
           lands on every label and a student weak everywhere sees several labels
-          returned; measured against the other labels, a shared shortfall cancels. So
+          returned; measured against the other labels, a shared shortfall cancels —
+          when labels share items equally; a heavily weighted label still absorbs more
+          of it (#23). So
           evidence on a single label is never a credible weakness here — there is
           nothing to compare it with. When unlabelled items carry the comparison (a
           label against the rest of the paper), use ``"global"``.
@@ -296,7 +307,7 @@ class LearnerModel:
         >>> [m.label for m in model.weakest('ada', relative_to='global', multiplicity='none')]
         ['area']
         """
-        if not (isinstance(n, int) and n >= 1):
+        if not (isinstance(n, int) and not isinstance(n, bool) and n >= 1):
             raise ValueError(f"n must be a positive integer, got {n!r}")
         if credible_below is not None and not credible_below >= 0:
             raise ValueError(
@@ -328,8 +339,8 @@ class LearnerModel:
         if relative_to == "labels" and len(ranked) < 2:
             return Weakest(reason="no_credible_weakness")
         z = (
-            _sidak_z(credible_below, len(ranked))
-            if multiplicity == "sidak"
+            _bonferroni_z(credible_below, len(ranked))
+            if multiplicity == "bonferroni"
             else credible_below
         )
         credible = [
