@@ -13,6 +13,8 @@ import pytest
 
 from learny.tracing import (
     DEFAULT_CREDIBLE_BELOW,
+    DEFAULT_MULTIPLICITY,
+    DEFAULT_RELATIVE_TO,
     Item,
     LearnerModel,
     Mastery,
@@ -139,6 +141,105 @@ class TestCredibleWeakest:
         found = {m.label for m in model.weakest("s", n=9, credible_below=1.0)}
         assert {"l0", "l1"} <= found
         assert not found & {"l2", "l3"}
+
+
+ORIGINAL_GATE = dict(relative_to="global", multiplicity="none")
+
+
+def _students(n_labels, *, n_students, skill=0.0, weak=None, n_responses=300):
+    """Models of synthetic students, one label per item, every label equal unless
+    ``weak`` gives the first label a real deviation. The setting of issue #14."""
+    labels = [f"l{i}" for i in range(n_labels)]
+    items = {
+        f"q{i}": Item(f"q{i}", labels=(labels[i % n_labels],), difficulty=0.5)
+        for i in range(5 * n_labels)
+    }
+    keys = sorted(items)
+    for seed in range(n_students):
+        rng = random.Random(seed)
+        model = LearnerModel(items=items, log={}, estimates={})
+        for _ in range(n_responses):
+            item = items[rng.choice(keys)]
+            dev = weak if weak is not None and item.labels[0] == "l0" else 0.0
+            p = expit(skill + dev - logit(item.difficulty))
+            model.record("s", item.id, "correct" if rng.random() < p else "wrong")
+        yield model
+
+
+def _flag_rate(models, n_labels, **gate):
+    flagged = [bool(m.weakest("s", n=n_labels, **gate)) for m in models]
+    return sum(flagged) / len(flagged)
+
+
+class TestFamilyGate:
+    """weakest() corrects for testing many labels and for a shared shortfall (#14)."""
+
+    def test_defaults_are_the_corrected_gate(self):
+        assert (DEFAULT_RELATIVE_TO, DEFAULT_MULTIPLICITY) == ("labels", "sidak")
+
+    @pytest.mark.parametrize("n_labels", [6, 20])
+    def test_no_real_weakness_is_rarely_flagged(self, n_labels):
+        models = list(_students(n_labels, n_students=40))
+        # the family-wise bound is ~16% at z = 1; the per-label gate flags most students
+        assert _flag_rate(models, n_labels) <= 0.2
+        assert _flag_rate(models, n_labels, **ORIGINAL_GATE) >= 0.4
+
+    def test_a_uniform_shortfall_is_not_blamed_on_labels(self):
+        models = list(_students(6, n_students=30, skill=-2.5))
+        assert _flag_rate(models, 6) <= 0.2
+        mean_flags = sum(len(m.weakest("s", n=6, **ORIGINAL_GATE)) for m in models) / 30
+        assert mean_flags >= 2.0  # the mean-field attribution the default removes
+
+    def test_a_real_weakness_is_still_found(self):
+        models = list(_students(6, n_students=20, weak=-2.0))
+        found = [{m.label for m in model.weakest("s", n=6)} for model in models]
+        assert sum(f == {"l0"} for f in found) >= 18
+
+    def test_the_original_gate_is_reachable(self, true_dev):
+        items = {
+            f"q{i}": Item(f"q{i}", labels=(LABELS[i % 9],), difficulty=0.5)
+            for i in range(45)
+        }
+        model = _model(items, _simulate(items, true_dev, n=600))
+        masteries = sorted(model.mastery("s").values(), key=lambda m: m.mu)
+        expected = [m for m in masteries if m.deviation.mu + m.deviation.sd < 0.0]
+        assert model.weakest("s", n=9, **ORIGINAL_GATE) == expected
+
+    def test_a_single_label_has_nothing_to_be_weaker_than(self):
+        items = {f"q{i}": Item(f"q{i}", labels=("a",)) for i in range(20)}
+        model = _model(items, [Response("s", f"q{i}", "wrong") for i in range(20)])
+        result = model.weakest("s")
+        assert result == [] and result.reason == "no_credible_weakness"
+        # against the global skill, the prior split blames the label: the old answer
+        assert [m.label for m in model.weakest("s", **ORIGINAL_GATE)] == ["a"]
+
+    def test_a_label_against_unlabelled_items_needs_the_global_comparator(self):
+        items = {f"u{i}": Item(f"u{i}") for i in range(20)}
+        items.update({f"a{i}": Item(f"a{i}", labels=("a",)) for i in range(20)})
+        responses = [Response("s", f"u{i}", "correct") for i in range(20)]
+        responses += [Response("s", f"a{i}", "wrong") for i in range(20)]
+        model = _model(items, responses)
+        assert model.weakest("s") == []
+        assert [m.label for m in model.weakest("s", relative_to="global")] == ["a"]
+
+    @pytest.mark.parametrize("outcome", ["correct", "wrong"])
+    def test_all_one_outcome_flags_nothing(self, outcome):
+        items = {f"q{i}": Item(f"q{i}", labels=(f"l{i % 6}",)) for i in range(60)}
+        model = _model(items, [Response("s", f"q{i}", outcome) for i in range(60)])
+        assert model.weakest("s").reason == "no_credible_weakness"
+
+    def test_one_response_flags_nothing(self):
+        items = {f"q{i}": Item(f"q{i}", labels=(f"l{i % 6}",)) for i in range(60)}
+        assert _model(items, [Response("s", "q0", "wrong")]).weakest("s").reason == (
+            "no_credible_weakness"
+        )
+
+    def test_unknown_options_are_refused(self):
+        model = _model({"q": Item("q", labels=("a",))}, [])
+        with pytest.raises(ValueError, match="relative_to"):
+            model.weakest("s", relative_to="others")
+        with pytest.raises(ValueError, match="multiplicity"):
+            model.weakest("s", multiplicity="bonferroni")
 
 
 class TestCalibration:
