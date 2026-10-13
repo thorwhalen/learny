@@ -49,10 +49,9 @@ __all__ = [
 DEFAULT_CREDIBLE_BELOW = 1.0
 
 #: What a label's weakness is measured against. ``"labels"``: the precision-weighted mean
-#: of the student's *other* labels, so a shortfall shared by every label — which the
-#: default estimator splits between global skill and each label by its priors — cancels
-#: out. ``"global"``: the student's global skill (zero deviation), as the original gate
-#: did.
+#: of the student's *other* labels, so whatever part of a shortfall every label shares
+#: cancels out. ``"global"``: the student's global skill (zero deviation), as the
+#: original gate did.
 #: With ``"labels"`` a student with evidence on a single label has nothing to compare it
 #: with, so nothing is credibly weak.
 DEFAULT_RELATIVE_TO = "labels"
@@ -100,8 +99,18 @@ def _contrasts(
 
     ``"global"`` is the deviation itself. ``"labels"`` subtracts the precision-weighted
     mean of the *other* labels' deviations (leave-one-out, so a label is never compared
-    with itself) and needs at least two labels; posteriors are treated as independent,
-    as the estimator stores them.
+    with itself) and needs at least two labels. Its variance counts the covariance the
+    deviations share through :attr:`Mastery.loading
+    <learny.tracing.estimators.Mastery.loading>` (zero: independent posteriors).
+
+    >>> from learny.tracing.estimators import Skill
+    >>> ms = [Mastery(k, Skill(0.0, 1.0), deviation=Skill(mu, 0.2), loading=a)
+    ...       for k, mu, a in (('a', -0.5, 0.0), ('b', 0.5, 0.0))]
+    >>> [(round(c, 2), round(sd, 3)) for c, sd in _contrasts(ms, 'labels')]
+    [(-1.0, 0.632), (1.0, 0.632)]
+    >>> shared = [Mastery(m.label, m.skill, deviation=m.deviation, loading=-0.3) for m in ms]
+    >>> [round(sd, 3) for _, sd in _contrasts(shared, 'labels')]  # what they share cancels
+    [0.469, 0.469]
     """
     devs = [m.deviation for m in masteries]
     if relative_to == "global":
@@ -112,12 +121,21 @@ def _contrasts(
                 f"Label {m.label!r} has a deviation variance of {d.var!r}; measuring "
                 "it against the other labels needs a positive posterior variance."
             )
+    loads = [float(getattr(m, "loading", 0.0) or 0.0) for m in masteries]
 
     def contrast(i: int) -> tuple[float, float]:
-        rest = [d for j, d in enumerate(devs) if j != i]
-        rest_prec = sum(1.0 / d.var for d in rest)
-        rest_mu = sum(d.mu / d.var for d in rest) / rest_prec
-        return devs[i].mu - rest_mu, math.sqrt(devs[i].var + 1.0 / rest_prec)
+        rest = [j for j in range(len(devs)) if j != i]
+        rest_prec = sum(1.0 / devs[j].var for j in rest)
+        w = {j: 1.0 / devs[j].var / rest_prec for j in rest}
+        rest_mu = sum(w[j] * devs[j].mu for j in rest)
+        # One-factor covariance: d_j = loading_j * Z + e_j with Var(e_j) = var_j - a_j^2.
+        shared = sum(w[j] * loads[j] for j in rest)
+        var = (
+            max(devs[i].var - loads[i] ** 2, 0.0)
+            + sum(w[j] ** 2 * max(devs[j].var - loads[j] ** 2, 0.0) for j in rest)
+            + (loads[i] - shared) ** 2
+        )
+        return devs[i].mu - rest_mu, math.sqrt(var)
 
     return [contrast(i) for i in range(len(devs))]
 
@@ -260,15 +278,16 @@ class LearnerModel:
           responses per label even a large real weakness is rarely returned. Pass
           ``"none"`` there if a missed weakness costs more than a false one (#22).
         * ``relative_to`` — ``"labels"`` (default) as above; ``"global"`` measures each
-          label's deviation against zero, the student's global skill. With the default
-          estimator that split comes from the priors, so part of a uniform shortfall
-          lands on every label and a student weak everywhere sees several labels
-          returned; measured against the other labels, a shared shortfall cancels —
-          when labels share items equally; a heavily weighted label still absorbs more
-          of it (#23). So
-          evidence on a single label is never a credible weakness here — there is
-          nothing to compare it with. When unlabelled items carry the comparison (a
-          label against the rest of the paper), use ``"global"``.
+          label's deviation against zero, the student's global skill. The default
+          estimator carries the global/label covariance, so a shortfall every item
+          shares goes to the global skill, and where the record cannot tell "weak
+          overall" from "weak on this label" the label's deviation stays wide rather
+          than taking the blame (#23); the contrast with the other labels counts the
+          covariance they share through it (:attr:`Mastery.loading
+          <learny.tracing.estimators.Mastery.loading>`). Evidence on a single label is
+          never a credible weakness under ``"labels"`` — there is nothing to compare it
+          with. When unlabelled items carry the comparison (a label against the rest of
+          the paper), use ``"global"``.
 
         ``multiplicity="none", relative_to="global"`` restores the original per-label gate.
 

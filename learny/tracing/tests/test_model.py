@@ -395,3 +395,101 @@ class TestUnknownItems:
 
     def test_predicting_an_unknown_item_is_a_coin_flip(self, model):
         assert model.predict("ada", "not-in-the-bank") == pytest.approx(0.5)
+
+
+class TestJointPosterior:
+    """The global/label covariance is carried (#23); older states still work."""
+
+    OLD_STATE = {  # the pre-#23 layout: no "cov" anywhere
+        "global": {"mu": -0.4, "var": 0.5, "n": 6, "t": None},
+        "labels": {
+            "a": {"mu": -0.2, "var": 0.2, "n": 3, "t": None},
+            "b": {"mu": 0.1, "var": 0.22, "n": 3, "t": None},
+        },
+    }
+
+    def test_a_state_without_covariances_still_loads(self):
+        est = RaschEstimator()
+        item = Item("q", labels=("a", "b"), difficulty=0.5)
+        # zero covariance is the mean-field state: the same prediction as before
+        s, v = -0.4 + 0.5 * (-0.2 + 0.1), 0.5 + 0.25 * (0.2 + 0.22)
+        expected = expit(s / (1 + 3.141592653589793 * v / 8) ** 0.5)
+        assert est.predict(self.OLD_STATE, item) == pytest.approx(expected)
+        assert est.mastery(self.OLD_STATE)["a"].skill.var == pytest.approx(0.7)
+        new = est.observe(self.OLD_STATE, Response("s", "q", Outcome.WRONG), item)
+        assert new["labels"]["a"]["cov"] < 0 and new["labels"]["b"]["cov"] < 0
+        assert "cov" not in self.OLD_STATE["labels"]["a"]  # and nothing was mutated
+
+    def test_prediction_counts_the_covariance(self):
+        """A negative global/label covariance narrows Var(global + label)."""
+        est = RaschEstimator()
+        item = Item("q", labels=("a",), difficulty=0.2)
+        state = {
+            "global": {"mu": 1.0, "var": 0.5, "n": 5, "t": None},
+            "labels": {"a": {"mu": 0.0, "var": 0.2, "n": 5, "t": None}},
+        }
+        correlated = {**state, "labels": {"a": {**state["labels"]["a"], "cov": -0.15}}}
+        assert est.predict(correlated, item) > est.predict(state, item) > 0.5
+
+    def test_a_shortfall_one_label_cannot_explain_is_split_by_the_priors(self):
+        """Global and label are not identified from one label's items; the joint
+        posterior keeps their split at the prior ratio however much evidence arrives,
+        where a mean-field update keeps moving it onto the label."""
+        est = RaschEstimator()
+        item = Item("q", labels=("a",), difficulty=0.5)
+        state = est.init()
+        for _ in range(40):
+            state = est.observe(state, Response("s", "q", Outcome.WRONG), item)
+        dev, total = state["labels"]["a"]["mu"], est.mastery(state)["a"].mu
+        ratio = est.label_prior_var / (est.prior_var + est.label_prior_var)
+        assert dev == pytest.approx(ratio * total)
+        # ... and the label's sd stays near its conditional prior: it is not identified
+        assert state["labels"]["a"]["var"] > 0.15
+
+    def test_an_unlabelled_item_moves_the_labels_that_covary_with_the_global(self):
+        est = RaschEstimator()
+        state = est.observe(
+            est.init(), Response("s", "q", Outcome.WRONG), Item("q", labels=("a",))
+        )
+        before = dict(state["labels"]["a"])
+        after = est.observe(state, Response("s", "u", Outcome.CORRECT), Item("u"))
+        assert after["labels"]["a"]["mu"] != before["mu"]
+        assert after["labels"]["a"]["n"] == before["n"]  # moved, but not observed
+
+    @pytest.mark.parametrize(
+        "options",
+        [
+            {},
+            {"gain": "elo"},
+            {"conjunctivity": 3.0},
+            {"guess": 0.2},
+            {"forget_per_week": 0.5},
+            {"update_difficulty": True},
+        ],
+        ids=lambda o: ",".join(o) or "default",
+    )
+    def test_every_option_keeps_a_valid_posterior(self, options):
+        est = RaschEstimator(**options)
+        bank = {
+            f"q{i}": Item(
+                f"q{i}",
+                labels={f"l{i % 4}": 0.7, f"l{(i + 1) % 4}": 0.3} if i % 3 else (),
+                difficulty=0.2 + 0.6 * (i % 5) / 4,
+            )
+            for i in range(20)
+        }
+        rng = random.Random(0)
+        model = LearnerModel(items=bank, estimator=est, log={}, estimates={})
+        for k in range(150):
+            outcome = rng.choice(["correct", "wrong", "unanswered"])
+            model.record("s", f"q{rng.randrange(20)}", outcome, at=k * 2 * 86400.0)
+        state = model.estimates["s"]
+        vg = state["global"]["var"]
+        assert 0 < vg <= est.prior_var
+        for entry in state["labels"].values():
+            assert entry["var"] > 0 and entry["cov"] ** 2 <= vg * entry["var"] + 1e-12
+        live = state
+        model.estimates.clear()
+        model.replay()
+        assert model.estimates["s"] == live
+        assert 0.0 < model.predict("s", "q1") < 1.0

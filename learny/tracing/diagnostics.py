@@ -193,7 +193,7 @@ def prequential(
     >>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
     >>> rs = [Response('a', 'q', 'correct'), Response('a', 'q', 'correct')]
     >>> [round(p, 3) for _, p in prequential(rs, items=items, estimator=RaschEstimator())]
-    [0.5, 0.607]
+    [0.5, 0.6]
     """
     state = estimator.init()
     for response in responses:
