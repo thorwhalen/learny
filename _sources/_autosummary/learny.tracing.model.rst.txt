@@ -9,6 +9,8 @@ learny.tracing.model
    .. autosummary::
    
       DEFAULT_CREDIBLE_BELOW
+      DEFAULT_RELATIVE_TO
+      DEFAULT_MULTIPLICITY
    
    .. rubric:: Classes
 

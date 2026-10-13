@@ -14,8 +14,10 @@ and every part can be replaced without touching the others:
 
 ### Module Attributes
 
-| [`DEFAULT_CREDIBLE_BELOW`](#learny.tracing.model.DEFAULT_CREDIBLE_BELOW)   | How many posterior standard deviations below the student's own level a label's deviation must be before [`LearnerModel.weakest()`](#learny.tracing.model.LearnerModel.weakest) calls it a weakness.   |
-|---------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`DEFAULT_CREDIBLE_BELOW`](#learny.tracing.model.DEFAULT_CREDIBLE_BELOW)   | How many posterior standard deviations below its comparator a label must be before [`LearnerModel.weakest()`](#learny.tracing.model.LearnerModel.weakest) calls it a weakness.                         |
+|---------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`DEFAULT_RELATIVE_TO`](#learny.tracing.model.DEFAULT_RELATIVE_TO)      | the precision-weighted mean of the student's *other* labels, so a shortfall shared by every label — which the default estimator splits between global skill and each label by its priors — cancels out. |
+| [`DEFAULT_MULTIPLICITY`](#learny.tracing.model.DEFAULT_MULTIPLICITY)     | How the bound accounts for testing several labels at once.                                                                                                                                              |
 
 ### Classes
 
@@ -25,13 +27,36 @@ and every part can be replaced without touching the others:
 
 ### learny.tracing.model.DEFAULT_CREDIBLE_BELOW *= 1.0*
 
-How many posterior standard deviations below the student’s own level a label’s
-deviation must be before [`LearnerModel.weakest()`](#learny.tracing.model.LearnerModel.weakest) calls it a weakness. 1.0 is a
-one-sided ~84% credible bound *per label*. It stops a set of labels that never vary
-independently (many labels on every item) from being ranked at all, and fires on a few
-papers of real evidence. It is **not** corrected for testing many labels at once: a
-student with no real weakness and six separable labels gets at least one label flagged
-more often than not. Raise `credible_below` when a false “practise this” is costly.
+How many posterior standard deviations below its comparator a label must be before
+[`LearnerModel.weakest()`](#learny.tracing.model.LearnerModel.weakest) calls it a weakness. 1.0 is a one-sided ~84% credible
+bound. With the default `multiplicity="bonferroni"` it is the bound for the \*whole
+set\* of labels tested — a student with no real weakness gets a label flagged at most
+about one time in six, however many labels there are — and with `multiplicity="none"` it is per
+label. It stops a set of labels that never vary independently (many labels on every
+item) from being ranked at all. Raise it when a false “practise this” is costly.
+
+### learny.tracing.model.DEFAULT_MULTIPLICITY *= 'bonferroni'*
+
+How the bound accounts for testing several labels at once. `"bonferroni"` raises the
+per-label z so the chance of *any* false flag is at most `1 - Phi(credible_below)`,
+whatever the dependence between labels (far less with little evidence, where a shrunk
+posterior’s sd overstates how far its mean wanders — the cost is power, see
+[`LearnerModel.weakest()`](#learny.tracing.model.LearnerModel.weakest));
+`"none"` applies `credible_below` to each label separately, as the original
+gate did.
+
+### learny.tracing.model.DEFAULT_RELATIVE_TO *= 'labels'*
+
+the precision-weighted mean
+of the student’s *other* labels, so a shortfall shared by every label — which the
+default estimator splits between global skill and each label by its priors — cancels
+out. `"global"`: the student’s global skill (zero deviation), as the original gate
+did.
+With `"labels"` a student with evidence on a single label has nothing to compare it
+with, so nothing is credibly weak.
+
+* **Type:**
+  What a label’s weakness is measured against. `"labels"`
 
 ### *class* learny.tracing.model.LearnerModel(, items=None, estimator=None, log=None, estimates=None)
 
@@ -123,21 +148,45 @@ Check `.distinguishable` before acting on an ordering from [`weakest()`](#learny
 * **Return type:**
   [`LabelSeparation`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
 
-#### weakest(student, n=5, , credible_below=1.0)
+#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='bonferroni')
 
 The labels this student is credibly weakest on — what to practise next.
 
-By default a label is returned only when its deviation from the student’s *own*
-global skill is credibly negative: the upper bound `mu + z * sd` of
-`Mastery.deviation` is below
-zero, with `z = credible_below` (default [`DEFAULT_CREDIBLE_BELOW`](#learny.tracing.model.DEFAULT_CREDIBLE_BELOW)). The
-survivors are ranked worst first and the first `n` returned. `z = 0` keeps
-every label whose deviation is merely below zero on average; larger `z`
-demands more certainty. The bound is per label, with no correction for how many
-labels are tested (see [`DEFAULT_CREDIBLE_BELOW`](#learny.tracing.model.DEFAULT_CREDIBLE_BELOW)), so with several separable
-labels a label or two can pass by chance. `credible_below=None` switches the gate off and ranks
-every label with evidence by posterior mean — check [`separation()`](#learny.tracing.model.LearnerModel.separation) before
-believing that ranking.
+By default a label is returned only when it is credibly below the student’s
+*other* labels: the upper bound `c + z * sd` of its contrast `c` — its
+`Mastery.deviation` minus the
+precision-weighted mean deviation of every other label with evidence — is below
+zero. The survivors are ranked by posterior mean mastery, worst first, and the
+first `n` returned.
+
+Three keywords set the gate:
+
+* `credible_below` — the z of the bound (default [`DEFAULT_CREDIBLE_BELOW`](#learny.tracing.model.DEFAULT_CREDIBLE_BELOW),
+  ~84% one-sided); larger `z` demands more certainty. With
+  `multiplicity="none"`, `z = 0` keeps every label merely below its
+  comparator on average. `None` switches the gate off and ranks every
+  label with evidence by posterior mean — check [`separation()`](#learny.tracing.model.LearnerModel.separation) before
+  believing that ranking.
+* `multiplicity` — `"bonferroni"` (default) corrects for testing every label with
+  evidence at once, so `z` bounds the chance of *any* false flag; `"none"`
+  applies `z` to each label separately, which with six labels, a few hundred
+  responses and no real weakness flags something more often than not. The
+  correction is on posterior bounds, which shrinkage already makes cautious
+  when evidence is thin, so in cold start it mostly costs power: with a few
+  responses per label even a large real weakness is rarely returned. Pass
+  `"none"` there if a missed weakness costs more than a false one (#22).
+* `relative_to` — `"labels"` (default) as above; `"global"` measures each
+  label’s deviation against zero, the student’s global skill. With the default
+  estimator that split comes from the priors, so part of a uniform shortfall
+  lands on every label and a student weak everywhere sees several labels
+  returned; measured against the other labels, a shared shortfall cancels —
+  when labels share items equally; a heavily weighted label still absorbs more
+  of it (#23). So
+  evidence on a single label is never a credible weakness here — there is
+  nothing to compare it with. When unlabelled items carry the comparison (a
+  label against the rest of the paper), use `"global"`.
+
+`multiplicity="none", relative_to="global"` restores the original per-label gate.
 
 Labels with no evidence are never included: the model has nothing to say about
 them, and saying it anyway is how a learner model loses trust.
@@ -148,18 +197,13 @@ otherwise one of:
 
 * `"no_evidence"` — the student has answered nothing that carries a label;
 * `"no_credible_weakness"` — there is evidence, but no label is credibly
-  below the student’s own level. That is a statement about *relative*
+  below the rest of the student’s record. That is a statement about *relative*
   weakness, not “nothing to practise”: practise at the student’s overall level
   (`model.estimator.skill(state)` for the default estimator).
 
-With the default estimator the split between “globally weak” and “weak on this
-label” comes from the priors, so part of a uniform shortfall is attributed to
-every label: a student who gets nearly everything wrong can see several labels
-returned here, in an order that means little. [`separation()`](#learny.tracing.model.LearnerModel.separation) says whether
-an order among the returned labels is worth believing.
-
 Raises `ValueError` for a negative `credible_below` (which would admit labels
-credibly *above* the student’s level), and `TypeError` when the gate is on but
+credibly *above* their comparator) or an unknown `relative_to` /
+`multiplicity`, and `TypeError` when the gate is on but
 the estimator’s [`Mastery`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery) values carry no
 `deviation` — rather than silently returning nothing.
 
@@ -177,6 +221,8 @@ the estimator’s [`Mastery`](learny.tracing.estimators.html.md#learny.tracing.e
 ['area']
 >>> [m.label for m in model.weakest('ada', credible_below=None)]  # plain ranking
 ['area', 'sums']
+>>> [m.label for m in model.weakest('ada', relative_to='global', multiplicity='none')]
+['area']
 ```
 
 * **Return type:**
