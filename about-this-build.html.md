@@ -2,7 +2,7 @@
 
 # About this build
 
-This documentation was built on **2026-10-14 00:33 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/51ea1781d8c18d7c3bbbf9c37b13328d6ec6c475"><code>51ea178</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 01:14 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/fe5d665a25351684e1c9497e825216d884463bb8"><code>fe5d665</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -11,7 +11,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/51ea1781d8c18d7c3bbbf9c37b13328d6ec6c475"><code>51ea1781d8c18d7c3bbbf9c37b13328d6ec6c475</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/fe5d665a25351684e1c9497e825216d884463bb8"><code>fe5d665a25351684e1c9497e825216d884463bb8</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -22,9 +22,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/38490679227">38490679227</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/38494496979">38494496979</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>51ea1781d8c18d7c3bbbf9c37b13328d6ec6c475</code> (in the history of the built commit) |
+| Event commit | <code>fe5d665a25351684e1c9497e825216d884463bb8</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -55,7 +55,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout 51ea1781d8c18d7c3bbbf9c37b13328d6ec6c475
+git checkout fe5d665a25351684e1c9497e825216d884463bb8
 pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
