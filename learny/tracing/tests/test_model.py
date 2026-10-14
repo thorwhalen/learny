@@ -566,3 +566,71 @@ class TestJointPosterior:
         model.replay()
         assert model.estimates["s"] == live
         assert 0.0 < model.predict("s", "q1") < 1.0
+
+
+def test_a_one_step_frame_collapse_stores_the_item_labels_exactly(monkeypatch):
+    """#27: the item's labels were stored in the collapsed frame (scale ~4e-7) and only
+    then re-expressed, which cost ~1e-7 of precision where the docs promise ~1e-12."""
+    import learny.tracing.estimators as estimators
+
+    est = RaschEstimator(forget_per_week=0.5)
+    year = 365 * 24 * 3600.0
+    state = {
+        "global": {
+            "mu": 0.3, "var": 4e-5, "n": 100_000, "t": 0.0,
+            "frame": {"scale": 0.0101, "resid": 0.02, "shift": 0.01},
+        },
+        "labels": {
+            "a": {"slope": 2.0, "resid_var": 0.3, "offset": 0.1, "n": 4, "t": 0.0},
+            "b": {"slope": -1.0, "resid_var": 0.2, "offset": 0.0, "n": 2, "t": 0.0},
+        },
+    }
+    # Every store of an update the step computed, as opposed to a re-expression of a
+    # regression read back from the state.
+    stored, read_back = [], []
+    real_store, real_regression = estimators._Frame.store, estimators._regression
+
+    def recording_store(frame, beta, cond_var, offset):
+        stored.append((beta, cond_var, offset))
+        return real_store(frame, beta, cond_var, offset)
+
+    def recording_regression(*args):
+        read_back.append(out := real_regression(*args))
+        return out
+
+    monkeypatch.setattr(estimators._Frame, "store", recording_store)
+    monkeypatch.setattr(estimators, "_regression", recording_regression)
+    item = Item("q", labels=("a",), difficulty=0.5)
+    new = est.observe(state, Response("s", "q", Outcome.CORRECT, at=2 * year), item)
+
+    frame = estimators._Frame.of(new["global"])
+    assert frame == estimators._Frame(), "the collapsed frame should have been replaced"
+    # The regression the update computed for "a" is the one stored, to the last bits.
+    (intended,) = [args for args in stored if args not in read_back]
+    read = real_regression(new["labels"]["a"], frame, None)
+    assert read == pytest.approx(intended, rel=1e-12, abs=1e-15)
+
+
+def test_a_covariance_label_in_a_framed_state_follows_the_global_skill():
+    """#27: a ``(mu, var, cov)`` label next to a framed global entry (a hand-made or
+    merged state) was never converted, so it stayed put when the global skill moved."""
+    est = RaschEstimator()
+    state = {
+        "global": {
+            "mu": 0.0, "var": 0.5, "n": 10, "t": None,
+            "frame": {"scale": 1.0, "resid": 0.0, "shift": 0.0},
+        },
+        "labels": {
+            "carried": {"mu": 0.2, "var": 0.4, "cov": 0.3, "n": 3, "t": None},
+            "named": {"slope": 0.0, "resid_var": 0.5, "offset": 0.0, "n": 1, "t": None},
+        },
+    }
+    item = Item("q", labels=("named",), difficulty=0.5)
+    new = est.observe(state, Response("s", "q", Outcome.CORRECT), item)
+    assert "slope" in new["labels"]["carried"], "the mixed-form label was not converted"
+    before = est.mastery(state)["carried"].deviation
+    after = est.mastery(new)["carried"].deviation
+    moved = new["global"]["mu"] - state["global"]["mu"]
+    assert moved > 0.01
+    # Cov 0.3 over var 0.5: the label moves with the global skill, by beta = 0.6.
+    assert after.mu - before.mu == pytest.approx(0.6 * moved, rel=1e-6)
