@@ -425,7 +425,7 @@ and every part can be replaced without touching the others:</p>
 <td><p>How many posterior standard deviations below its comparator a label must be before <a class="reference internal" href="#learny.tracing.model.LearnerModel.weakest" title="learny.tracing.model.LearnerModel.weakest"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LearnerModel.weakest()</span></code></a> calls it a weakness.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.model.DEFAULT_RELATIVE_TO" title="learny.tracing.model.DEFAULT_RELATIVE_TO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_RELATIVE_TO</span></code></a></p></td>
-<td><p>the precision-weighted mean of the student's <em>other</em> labels, so a shortfall shared by every label — which the default estimator splits between global skill and each label by its priors — cancels out.</p></td>
+<td><p>the precision-weighted mean of the student's <em>other</em> labels, so whatever part of a shortfall every label shares cancels out.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.model.DEFAULT_MULTIPLICITY" title="learny.tracing.model.DEFAULT_MULTIPLICITY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_MULTIPLICITY</span></code></a></p></td>
 <td><p>How the bound accounts for testing several labels at once.</p></td>
@@ -473,10 +473,9 @@ gate did.</p>
 <dt class="sig sig-object py" id="learny.tracing.model.DEFAULT_RELATIVE_TO">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.model.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_RELATIVE_TO</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'labels'</span></span><a class="headerlink" href="#learny.tracing.model.DEFAULT_RELATIVE_TO" title="Link to this definition">#</a></dt>
 <dd><p>the precision-weighted mean
-of the student’s <em>other</em> labels, so a shortfall shared by every label — which the
-default estimator splits between global skill and each label by its priors — cancels
-out. <code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code>: the student’s global skill (zero deviation), as the original gate
-did.
+of the student’s <em>other</em> labels, so whatever part of a shortfall every label shares
+cancels out. <code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code>: the student’s global skill (zero deviation), as the
+original gate did.
 With <code class="docutils literal notranslate"><span class="pre">&quot;labels&quot;</span></code> a student with evidence on a single label has nothing to compare it
 with, so nothing is credibly weak.</p>
 <dl class="field-list simple">
@@ -625,15 +624,15 @@ when evidence is thin, so in cold start it mostly costs power: with a few
 responses per label even a large real weakness is rarely returned. Pass
 <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> there if a missed weakness costs more than a false one (#22).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">relative_to</span></code> — <code class="docutils literal notranslate"><span class="pre">&quot;labels&quot;</span></code> (default) as above; <code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code> measures each
-label’s deviation against zero, the student’s global skill. With the default
-estimator that split comes from the priors, so part of a uniform shortfall
-lands on every label and a student weak everywhere sees several labels
-returned; measured against the other labels, a shared shortfall cancels —
-when labels share items equally; a heavily weighted label still absorbs more
-of it (#23). So
-evidence on a single label is never a credible weakness here — there is
-nothing to compare it with. When unlabelled items carry the comparison (a
-label against the rest of the paper), use <code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code>.</p></li>
+label’s deviation against zero, the student’s global skill. The default
+estimator carries the global/label covariance, so a shortfall every item
+shares goes to the global skill, and where the record cannot tell “weak
+overall” from “weak on this label” the label’s deviation stays wide rather
+than taking the blame (#23); the contrast with the other labels counts the
+covariance they share through it (<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.Mastery.loading" title="learny.tracing.estimators.Mastery.loading"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mastery.loading</span></code></a>). Evidence on a single label is
+never a credible weakness under <code class="docutils literal notranslate"><span class="pre">&quot;labels&quot;</span></code> — there is nothing to compare it
+with. When unlabelled items carry the comparison (a label against the rest of
+the paper), use <code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code>.</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">multiplicity=&quot;none&quot;,</span> <span class="pre">relative_to=&quot;global&quot;</span></code> restores the original per-label gate.</p>
 <p>Labels with no evidence are never included: the model has nothing to say about

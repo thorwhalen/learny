@@ -10,7 +10,10 @@ an opponent of known strength. Belief about a student is:
 logit P(correct) = global_skill + aggregate(label skills) - item_difficulty
 ```
 
-where every skill is a posterior `(mu, var)` rather than a point. Carrying the variance
+where every skill is a posterior `(mu, var)` rather than a point, and each label also
+carries its covariance with the global skill (`cov`), so the posterior is joint: a
+shortfall every item shares is attributed to the global skill, not to whichever label
+has the largest share of each item. Carrying the variance
 is what lets the model say *how sure* it is, decay confidence over time without
 pretending to know which way a skill moved, and behave sanely at zero observations — all
 from one formula instead of three bolted-on heuristics.
@@ -35,6 +38,21 @@ global skill enough precision to serve as every label’s prior before any label
 evidence exists. So the pooling that makes sparse labels usable happens \*\*across labels
 within one student\*\* — no other student need exist, and none is ever consulted.
 
+\*\*The posterior is joint, but stored in O(labels) and updated in O(labels on the
+item).\*\* Labels are kept conditionally independent given the global skill (a star around
+it), and each is stored as its regression on the global skill: `label = offset + beta *
+global + e` with `Var(e) = cond_var`. Its marginal `(mu, var)` and its covariance
+with the global skill are read back from that (`mastery()` reports them), and
+label-label covariance is implied as `cov_a * cov_b / var_global`. One response is one
+rank-1 (Laplace) update of the joint covariance, followed by the projection back onto the
+star that keeps every `(global, label)` pair exactly; a label the item does not name
+keeps its regression exactly, so only the item’s labels are rewritten. Forgetting adds
+independent drift to each skill and leaves the covariances alone; the global skill’s
+share of that is carried for all labels at once by a *frame* on the global entry. The
+`conjunctivity` soft-min shares are linearised at the posterior means, as before.
+States written before this layout – labels as `(mu, var)`, optionally with `cov` –
+read unchanged, and need no migration.
+
 **A skip is not a wrong answer, and not all skips are alike.** A blank at the end of a
 paper is a clock, not a judgement; a blank with answers after it is an abstention, which
 carries real information about confidence. They are treated differently, and neither is
@@ -53,7 +71,7 @@ scored as wrong.
 | [`Estimator`](#learny.tracing.estimators.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                |
 |----------------------------------------------------------------------------------------------------|----------------------------------------------------------|
 | [`RaschEstimator`](#learny.tracing.estimators.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                  |
-| [`Mastery`](#learny.tracing.estimators.Mastery)(label, skill[, prior_var, deviation])     | What the model believes about one student and one label. |
+| [`Mastery`](#learny.tracing.estimators.Mastery)(label, skill[, prior_var, ...])           | What the model believes about one student and one label. |
 | [`Skill`](#learny.tracing.estimators.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.   |
 
 ### *class* learny.tracing.estimators.Estimator(\*args, \*\*kwargs)
@@ -99,7 +117,7 @@ Probability this student answers this item correctly.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* learny.tracing.estimators.Mastery(label, skill, prior_var=1.0, , deviation=None)
+### *class* learny.tracing.estimators.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -132,6 +150,13 @@ A credible interval for [`probability`](#learny.tracing.estimators.Mastery.proba
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
+#### loading *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 0.0*
+
+The deviation’s loading on what every label of this student shares — for the
+default estimator, its covariance with the global skill over the global skill’s
+sd — so that two labels’ deviations covary by `loading_a * loading_b`. 0 (the
+default) treats the deviations as independent.
 
 #### *property* probability *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 
@@ -226,6 +251,18 @@ Per-label mastery: the student’s global skill adjusted by each label.
 #### observe(state, response, item)
 
 The new state after one response. Pure: `state` is not mutated.
+
+One Newton (Laplace) step on the *joint* log-posterior over the global skill and
+every label: a rank-1 update of the covariance along `Cov(skill, s)`. Because
+the global/label covariance is carried, a shortfall that every item shares is
+attributed to the global skill rather than to whichever label has the largest
+share of each item (#23). The result is projected back onto the stored star
+structure, which keeps every `(global, label)` pair exactly and drops only the
+residual label-label correlation given the global skill.
+
+Only the global skill and the item’s labels are written: every other label is
+stored as its regression on the global skill, which this update leaves exactly
+as it was (see `_Frame`).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]

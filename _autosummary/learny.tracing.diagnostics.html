@@ -430,7 +430,7 @@ neither looks at more than one student at a time unless asked to.</p>
 <p class="rubric">Functions</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.label_separation" title="learny.tracing.diagnostics.label_separation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">label_separation</span></code></a>(state, *[, min_n, threshold])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.label_separation" title="learny.tracing.diagnostics.label_separation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">label_separation</span></code></a>(state, *[, estimator, ...])</p></td>
 <td><p>Separation of one student's label deviations, from their estimator state.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.diagnostics.prequential" title="learny.tracing.diagnostics.prequential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prequential</span></code></a>(responses, *, items, estimator)</p></td>
@@ -614,10 +614,12 @@ there is no right answer to compare them to.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.diagnostics.label_separation">
-<span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">label_separation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#label_separation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.label_separation" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.diagnostics.</span></span><span class="sig-name descname"><span class="pre">label_separation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#label_separation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.diagnostics.label_separation" title="Link to this definition">#</a></dt>
 <dd><p>Separation of one student’s label deviations, from their estimator state.</p>
-<p>Works on any state that stores labels as <code class="docutils literal notranslate"><span class="pre">{label:</span> <span class="pre">{&quot;mu&quot;,</span> <span class="pre">&quot;var&quot;,</span> <span class="pre">&quot;n&quot;}}</span></code> — the
-<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.RaschEstimator" title="learny.tracing.estimators.RaschEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a> layout. Only labels with at least
+<p>The state is read through <code class="docutils literal notranslate"><span class="pre">estimator.mastery()</span></code> (default: a
+<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.RaschEstimator" title="learny.tracing.estimators.RaschEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a>, which also reads a plain
+<code class="docutils literal notranslate"><span class="pre">{label:</span> <span class="pre">{&quot;mu&quot;,</span> <span class="pre">&quot;var&quot;,</span> <span class="pre">&quot;n&quot;}}</span></code> layout), from each label’s
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">deviation</span></code>. Only labels with at least
 <code class="docutils literal notranslate"><span class="pre">min_n</span></code> observations are counted; a label nobody has evidence on is not a label
 that can be told apart from anything.</p>
 <p>Deviations, not mastery, are what is measured: the question is whether the labels
@@ -633,6 +635,10 @@ re-opened a stale label’s variance without moving its mean (<code class="docut
 that only adds noise, so it can only lower <code class="docutils literal notranslate"><span class="pre">G</span></code> – whereas undoing a presumed
 shrinkage there would attribute a whole history’s mean to the little evidence the
 variance still shows, and call noise distinguishable.</p>
+<p><code class="docutils literal notranslate"><span class="pre">var</span></code> is each deviation’s variance <em>given the global skill</em> (<code class="docutils literal notranslate"><span class="pre">var</span> <span class="pre">-</span>
+<span class="pre">loading**2</span></code>). What the deviations share through the global skill – how much of
+the student’s level is “overall” rather than “this label”, which a record often
+cannot tell – moves them all together, so it blurs no ordering among them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#learny.tracing.diagnostics.LabelSeparation" title="learny.tracing.diagnostics.LabelSeparation"><code class="xref py py-class docutils literal notranslate"><span class="pre">LabelSeparation</span></code></a></span></p>
@@ -669,7 +675,7 @@ skips included; filter on <code class="docutils literal notranslate"><span class
 <span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'q'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'x'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'q'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">),</span> <span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'q'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">)]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">prequential</span><span class="p">(</span><span class="n">rs</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">RaschEstimator</span><span class="p">())]</span>
-<span class="go">[0.5, 0.607]</span>
+<span class="go">[0.5, 0.6]</span>
 </pre></div>
 </div>
 </dd></dl>

@@ -762,10 +762,9 @@ window.runMermaid = runMermaid;</script>
 <span class="n">DEFAULT_CREDIBLE_BELOW</span> <span class="o">=</span> <span class="mf">1.0</span>
 
 <span class="c1">#: What a label's weakness is measured against. ``"labels"``: the precision-weighted mean</span>
-<span class="c1">#: of the student's *other* labels, so a shortfall shared by every label — which the</span>
-<span class="c1">#: default estimator splits between global skill and each label by its priors — cancels</span>
-<span class="c1">#: out. ``"global"``: the student's global skill (zero deviation), as the original gate</span>
-<span class="c1">#: did.</span>
+<span class="c1">#: of the student's *other* labels, so whatever part of a shortfall every label shares</span>
+<span class="c1">#: cancels out. ``"global"``: the student's global skill (zero deviation), as the</span>
+<span class="c1">#: original gate did.</span>
 <span class="c1">#: With ``"labels"`` a student with evidence on a single label has nothing to compare it</span>
 <span class="c1">#: with, so nothing is credibly weak.</span>
 <span class="n">DEFAULT_RELATIVE_TO</span> <span class="o">=</span> <span class="s2">"labels"</span>
@@ -813,8 +812,18 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    ``"global"`` is the deviation itself. ``"labels"`` subtracts the precision-weighted</span>
 <span class="sd">    mean of the *other* labels' deviations (leave-one-out, so a label is never compared</span>
-<span class="sd">    with itself) and needs at least two labels; posteriors are treated as independent,</span>
-<span class="sd">    as the estimator stores them.</span>
+<span class="sd">    with itself) and needs at least two labels. Its variance counts the covariance the</span>
+<span class="sd">    deviations share through :attr:`Mastery.loading</span>
+<span class="sd">    &lt;learny.tracing.estimators.Mastery.loading&gt;` (zero: independent posteriors).</span>
+
+<span class="sd">    &gt;&gt;&gt; from learny.tracing.estimators import Skill</span>
+<span class="sd">    &gt;&gt;&gt; ms = [Mastery(k, Skill(0.0, 1.0), deviation=Skill(mu, 0.2), loading=a)</span>
+<span class="sd">    ...       for k, mu, a in (('a', -0.5, 0.0), ('b', 0.5, 0.0))]</span>
+<span class="sd">    &gt;&gt;&gt; [(round(c, 2), round(sd, 3)) for c, sd in _contrasts(ms, 'labels')]</span>
+<span class="sd">    [(-1.0, 0.632), (1.0, 0.632)]</span>
+<span class="sd">    &gt;&gt;&gt; shared = [Mastery(m.label, m.skill, deviation=m.deviation, loading=-0.3) for m in ms]</span>
+<span class="sd">    &gt;&gt;&gt; [round(sd, 3) for _, sd in _contrasts(shared, 'labels')]  # what they share cancels</span>
+<span class="sd">    [0.469, 0.469]</span>
 <span class="sd">    """</span>
     <span class="n">devs</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">deviation</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">masteries</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">relative_to</span> <span class="o">==</span> <span class="s2">"global"</span><span class="p">:</span>
@@ -825,12 +834,21 @@ window.runMermaid = runMermaid;</script>
                 <span class="sa">f</span><span class="s2">"Label </span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> has a deviation variance of </span><span class="si">{</span><span class="n">d</span><span class="o">.</span><span class="n">var</span><span class="si">!r}</span><span class="s2">; measuring "</span>
                 <span class="s2">"it against the other labels needs a positive posterior variance."</span>
             <span class="p">)</span>
+    <span class="n">loads</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">"loading"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">masteries</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">contrast</span><span class="p">(</span><span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-        <span class="n">rest</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">devs</span><span class="p">)</span> <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="p">]</span>
-        <span class="n">rest_prec</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">d</span><span class="o">.</span><span class="n">var</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span>
-        <span class="n">rest_mu</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">mu</span> <span class="o">/</span> <span class="n">d</span><span class="o">.</span><span class="n">var</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span> <span class="o">/</span> <span class="n">rest_prec</span>
-        <span class="k">return</span> <span class="n">devs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="n">rest_mu</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">devs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">var</span> <span class="o">+</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">rest_prec</span><span class="p">)</span>
+        <span class="n">rest</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">devs</span><span class="p">))</span> <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="p">]</span>
+        <span class="n">rest_prec</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">devs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">var</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="p">{</span><span class="n">j</span><span class="p">:</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">devs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">var</span> <span class="o">/</span> <span class="n">rest_prec</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">}</span>
+        <span class="n">rest_mu</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">devs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">mu</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span>
+        <span class="c1"># One-factor covariance: d_j = loading_j * Z + e_j with Var(e_j) = var_j - a_j^2.</span>
+        <span class="n">shared</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">loads</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">devs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">var</span> <span class="o">-</span> <span class="n">loads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">devs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">var</span> <span class="o">-</span> <span class="n">loads</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">loads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">shared</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">devs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="n">rest_mu</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">[</span><span class="n">contrast</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">devs</span><span class="p">))]</span>
 
@@ -992,15 +1010,16 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">          responses per label even a large real weakness is rarely returned. Pass</span>
 <span class="sd">          ``"none"`` there if a missed weakness costs more than a false one (#22).</span>
 <span class="sd">        * ``relative_to`` — ``"labels"`` (default) as above; ``"global"`` measures each</span>
-<span class="sd">          label's deviation against zero, the student's global skill. With the default</span>
-<span class="sd">          estimator that split comes from the priors, so part of a uniform shortfall</span>
-<span class="sd">          lands on every label and a student weak everywhere sees several labels</span>
-<span class="sd">          returned; measured against the other labels, a shared shortfall cancels —</span>
-<span class="sd">          when labels share items equally; a heavily weighted label still absorbs more</span>
-<span class="sd">          of it (#23). So</span>
-<span class="sd">          evidence on a single label is never a credible weakness here — there is</span>
-<span class="sd">          nothing to compare it with. When unlabelled items carry the comparison (a</span>
-<span class="sd">          label against the rest of the paper), use ``"global"``.</span>
+<span class="sd">          label's deviation against zero, the student's global skill. The default</span>
+<span class="sd">          estimator carries the global/label covariance, so a shortfall every item</span>
+<span class="sd">          shares goes to the global skill, and where the record cannot tell "weak</span>
+<span class="sd">          overall" from "weak on this label" the label's deviation stays wide rather</span>
+<span class="sd">          than taking the blame (#23); the contrast with the other labels counts the</span>
+<span class="sd">          covariance they share through it (:attr:`Mastery.loading</span>
+<span class="sd">          &lt;learny.tracing.estimators.Mastery.loading&gt;`). Evidence on a single label is</span>
+<span class="sd">          never a credible weakness under ``"labels"`` — there is nothing to compare it</span>
+<span class="sd">          with. When unlabelled items carry the comparison (a label against the rest of</span>
+<span class="sd">          the paper), use ``"global"``.</span>
 
 <span class="sd">        ``multiplicity="none", relative_to="global"`` restores the original per-label gate.</span>
 
@@ -1096,7 +1115,9 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">        Check ``.distinguishable`` before acting on an ordering from :meth:`weakest`.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">label_separation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">(</span><span class="n">student</span><span class="p">),</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">label_separation</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">(</span><span class="n">student</span><span class="p">),</span> <span class="n">estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="LearnerModel.calibration">

@@ -1,4 +1,4 @@
-> built 2026-10-13 13:34 UTC from 92ca6c2 (main) · learny 0.0.1. Details: build_info.json
+> built 2026-10-14 00:33 UTC from 51ea178 (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -171,10 +171,10 @@ neither looks at more than one student at a time unless asked to.
 
 ### Functions
 
-| [`label_separation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation)(state, \*[, min_n, threshold])   | Separation of one student's label deviations, from their estimator state.     |
-|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`prequential`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)      | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
-| [`calibration`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...])     | Prequential calibration of `estimator` over the students in `log`.            |
+| [`label_separation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.label_separation)(state, \*[, estimator, ...])   | Separation of one student's label deviations, from their estimator state.     |
+|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`prequential`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)    | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
+| [`calibration`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...])   | Prequential calibration of `estimator` over the students in `log`.            |
 
 ### Classes
 
@@ -305,12 +305,14 @@ there is no right answer to compare them to.
 True
 ```
 
-### learny.tracing.diagnostics.label_separation(state, , min_n=1, threshold=2.0)
+### learny.tracing.diagnostics.label_separation(state, , estimator=None, min_n=1, threshold=2.0)
 
 Separation of one student’s label deviations, from their estimator state.
 
-Works on any state that stores labels as `{label: {"mu", "var", "n"}}` — the
-[`RaschEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator) layout. Only labels with at least
+The state is read through `estimator.mastery()` (default: a
+[`RaschEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator), which also reads a plain
+`{label: {"mu", "var", "n"}}` layout), from each label’s
+`deviation`. Only labels with at least
 `min_n` observations are counted; a label nobody has evidence on is not a label
 that can be told apart from anything.
 
@@ -328,6 +330,11 @@ re-opened a stale label’s variance without moving its mean (`forget_per_week`)
 that only adds noise, so it can only lower `G` – whereas undoing a presumed
 shrinkage there would attribute a whole history’s mean to the little evidence the
 variance still shows, and call noise distinguishable.
+
+`var` is each deviation’s variance *given the global skill* (`var -
+loading**2`). What the deviations share through the global skill – how much of
+the student’s level is “overall” rather than “this label”, which a record often
+cannot tell – moves them all together, so it blurs no ordering among them.
 
 * **Return type:**
   [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
@@ -362,7 +369,7 @@ skips included; filter on `response.outcome.is_scored` to score.
 >>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
 >>> rs = [Response('a', 'q', 'correct'), Response('a', 'q', 'correct')]
 >>> [round(p, 3) for _, p in prequential(rs, items=items, estimator=RaschEstimator())]
-[0.5, 0.607]
+[0.5, 0.6]
 ```
 
 
@@ -380,7 +387,10 @@ an opponent of known strength. Belief about a student is:
 logit P(correct) = global_skill + aggregate(label skills) - item_difficulty
 ```
 
-where every skill is a posterior `(mu, var)` rather than a point. Carrying the variance
+where every skill is a posterior `(mu, var)` rather than a point, and each label also
+carries its covariance with the global skill (`cov`), so the posterior is joint: a
+shortfall every item shares is attributed to the global skill, not to whichever label
+has the largest share of each item. Carrying the variance
 is what lets the model say *how sure* it is, decay confidence over time without
 pretending to know which way a skill moved, and behave sanely at zero observations — all
 from one formula instead of three bolted-on heuristics.
@@ -405,6 +415,21 @@ global skill enough precision to serve as every label’s prior before any label
 evidence exists. So the pooling that makes sparse labels usable happens \*\*across labels
 within one student\*\* — no other student need exist, and none is ever consulted.
 
+\*\*The posterior is joint, but stored in O(labels) and updated in O(labels on the
+item).\*\* Labels are kept conditionally independent given the global skill (a star around
+it), and each is stored as its regression on the global skill: `label = offset + beta *
+global + e` with `Var(e) = cond_var`. Its marginal `(mu, var)` and its covariance
+with the global skill are read back from that (`mastery()` reports them), and
+label-label covariance is implied as `cov_a * cov_b / var_global`. One response is one
+rank-1 (Laplace) update of the joint covariance, followed by the projection back onto the
+star that keeps every `(global, label)` pair exactly; a label the item does not name
+keeps its regression exactly, so only the item’s labels are rewritten. Forgetting adds
+independent drift to each skill and leaves the covariances alone; the global skill’s
+share of that is carried for all labels at once by a *frame* on the global entry. The
+`conjunctivity` soft-min shares are linearised at the posterior means, as before.
+States written before this layout – labels as `(mu, var)`, optionally with `cov` –
+read unchanged, and need no migration.
+
 **A skip is not a wrong answer, and not all skips are alike.** A blank at the end of a
 paper is a clock, not a judgement; a blank with answers after it is an abstention, which
 carries real information about confidence. They are treated differently, and neither is
@@ -423,7 +448,7 @@ scored as wrong.
 | [`Estimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                |
 |----------------------------------------------------------------------------------------------------|----------------------------------------------------------|
 | [`RaschEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                  |
-| [`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)(label, skill[, prior_var, deviation])     | What the model believes about one student and one label. |
+| [`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)(label, skill[, prior_var, ...])           | What the model believes about one student and one label. |
 | [`Skill`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.   |
 
 ### *class* learny.tracing.estimators.Estimator(\*args, \*\*kwargs)
@@ -469,7 +494,7 @@ Probability this student answers this item correctly.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* learny.tracing.estimators.Mastery(label, skill, prior_var=1.0, , deviation=None)
+### *class* learny.tracing.estimators.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -502,6 +527,13 @@ A credible interval for [`probability`](_autosummary/learny.tracing.estimators.h
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
+#### loading *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 0.0*
+
+The deviation’s loading on what every label of this student shares — for the
+default estimator, its covariance with the global skill over the global skill’s
+sd — so that two labels’ deviations covary by `loading_a * loading_b`. 0 (the
+default) treats the deviations as independent.
 
 #### *property* probability *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 
@@ -596,6 +628,18 @@ Per-label mastery: the student’s global skill adjusted by each label.
 #### observe(state, response, item)
 
 The new state after one response. Pure: `state` is not mutated.
+
+One Newton (Laplace) step on the *joint* log-posterior over the global skill and
+every label: a rank-1 update of the covariance along `Cov(skill, s)`. Because
+the global/label covariance is carried, a shortfall that every item shares is
+attributed to the global skill rather than to whichever label has the largest
+share of each item (#23). The result is projected back onto the stored star
+structure, which keeps every `(global, label)` pair exactly and drops only the
+residual label-label correlation given the global skill.
+
+Only the global skill and the item’s labels are written: every other label is
+stored as its regression on the global skill, which this update leaves exactly
+as it was (see `_Frame`).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
@@ -762,18 +806,18 @@ True
 
 ### Functions
 
-| [`estimate_store`](_autosummary/learny.tracing.html.md#learny.tracing.estimate_store)(\*[, rootdir])                   | Per-student mastery estimates, keyed by student.                                                                   |
-|--------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| [`response_log`](_autosummary/learny.tracing.html.md#learny.tracing.response_log)(\*[, rootdir])                     | The default response log, under `~/.local/share/learny/responses/`.                                                |
-| [`data_dir`](_autosummary/learny.tracing.html.md#learny.tracing.data_dir)([kind, app_name])                      | The per-kind data directory, created on demand.                                                                    |
-| [`label_separation`](_autosummary/learny.tracing.html.md#learny.tracing.label_separation)(state, \*[, min_n, threshold]) | Separation of one student's label deviations, from their estimator state.                                          |
-| [`calibration`](_autosummary/learny.tracing.html.md#learny.tracing.calibration)(log, \*, items, estimator[, ...])   | Prequential calibration of `estimator` over the students in `log`.                                                 |
-| [`prequential`](_autosummary/learny.tracing.html.md#learny.tracing.prequential)(responses, \*, items, estimator)    | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                      |
-| [`restrict_labels`](_autosummary/learny.tracing.html.md#learny.tracing.restrict_labels)(items, \*, keep[, ...])         | Project an item bank onto a subset of its labels — one facet, say.                                                 |
-| [`difficulty_from_rank`](_autosummary/learny.tracing.html.md#learny.tracing.difficulty_from_rank)(rank, n_ranks)             | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
-| [`mark_not_reached`](_autosummary/learny.tracing.html.md#learny.tracing.mark_not_reached)(responses)                     | Flag the trailing run of blanks in one sitting as *not reached*.                                                   |
-| [`expit`](_autosummary/learny.tracing.html.md#learny.tracing.expit)(x)                                        | The logistic function, overflow-safe at the tails.                                                                 |
-| [`logit`](_autosummary/learny.tracing.html.md#learny.tracing.logit)(p, \*[, eps])                             | Inverse of [`expit()`](_autosummary/learny.tracing.html.md#learny.tracing.expit), clamped away from 0 and 1 so it stays finite. |
+| [`estimate_store`](_autosummary/learny.tracing.html.md#learny.tracing.estimate_store)(\*[, rootdir])                 | Per-student mastery estimates, keyed by student.                                                                   |
+|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [`response_log`](_autosummary/learny.tracing.html.md#learny.tracing.response_log)(\*[, rootdir])                   | The default response log, under `~/.local/share/learny/responses/`.                                                |
+| [`data_dir`](_autosummary/learny.tracing.html.md#learny.tracing.data_dir)([kind, app_name])                    | The per-kind data directory, created on demand.                                                                    |
+| [`label_separation`](_autosummary/learny.tracing.html.md#learny.tracing.label_separation)(state, \*[, estimator, ...]) | Separation of one student's label deviations, from their estimator state.                                          |
+| [`calibration`](_autosummary/learny.tracing.html.md#learny.tracing.calibration)(log, \*, items, estimator[, ...]) | Prequential calibration of `estimator` over the students in `log`.                                                 |
+| [`prequential`](_autosummary/learny.tracing.html.md#learny.tracing.prequential)(responses, \*, items, estimator)  | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                      |
+| [`restrict_labels`](_autosummary/learny.tracing.html.md#learny.tracing.restrict_labels)(items, \*, keep[, ...])       | Project an item bank onto a subset of its labels — one facet, say.                                                 |
+| [`difficulty_from_rank`](_autosummary/learny.tracing.html.md#learny.tracing.difficulty_from_rank)(rank, n_ranks)           | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
+| [`mark_not_reached`](_autosummary/learny.tracing.html.md#learny.tracing.mark_not_reached)(responses)                   | Flag the trailing run of blanks in one sitting as *not reached*.                                                   |
+| [`expit`](_autosummary/learny.tracing.html.md#learny.tracing.expit)(x)                                      | The logistic function, overflow-safe at the tails.                                                                 |
+| [`logit`](_autosummary/learny.tracing.html.md#learny.tracing.logit)(p, \*[, eps])                           | Inverse of [`expit()`](_autosummary/learny.tracing.html.md#learny.tracing.expit), clamped away from 0 and 1 so it stays finite. |
 
 ### Classes
 
@@ -783,7 +827,7 @@ True
 | [`Item`](_autosummary/learny.tracing.html.md#learny.tracing.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty.                                          |
 | [`Outcome`](_autosummary/learny.tracing.html.md#learny.tracing.Outcome)(\*values)                                 | What happened when a student met an item.                                                                            |
 | [`Response`](_autosummary/learny.tracing.html.md#learny.tracing.Response)(student, item, outcome[, at, meta])      | One student meeting one item, once.                                                                                  |
-| [`Mastery`](_autosummary/learny.tracing.html.md#learny.tracing.Mastery)(label, skill[, prior_var, deviation])     | What the model believes about one student and one label.                                                             |
+| [`Mastery`](_autosummary/learny.tracing.html.md#learny.tracing.Mastery)(label, skill[, prior_var, ...])           | What the model believes about one student and one label.                                                             |
 | [`Skill`](_autosummary/learny.tracing.html.md#learny.tracing.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                                                               |
 | [`Estimator`](_autosummary/learny.tracing.html.md#learny.tracing.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                                                            |
 | [`RaschEstimator`](_autosummary/learny.tracing.html.md#learny.tracing.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                                                              |
@@ -1065,15 +1109,15 @@ Three keywords set the gate:
   responses per label even a large real weakness is rarely returned. Pass
   `"none"` there if a missed weakness costs more than a false one (#22).
 * `relative_to` — `"labels"` (default) as above; `"global"` measures each
-  label’s deviation against zero, the student’s global skill. With the default
-  estimator that split comes from the priors, so part of a uniform shortfall
-  lands on every label and a student weak everywhere sees several labels
-  returned; measured against the other labels, a shared shortfall cancels —
-  when labels share items equally; a heavily weighted label still absorbs more
-  of it (#23). So
-  evidence on a single label is never a credible weakness here — there is
-  nothing to compare it with. When unlabelled items carry the comparison (a
-  label against the rest of the paper), use `"global"`.
+  label’s deviation against zero, the student’s global skill. The default
+  estimator carries the global/label covariance, so a shortfall every item
+  shares goes to the global skill, and where the record cannot tell “weak
+  overall” from “weak on this label” the label’s deviation stays wide rather
+  than taking the blame (#23); the contrast with the other labels counts the
+  covariance they share through it ([`Mastery.loading`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery.loading)). Evidence on a single label is
+  never a credible weakness under `"labels"` — there is nothing to compare it
+  with. When unlabelled items carry the comparison (a label against the rest of
+  the paper), use `"global"`.
 
 `multiplicity="none", relative_to="global"` restores the original per-label gate.
 
@@ -1117,7 +1161,7 @@ the estimator’s [`Mastery`](_autosummary/learny.tracing.estimators.html.md#lea
 * **Return type:**
   [`Weakest`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.Weakest)
 
-### *class* learny.tracing.Mastery(label, skill, prior_var=1.0, , deviation=None)
+### *class* learny.tracing.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1150,6 +1194,13 @@ A credible interval for [`probability`](_autosummary/learny.tracing.html.md#lear
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
+#### loading *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 0.0*
+
+The deviation’s loading on what every label of this student shares — for the
+default estimator, its covariance with the global skill over the global skill’s
+sd — so that two labels’ deviations covary by `loading_a * loading_b`. 0 (the
+default) treats the deviations as independent.
 
 #### *property* probability *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 
@@ -1272,6 +1323,18 @@ Per-label mastery: the student’s global skill adjusted by each label.
 #### observe(state, response, item)
 
 The new state after one response. Pure: `state` is not mutated.
+
+One Newton (Laplace) step on the *joint* log-posterior over the global skill and
+every label: a rank-1 update of the covariance along `Cov(skill, s)`. Because
+the global/label covariance is carried, a shortfall that every item shares is
+attributed to the global skill rather than to whichever label has the largest
+share of each item (#23). The result is projected back onto the stored star
+structure, which keeps every `(global, label)` pair exactly and drops only the
+residual label-label correlation given the global skill.
+
+Only the global skill and the item’s labels are written: every other label is
+stored as its regression on the global skill, which this update leaves exactly
+as it was (see `_Frame`).
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
@@ -1535,12 +1598,14 @@ The logistic function, overflow-safe at the tails.
 0.0
 ```
 
-### learny.tracing.label_separation(state, , min_n=1, threshold=2.0)
+### learny.tracing.label_separation(state, , estimator=None, min_n=1, threshold=2.0)
 
 Separation of one student’s label deviations, from their estimator state.
 
-Works on any state that stores labels as `{label: {"mu", "var", "n"}}` — the
-[`RaschEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator) layout. Only labels with at least
+The state is read through `estimator.mastery()` (default: a
+[`RaschEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator), which also reads a plain
+`{label: {"mu", "var", "n"}}` layout), from each label’s
+`deviation`. Only labels with at least
 `min_n` observations are counted; a label nobody has evidence on is not a label
 that can be told apart from anything.
 
@@ -1558,6 +1623,11 @@ re-opened a stale label’s variance without moving its mean (`forget_per_week`)
 that only adds noise, so it can only lower `G` – whereas undoing a presumed
 shrinkage there would attribute a whole history’s mean to the little evidence the
 variance still shows, and call noise distinguishable.
+
+`var` is each deviation’s variance *given the global skill* (`var -
+loading**2`). What the deviations share through the global skill – how much of
+the student’s level is “overall” rather than “this label”, which a record often
+cannot tell – moves them all together, so it blurs no ordering among them.
 
 * **Return type:**
   [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
@@ -1627,7 +1697,7 @@ skips included; filter on `response.outcome.is_scored` to score.
 >>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
 >>> rs = [Response('a', 'q', 'correct'), Response('a', 'q', 'correct')]
 >>> [round(p, 3) for _, p in prequential(rs, items=items, estimator=RaschEstimator())]
-[0.5, 0.607]
+[0.5, 0.6]
 ```
 
 ### learny.tracing.response_log(, rootdir=None)
@@ -1695,10 +1765,10 @@ and every part can be replaced without touching the others:
 
 ### Module Attributes
 
-| [`DEFAULT_CREDIBLE_BELOW`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.DEFAULT_CREDIBLE_BELOW)   | How many posterior standard deviations below its comparator a label must be before [`LearnerModel.weakest()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.weakest) calls it a weakness.                         |
-|---------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`DEFAULT_RELATIVE_TO`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.DEFAULT_RELATIVE_TO)      | the precision-weighted mean of the student's *other* labels, so a shortfall shared by every label — which the default estimator splits between global skill and each label by its priors — cancels out. |
-| [`DEFAULT_MULTIPLICITY`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.DEFAULT_MULTIPLICITY)     | How the bound accounts for testing several labels at once.                                                                                                                                              |
+| [`DEFAULT_CREDIBLE_BELOW`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.DEFAULT_CREDIBLE_BELOW)   | How many posterior standard deviations below its comparator a label must be before [`LearnerModel.weakest()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.weakest) calls it a weakness.   |
+|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`DEFAULT_RELATIVE_TO`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.DEFAULT_RELATIVE_TO)      | the precision-weighted mean of the student's *other* labels, so whatever part of a shortfall every label shares cancels out.                                                      |
+| [`DEFAULT_MULTIPLICITY`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.DEFAULT_MULTIPLICITY)     | How the bound accounts for testing several labels at once.                                                                                                                        |
 
 ### Classes
 
@@ -1729,10 +1799,9 @@ gate did.
 ### learny.tracing.model.DEFAULT_RELATIVE_TO *= 'labels'*
 
 the precision-weighted mean
-of the student’s *other* labels, so a shortfall shared by every label — which the
-default estimator splits between global skill and each label by its priors — cancels
-out. `"global"`: the student’s global skill (zero deviation), as the original gate
-did.
+of the student’s *other* labels, so whatever part of a shortfall every label shares
+cancels out. `"global"`: the student’s global skill (zero deviation), as the
+original gate did.
 With `"labels"` a student with evidence on a single label has nothing to compare it
 with, so nothing is credibly weak.
 
@@ -1857,15 +1926,15 @@ Three keywords set the gate:
   responses per label even a large real weakness is rarely returned. Pass
   `"none"` there if a missed weakness costs more than a false one (#22).
 * `relative_to` — `"labels"` (default) as above; `"global"` measures each
-  label’s deviation against zero, the student’s global skill. With the default
-  estimator that split comes from the priors, so part of a uniform shortfall
-  lands on every label and a student weak everywhere sees several labels
-  returned; measured against the other labels, a shared shortfall cancels —
-  when labels share items equally; a heavily weighted label still absorbs more
-  of it (#23). So
-  evidence on a single label is never a credible weakness here — there is
-  nothing to compare it with. When unlabelled items carry the comparison (a
-  label against the rest of the paper), use `"global"`.
+  label’s deviation against zero, the student’s global skill. The default
+  estimator carries the global/label covariance, so a shortfall every item
+  shares goes to the global skill, and where the record cannot tell “weak
+  overall” from “weak on this label” the label’s deviation stays wide rather
+  than taking the blame (#23); the contrast with the other labels counts the
+  covariance they share through it ([`Mastery.loading`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery.loading)). Evidence on a single label is
+  never a credible weakness under `"labels"` — there is nothing to compare it
+  with. When unlabelled items carry the comparison (a label against the rest of
+  the paper), use `"global"`.
 
 `multiplicity="none", relative_to="global"` restores the original per-label gate.
 
@@ -2211,7 +2280,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-10-13 13:34 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/92ca6c2a2fc8ada4c2167f9d7bc425896cd0c1a1"><code>92ca6c2</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-14 00:33 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/51ea1781d8c18d7c3bbbf9c37b13328d6ec6c475"><code>51ea178</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -2220,7 +2289,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/92ca6c2a2fc8ada4c2167f9d7bc425896cd0c1a1"><code>92ca6c2a2fc8ada4c2167f9d7bc425896cd0c1a1</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/51ea1781d8c18d7c3bbbf9c37b13328d6ec6c475"><code>51ea1781d8c18d7c3bbbf9c37b13328d6ec6c475</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -2231,15 +2300,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/38405887487">38405887487</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/38490679227">38490679227</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>92ca6c2a2fc8ada4c2167f9d7bc425896cd0c1a1</code> (in the history of the built commit) |
+| Event commit | <code>51ea1781d8c18d7c3bbbf9c37b13328d6ec6c475</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.15  |
+| epythet  | 0.2.17  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -2264,8 +2333,8 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout 92ca6c2a2fc8ada4c2167f9d7bc425896cd0c1a1
-pip install "epythet==0.2.15"
+git checkout 51ea1781d8c18d7c3bbbf9c37b13328d6ec6c475
+pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

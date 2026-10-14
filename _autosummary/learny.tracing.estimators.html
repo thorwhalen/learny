@@ -404,7 +404,10 @@ an opponent of known strength. Belief about a student is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">logit</span> <span class="n">P</span><span class="p">(</span><span class="n">correct</span><span class="p">)</span> <span class="o">=</span> <span class="n">global_skill</span> <span class="o">+</span> <span class="n">aggregate</span><span class="p">(</span><span class="n">label</span> <span class="n">skills</span><span class="p">)</span> <span class="o">-</span> <span class="n">item_difficulty</span>
 </pre></div>
 </div>
-<p>where every skill is a posterior <code class="docutils literal notranslate"><span class="pre">(mu,</span> <span class="pre">var)</span></code> rather than a point. Carrying the variance
+<p>where every skill is a posterior <code class="docutils literal notranslate"><span class="pre">(mu,</span> <span class="pre">var)</span></code> rather than a point, and each label also
+carries its covariance with the global skill (<code class="docutils literal notranslate"><span class="pre">cov</span></code>), so the posterior is joint: a
+shortfall every item shares is attributed to the global skill, not to whichever label
+has the largest share of each item. Carrying the variance
 is what lets the model say <em>how sure</em> it is, decay confidence over time without
 pretending to know which way a skill moved, and behave sanely at zero observations — all
 from one formula instead of three bolted-on heuristics.</p>
@@ -424,6 +427,20 @@ that student’s global skill, shrunk hard toward zero by its prior. One paper g
 global skill enough precision to serve as every label’s prior before any label-specific
 evidence exists. So the pooling that makes sparse labels usable happens **across labels
 within one student** — no other student need exist, and none is ever consulted.</p>
+<p>**The posterior is joint, but stored in O(labels) and updated in O(labels on the
+item).** Labels are kept conditionally independent given the global skill (a star around
+it), and each is stored as its regression on the global skill: <code class="docutils literal notranslate"><span class="pre">label</span> <span class="pre">=</span> <span class="pre">offset</span> <span class="pre">+</span> <span class="pre">beta</span> <span class="pre">*</span>
+<span class="pre">global</span> <span class="pre">+</span> <span class="pre">e</span></code> with <code class="docutils literal notranslate"><span class="pre">Var(e)</span> <span class="pre">=</span> <span class="pre">cond_var</span></code>. Its marginal <code class="docutils literal notranslate"><span class="pre">(mu,</span> <span class="pre">var)</span></code> and its covariance
+with the global skill are read back from that (<code class="docutils literal notranslate"><span class="pre">mastery()</span></code> reports them), and
+label-label covariance is implied as <code class="docutils literal notranslate"><span class="pre">cov_a</span> <span class="pre">*</span> <span class="pre">cov_b</span> <span class="pre">/</span> <span class="pre">var_global</span></code>. One response is one
+rank-1 (Laplace) update of the joint covariance, followed by the projection back onto the
+star that keeps every <code class="docutils literal notranslate"><span class="pre">(global,</span> <span class="pre">label)</span></code> pair exactly; a label the item does not name
+keeps its regression exactly, so only the item’s labels are rewritten. Forgetting adds
+independent drift to each skill and leaves the covariances alone; the global skill’s
+share of that is carried for all labels at once by a <em>frame</em> on the global entry. The
+<code class="docutils literal notranslate"><span class="pre">conjunctivity</span></code> soft-min shares are linearised at the posterior means, as before.
+States written before this layout – labels as <code class="docutils literal notranslate"><span class="pre">(mu,</span> <span class="pre">var)</span></code>, optionally with <code class="docutils literal notranslate"><span class="pre">cov</span></code> –
+read unchanged, and need no migration.</p>
 <p><strong>A skip is not a wrong answer, and not all skips are alike.</strong> A blank at the end of a
 paper is a clock, not a judgement; a blank with answers after it is an abstention, which
 carries real information about confidence. They are treated differently, and neither is
@@ -455,7 +472,7 @@ scored as wrong.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.estimators.RaschEstimator" title="learny.tracing.estimators.RaschEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a>([prior_var, label_prior_var, ...])</p></td>
 <td><p>Online Rasch with a Gaussian posterior.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.estimators.Mastery" title="learny.tracing.estimators.Mastery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mastery</span></code></a>(label, skill[, prior_var, deviation])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.estimators.Mastery" title="learny.tracing.estimators.Mastery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mastery</span></code></a>(label, skill[, prior_var, ...])</p></td>
 <td><p>What the model believes about one student and one label.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.estimators.Skill" title="learny.tracing.estimators.Skill"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Skill</span></code></a>(mu, var[, n, t])</p></td>
@@ -524,7 +541,7 @@ skill) if you can: <a class="reference internal" href="learny.tracing.model.html
 
 <dl class="py class">
 <dt class="sig sig-object py" id="learny.tracing.estimators.Mastery">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.estimators.</span></span><span class="sig-name descname"><span class="pre">Mastery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skill</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">deviation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#Mastery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.Mastery" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.estimators.</span></span><span class="sig-name descname"><span class="pre">Mastery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skill</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">deviation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loading</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#Mastery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.Mastery" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>What the model believes about one student and one label.</p>
 <p><code class="docutils literal notranslate"><span class="pre">probability</span></code> is the chance of success on an item of <em>average</em> difficulty, which is
@@ -558,6 +575,15 @@ this field rather than a caller reading the estimator’s private state.</p>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.tracing.estimators.Mastery.loading">
+<span class="sig-name descname"><span class="pre">loading</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></span><a class="headerlink" href="#learny.tracing.estimators.Mastery.loading" title="Link to this definition">#</a></dt>
+<dd><p>The deviation’s loading on what every label of this student shares — for the
+default estimator, its covariance with the global skill over the global skill’s
+sd — so that two labels’ deviations covary by <code class="docutils literal notranslate"><span class="pre">loading_a</span> <span class="pre">*</span> <span class="pre">loading_b</span></code>. 0 (the
+default) treats the deviations as independent.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -674,6 +700,16 @@ observations from drifting away from what the student’s whole record says.</p>
 <dt class="sig sig-object py" id="learny.tracing.estimators.RaschEstimator.observe">
 <span class="sig-name descname"><span class="pre">observe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#RaschEstimator.observe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.RaschEstimator.observe" title="Link to this definition">#</a></dt>
 <dd><p>The new state after one response. Pure: <code class="docutils literal notranslate"><span class="pre">state</span></code> is not mutated.</p>
+<p>One Newton (Laplace) step on the <em>joint</em> log-posterior over the global skill and
+every label: a rank-1 update of the covariance along <code class="docutils literal notranslate"><span class="pre">Cov(skill,</span> <span class="pre">s)</span></code>. Because
+the global/label covariance is carried, a shortfall that every item shares is
+attributed to the global skill rather than to whichever label has the largest
+share of each item (#23). The result is projected back onto the stored star
+structure, which keeps every <code class="docutils literal notranslate"><span class="pre">(global,</span> <span class="pre">label)</span></code> pair exactly and drops only the
+residual label-label correlation given the global skill.</p>
+<p>Only the global skill and the item’s labels are written: every other label is
+stored as its regression on the global skill, which this update leaves exactly
+as it was (see <code class="docutils literal notranslate"><span class="pre">_Frame</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
@@ -904,6 +940,7 @@ student. Pass one sitting’s responses <strong>in the order they were presented
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.Mastery"><code class="docutils literal notranslate"><span class="pre">Mastery</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.Mastery.confidence"><code class="docutils literal notranslate"><span class="pre">Mastery.confidence</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.Mastery.interval"><code class="docutils literal notranslate"><span class="pre">Mastery.interval()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.Mastery.loading"><code class="docutils literal notranslate"><span class="pre">Mastery.loading</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.Mastery.probability"><code class="docutils literal notranslate"><span class="pre">Mastery.probability</span></code></a></li>
 </ul>
 </li>

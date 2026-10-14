@@ -14,10 +14,10 @@ and every part can be replaced without touching the others:
 
 ### Module Attributes
 
-| [`DEFAULT_CREDIBLE_BELOW`](#learny.tracing.model.DEFAULT_CREDIBLE_BELOW)   | How many posterior standard deviations below its comparator a label must be before [`LearnerModel.weakest()`](#learny.tracing.model.LearnerModel.weakest) calls it a weakness.                         |
-|---------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`DEFAULT_RELATIVE_TO`](#learny.tracing.model.DEFAULT_RELATIVE_TO)      | the precision-weighted mean of the student's *other* labels, so a shortfall shared by every label — which the default estimator splits between global skill and each label by its priors — cancels out. |
-| [`DEFAULT_MULTIPLICITY`](#learny.tracing.model.DEFAULT_MULTIPLICITY)     | How the bound accounts for testing several labels at once.                                                                                                                                              |
+| [`DEFAULT_CREDIBLE_BELOW`](#learny.tracing.model.DEFAULT_CREDIBLE_BELOW)   | How many posterior standard deviations below its comparator a label must be before [`LearnerModel.weakest()`](#learny.tracing.model.LearnerModel.weakest) calls it a weakness.   |
+|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`DEFAULT_RELATIVE_TO`](#learny.tracing.model.DEFAULT_RELATIVE_TO)      | the precision-weighted mean of the student's *other* labels, so whatever part of a shortfall every label shares cancels out.                                                      |
+| [`DEFAULT_MULTIPLICITY`](#learny.tracing.model.DEFAULT_MULTIPLICITY)     | How the bound accounts for testing several labels at once.                                                                                                                        |
 
 ### Classes
 
@@ -48,10 +48,9 @@ gate did.
 ### learny.tracing.model.DEFAULT_RELATIVE_TO *= 'labels'*
 
 the precision-weighted mean
-of the student’s *other* labels, so a shortfall shared by every label — which the
-default estimator splits between global skill and each label by its priors — cancels
-out. `"global"`: the student’s global skill (zero deviation), as the original gate
-did.
+of the student’s *other* labels, so whatever part of a shortfall every label shares
+cancels out. `"global"`: the student’s global skill (zero deviation), as the
+original gate did.
 With `"labels"` a student with evidence on a single label has nothing to compare it
 with, so nothing is credibly weak.
 
@@ -176,15 +175,15 @@ Three keywords set the gate:
   responses per label even a large real weakness is rarely returned. Pass
   `"none"` there if a missed weakness costs more than a false one (#22).
 * `relative_to` — `"labels"` (default) as above; `"global"` measures each
-  label’s deviation against zero, the student’s global skill. With the default
-  estimator that split comes from the priors, so part of a uniform shortfall
-  lands on every label and a student weak everywhere sees several labels
-  returned; measured against the other labels, a shared shortfall cancels —
-  when labels share items equally; a heavily weighted label still absorbs more
-  of it (#23). So
-  evidence on a single label is never a credible weakness here — there is
-  nothing to compare it with. When unlabelled items carry the comparison (a
-  label against the rest of the paper), use `"global"`.
+  label’s deviation against zero, the student’s global skill. The default
+  estimator carries the global/label covariance, so a shortfall every item
+  shares goes to the global skill, and where the record cannot tell “weak
+  overall” from “weak on this label” the label’s deviation stays wide rather
+  than taking the blame (#23); the contrast with the other labels counts the
+  covariance they share through it ([`Mastery.loading`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery.loading)). Evidence on a single label is
+  never a credible weakness under `"labels"` — there is nothing to compare it
+  with. When unlabelled items carry the comparison (a label against the rest of
+  the paper), use `"global"`.
 
 `multiplicity="none", relative_to="global"` restores the original per-label gate.
 

@@ -31,10 +31,10 @@ neither looks at more than one student at a time unless asked to.
 
 ### Functions
 
-| [`label_separation`](#learny.tracing.diagnostics.label_separation)(state, \*[, min_n, threshold])   | Separation of one student's label deviations, from their estimator state.     |
-|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`prequential`](#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)      | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
-| [`calibration`](#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...])     | Prequential calibration of `estimator` over the students in `log`.            |
+| [`label_separation`](#learny.tracing.diagnostics.label_separation)(state, \*[, estimator, ...])   | Separation of one student's label deviations, from their estimator state.     |
+|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`prequential`](#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)    | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
+| [`calibration`](#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...])   | Prequential calibration of `estimator` over the students in `log`.            |
 
 ### Classes
 
@@ -165,12 +165,14 @@ there is no right answer to compare them to.
 True
 ```
 
-### learny.tracing.diagnostics.label_separation(state, , min_n=1, threshold=2.0)
+### learny.tracing.diagnostics.label_separation(state, , estimator=None, min_n=1, threshold=2.0)
 
 Separation of one student’s label deviations, from their estimator state.
 
-Works on any state that stores labels as `{label: {"mu", "var", "n"}}` — the
-[`RaschEstimator`](learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator) layout. Only labels with at least
+The state is read through `estimator.mastery()` (default: a
+[`RaschEstimator`](learny.tracing.estimators.html.md#learny.tracing.estimators.RaschEstimator), which also reads a plain
+`{label: {"mu", "var", "n"}}` layout), from each label’s
+`deviation`. Only labels with at least
 `min_n` observations are counted; a label nobody has evidence on is not a label
 that can be told apart from anything.
 
@@ -188,6 +190,11 @@ re-opened a stale label’s variance without moving its mean (`forget_per_week`)
 that only adds noise, so it can only lower `G` – whereas undoing a presumed
 shrinkage there would attribute a whole history’s mean to the little evidence the
 variance still shows, and call noise distinguishable.
+
+`var` is each deviation’s variance *given the global skill* (`var -
+loading**2`). What the deviations share through the global skill – how much of
+the student’s level is “overall” rather than “this label”, which a record often
+cannot tell – moves them all together, so it blurs no ordering among them.
 
 * **Return type:**
   [`LabelSeparation`](#learny.tracing.diagnostics.LabelSeparation)
@@ -222,5 +229,5 @@ skips included; filter on `response.outcome.is_scored` to score.
 >>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
 >>> rs = [Response('a', 'q', 'correct'), Response('a', 'q', 'correct')]
 >>> [round(p, 3) for _, p in prequential(rs, items=items, estimator=RaschEstimator())]
-[0.5, 0.607]
+[0.5, 0.6]
 ```
