@@ -29,7 +29,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from learny.tracing.estimators import Estimator
+from learny.tracing.estimators import Estimator, RaschEstimator
 from learny.tracing.records import Item, Outcome, Response
 
 __all__ = [
@@ -115,13 +115,16 @@ class LabelSeparation:
 def label_separation(
     state: Mapping[str, Any],
     *,
+    estimator: Estimator | None = None,
     min_n: int = 1,
     threshold: float = DEFAULT_SEPARATION_THRESHOLD,
 ) -> LabelSeparation:
     """Separation of one student's label deviations, from their estimator state.
 
-    Works on any state that stores labels as ``{label: {"mu", "var", "n"}}`` — the
-    :class:`~learny.tracing.estimators.RaschEstimator` layout. Only labels with at least
+    The state is read through ``estimator.mastery()`` (default: a
+    :class:`~learny.tracing.estimators.RaschEstimator`, which also reads a plain
+    ``{label: {"mu", "var", "n"}}`` layout), from each label's
+    :attr:`~learny.tracing.estimators.Mastery.deviation`. Only labels with at least
     ``min_n`` observations are counted; a label nobody has evidence on is not a label
     that can be told apart from anything.
 
@@ -140,6 +143,11 @@ def label_separation(
     shrinkage there would attribute a whole history's mean to the little evidence the
     variance still shows, and call noise distinguishable.
 
+    ``var`` is each deviation's variance *given the global skill* (``var -
+    loading**2``). What the deviations share through the global skill -- how much of
+    the student's level is "overall" rather than "this label", which a record often
+    cannot tell -- moves them all together, so it blurs no ordering among them.
+
     >>> state = {"labels": {
     ...     "fractions": {"mu": 0.9, "var": 0.02, "n": 30},
     ...     "area":      {"mu": -0.8, "var": 0.02, "n": 30},
@@ -151,18 +159,26 @@ def label_separation(
     >>> label_separation(blurred).distinguishable   # nine labels, all noise
     False
     """
-    entries = [
-        e for e in state.get("labels", {}).values() if int(e.get("n", 0)) >= min_n
-    ]
-    k = len(entries)
+    estimator = RaschEstimator() if estimator is None else estimator
+    masteries = [m for m in estimator.mastery(state).values() if m.n >= min_n]
+    if any(m.deviation is None for m in masteries):
+        raise TypeError(
+            f"label_separation() reads each label's Mastery.deviation, and "
+            f"{type(estimator).__name__}.mastery() does not provide one."
+        )
+    k = len(masteries)
     if k == 0:
         return LabelSeparation(
             n_labels=0, observed_sd=0.0, rmse=0.0, threshold=threshold
         )
-    mus = [float(e["mu"]) for e in entries]
+    mus = [m.deviation.mu for m in masteries]
     mean = sum(mus) / k
     signal_var = sum((m - mean) ** 2 for m in mus) / (k - 1) if k > 1 else 0.0
-    mse = sum(float(e["var"]) for e in entries) / k
+    # The noise is each deviation's variance *given the global skill*, var - loading²:
+    # the part every label shares through the global skill (how much of the student's
+    # level is "overall" rather than "this label") moves all deviations together, so
+    # it blurs no ordering among them (decision 10 in docs/learner-model-design.md).
+    mse = sum(max(m.deviation.var - m.loading**2, 0.0) for m in masteries) / k
     # ``LabelSeparation`` reads true variance as observed minus error; in the posterior
     # form the signal is ``var(mu)`` itself, so "observed" is signal plus error.
     return LabelSeparation(

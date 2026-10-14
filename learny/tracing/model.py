@@ -380,7 +380,9 @@ class LearnerModel:
 
         Check ``.distinguishable`` before acting on an ordering from :meth:`weakest`.
         """
-        return label_separation(self._state(student), threshold=threshold)
+        return label_separation(
+            self._state(student), estimator=self.estimator, threshold=threshold
+        )
 
     def calibration(
         self, students: Iterable[str] | None = None, *, n_bins: int = DEFAULT_N_BINS

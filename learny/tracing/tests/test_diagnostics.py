@@ -234,10 +234,19 @@ class TestFamilyGate:
         model = _model(items, [Response("s", f"q{i}", "wrong") for i in range(20)])
         result = model.weakest("s")
         assert result == [] and result.reason == "no_credible_weakness"
-        # Nor against the global skill: with the global/label covariance carried (#23)
-        # the posterior knows the split between them is unidentified, and keeps the
-        # label's deviation wide instead of blaming it (the mean-field answer was ["a"]).
-        assert model.weakest("s", **ORIGINAL_GATE) == []
+        # Against the global skill, the split of the shortfall between global and label
+        # is not identified from this record. With the covariance carried (#23) the
+        # posterior splits it in the prior ratio (0.25 : 1, so the label takes 0.2 of
+        # it, at every n) and keeps the label's sd near sqrt(0.25 * 1 / 1.25) ~ 0.45
+        # instead of shrinking it as if the split were evidence. Whether the original
+        # gate then flags the label depends on the size of the total shortfall (here
+        # mu + sd is about +0.04; at 50 wrong answers it is below 0), so that is not
+        # asserted.
+        est = model.estimator
+        m = model.mastery("s")["a"]
+        share = est.label_prior_var / (est.prior_var + est.label_prior_var)
+        assert m.deviation.mu == pytest.approx(share * m.mu, rel=1e-6)
+        assert m.deviation.sd > 0.44
 
     def test_a_label_against_unlabelled_items_needs_the_global_comparator(self):
         items = {f"u{i}": Item(f"u{i}") for i in range(20)}
@@ -553,8 +562,12 @@ class TestWeakestContract:
         model.record("s", "q1", "wrong")
         m = model.mastery("s")["area"]
         state = model.estimates["s"]
-        assert m.deviation.mu == pytest.approx(state["labels"]["area"]["mu"])
-        assert m.deviation.var == pytest.approx(state["labels"]["area"]["var"])
+        # labels are stored as their regression on the global skill (#23)
+        glob, area = state["global"], state["labels"]["area"]
+        dev_mu = area["offset"] + area["slope"] * glob["mu"]
+        dev_var = area["resid_var"] + area["slope"] ** 2 * glob["var"]
+        assert m.deviation.mu == pytest.approx(dev_mu)
+        assert m.deviation.var == pytest.approx(dev_var)
         assert m.mu == pytest.approx(state["global"]["mu"] + m.deviation.mu)
 
     def test_an_estimator_without_deviation_is_an_error_not_silence(self, split_items):
