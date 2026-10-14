@@ -638,16 +638,19 @@ class RaschEstimator:
         }
         if "items" in state:
             new["items"] = {k: dict(v) for k, v in state["items"].items()}
-        if "frame" not in new["global"]:
-            # Written before the regression form: a label with a covariance is read
-            # relative to the global skill as stored, so pin it there, once.
-            stored = self._skill(state.get("global"), prior_var=self.prior_var)
-            for label, entry in state.get("labels", {}).items():
-                if entry.get("cov"):
-                    new["labels"][label] = {
-                        **_Frame().store(*_regression(entry, _Frame(), stored)),
-                        "n": int(entry.get("n", 0)), "t": entry.get("t"),
-                    }
+        # Written before the regression form: a label with a covariance is read relative
+        # to the global skill as stored, so pin it there, in the stored frame. Any such
+        # label is converted, whatever the global entry holds: a hand-made or merged state
+        # can mix the two forms, and an unconverted label would not follow the global
+        # skill when it moves (#27).
+        stored = self._skill(state.get("global"), prior_var=self.prior_var)
+        stored_frame = _Frame.of(state.get("global"))
+        for label, entry in state.get("labels", {}).items():
+            if "slope" not in entry and entry.get("cov"):
+                new["labels"][label] = {
+                    **stored_frame.store(*_regression(entry, stored_frame, stored)),
+                    "n": int(entry.get("n", 0)), "t": entry.get("t"),
+                }
 
         # Bayes: the posterior gain Sigma h / (1 + info * h' Sigma h). Elo: the fixed gain
         # elo_rate * h of classical Elo, which moves only the skills the item names; the
@@ -664,6 +667,19 @@ class RaschEstimator:
         if not bayes:
             # A label Elo does not name keeps its mean although the global skill moved.
             frame = frame._replace(shift=frame.shift - frame.scale * moved)
+        if frame.scale < _FRAME_FLOOR:
+            # Re-express every stored label in a fresh frame before the stored slopes grow
+            # large enough to cost precision: O(labels), once per many weeks of drift. It
+            # comes before the item's labels are written, so they are stored in the fresh
+            # frame directly rather than in the collapsed one and re-expressed (#27).
+            fresh = _Frame()
+            for label, entry in new["labels"].items():
+                if "slope" in entry:
+                    new["labels"][label] = {
+                        **fresh.store(*_regression(entry, frame, glob)),
+                        "n": entry["n"], "t": entry["t"],
+                    }
+            frame = fresh
         for label, share in joint.shares.items():
             lab, u = joint.labels[label], joint.u[label]
             mu = lab.skill.mu + (u * step if bayes else self.elo_rate * share * score)
@@ -675,17 +691,6 @@ class RaschEstimator:
                 "n": lab.skill.n + 1,
                 "t": now if now is not None else lab.skill.t,
             }
-        if frame.scale < _FRAME_FLOOR:
-            # Re-express every label in a fresh frame before the stored slopes grow
-            # large enough to cost precision: O(labels), once per many weeks of drift.
-            here, fresh = Skill(mu=mu_g, var=vg), _Frame()
-            for label, entry in new["labels"].items():
-                if "slope" in entry:
-                    new["labels"][label] = {
-                        **fresh.store(*_regression(entry, frame, here)),
-                        "n": entry["n"], "t": entry["t"],
-                    }
-            frame = fresh
         new["global"] = {
             "mu": mu_g,
             "var": vg,
