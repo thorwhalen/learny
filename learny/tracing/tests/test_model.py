@@ -234,7 +234,10 @@ class TestAggregation:
         noisy = est.observe(
             est.init(), r, Item("q", labels={"x": 0.57, "y": 0.43}, difficulty=0.5)
         )
-        assert abs(noisy["labels"]["x"]["mu"]) < abs(full["labels"]["x"]["mu"])
+        def dev(state):
+            return est.mastery(state)["x"].deviation.mu
+
+        assert abs(dev(noisy)) < abs(dev(full))
 
 
 class TestLearning:
@@ -261,8 +264,8 @@ class TestLearning:
         for i in range(10):
             model.record("ada", f"q{i}", "correct")
         state = model.estimates["ada"]
-        for entry in state["labels"].values():
-            assert abs(entry["mu"]) < abs(state["global"]["mu"])
+        for m in model.mastery("ada").values():
+            assert abs(m.deviation.mu) < abs(state["global"]["mu"])
 
     def test_weakest_returns_labels_with_evidence_only(self, model):
         model.record("ada", "q1", "wrong")  # q1 is labelled ('fractions',)
@@ -395,3 +398,171 @@ class TestUnknownItems:
 
     def test_predicting_an_unknown_item_is_a_coin_flip(self, model):
         assert model.predict("ada", "not-in-the-bank") == pytest.approx(0.5)
+
+
+class TestJointPosterior:
+    """The global/label covariance is carried (#23); older states still work."""
+
+    OLD_STATE = {  # the pre-#23 layout: no "cov" anywhere
+        "global": {"mu": -0.4, "var": 0.5, "n": 6, "t": None},
+        "labels": {
+            "a": {"mu": -0.2, "var": 0.2, "n": 3, "t": None},
+            "b": {"mu": 0.1, "var": 0.22, "n": 3, "t": None},
+        },
+    }
+
+    def test_a_state_without_covariances_still_loads(self):
+        est = RaschEstimator()
+        item = Item("q", labels=("a", "b"), difficulty=0.5)
+        # zero covariance is the mean-field state: the same prediction as before
+        s, v = -0.4 + 0.5 * (-0.2 + 0.1), 0.5 + 0.25 * (0.2 + 0.22)
+        expected = expit(s / (1 + 3.141592653589793 * v / 8) ** 0.5)
+        assert est.predict(self.OLD_STATE, item) == pytest.approx(expected)
+        assert est.mastery(self.OLD_STATE)["a"].skill.var == pytest.approx(0.7)
+        new = est.observe(self.OLD_STATE, Response("s", "q", Outcome.WRONG), item)
+        after = est.mastery(new)
+        assert after["a"].loading < 0 and after["b"].loading < 0
+        assert "cov" not in self.OLD_STATE["labels"]["a"]  # and nothing was mutated
+
+    def test_a_state_with_marginal_covariances_still_loads(self):
+        """The first #23 layout stored each label's (mu, var, cov); it reads unchanged,
+        and a response then moves an off-item label exactly as that layout did."""
+        est = RaschEstimator()
+        state = {
+            "global": {"mu": -0.4, "var": 0.5, "n": 6, "t": None},
+            "labels": {
+                "a": {"mu": -0.2, "var": 0.2, "n": 3, "t": None, "cov": -0.1},
+                "b": {"mu": 0.1, "var": 0.22, "n": 3, "t": None, "cov": None},
+            },
+        }
+        m = est.mastery(state)
+        assert (m["a"].deviation.mu, m["a"].deviation.var) == pytest.approx((-0.2, 0.2))
+        assert m["a"].loading == pytest.approx(-0.1 / 0.5**0.5)
+        assert m["a"].skill.var == pytest.approx(0.5 + 0.2 - 0.2)
+        assert m["b"].loading == 0.0  # None is the mean-field state, not an error
+        new = est.observe(state, Response("s", "u", Outcome.WRONG), Item("u"))
+        moved = new["global"]["mu"] - state["global"]["mu"]
+        assert est.mastery(new)["a"].deviation.mu == pytest.approx(-0.2 - 0.1 / 0.5 * moved)
+
+    def test_a_response_rewrites_only_the_labels_it_names(self):
+        """O(labels on the item): every other label is stored as its regression on the
+        global skill, which the update leaves exactly as it was."""
+        est = RaschEstimator()
+        state = est.init()
+        for i in range(50):
+            item = Item(f"q{i}", labels=(f"l{i}",), difficulty=0.5)
+            response = Response("s", item.id, Outcome.WRONG, at=i * 9e4)
+            state = est.observe(state, response, item)
+        item = Item("q", labels=("l3",), difficulty=0.5)
+        new = est.observe(state, Response("s", "q", Outcome.CORRECT, at=6e6), item)
+        changed = {k for k in new["labels"] if new["labels"][k] is not state["labels"][k]}
+        assert changed == {"l3"}
+        assert est.mastery(new)["l7"].deviation.mu != est.mastery(state)["l7"].deviation.mu
+
+    def test_re_expressing_the_frame_changes_nothing(self, monkeypatch):
+        """Long forgetting re-expresses every label in a fresh frame now and then, for
+        precision; the posterior it describes is the same."""
+        import learny.tracing.estimators as estimators
+
+        bank = {
+            f"q{i}": Item(f"q{i}", labels=(f"l{i % 6}",), difficulty=0.5) for i in range(12)
+        }
+        rng = random.Random(3)
+        rs = [
+            Response(
+                "s", f"q{rng.randrange(12)}", rng.choice(["correct", "wrong"]), at=k * 6e5
+            )
+            for k in range(300)
+        ]
+
+        def final(est):
+            state = est.init()
+            for r in rs:
+                state = est.observe(state, r, bank[r.item])
+            return state
+
+        est = RaschEstimator(forget_per_week=0.5)
+        default = final(est)
+        assert default["global"]["frame"]["scale"] >= estimators._FRAME_FLOOR
+        monkeypatch.setattr(estimators, "_FRAME_FLOOR", 0.5)  # re-expressed far more often
+        often = final(est)
+        a, b = est.mastery(default), est.mastery(often)
+        for label in a:
+            assert a[label].mu == pytest.approx(b[label].mu, abs=1e-9)
+            assert a[label].skill.var == pytest.approx(b[label].skill.var, abs=1e-9)
+
+    def test_prediction_counts_the_covariance(self):
+        """A negative global/label covariance narrows Var(global + label)."""
+        est = RaschEstimator()
+        item = Item("q", labels=("a",), difficulty=0.2)
+        state = {
+            "global": {"mu": 1.0, "var": 0.5, "n": 5, "t": None},
+            "labels": {"a": {"mu": 0.0, "var": 0.2, "n": 5, "t": None}},
+        }
+        correlated = {**state, "labels": {"a": {**state["labels"]["a"], "cov": -0.15}}}
+        assert est.predict(correlated, item) > est.predict(state, item) > 0.5
+
+    def test_a_shortfall_one_label_cannot_explain_is_split_by_the_priors(self):
+        """Global and label are not identified from one label's items; the joint
+        posterior keeps their split at the prior ratio however much evidence arrives,
+        where a mean-field update keeps moving it onto the label."""
+        est = RaschEstimator()
+        item = Item("q", labels=("a",), difficulty=0.5)
+        state = est.init()
+        for _ in range(40):
+            state = est.observe(state, Response("s", "q", Outcome.WRONG), item)
+        m = est.mastery(state)["a"]
+        ratio = est.label_prior_var / (est.prior_var + est.label_prior_var)
+        assert m.deviation.mu == pytest.approx(ratio * m.mu)
+        # ... and the label's sd stays near its conditional prior: it is not identified
+        assert m.deviation.var > 0.15
+
+    def test_an_unlabelled_item_moves_the_labels_that_covary_with_the_global(self):
+        est = RaschEstimator()
+        state = est.observe(
+            est.init(), Response("s", "q", Outcome.WRONG), Item("q", labels=("a",))
+        )
+        before = est.mastery(state)["a"]
+        after = est.mastery(
+            est.observe(state, Response("s", "u", Outcome.CORRECT), Item("u"))
+        )["a"]
+        assert after.deviation.mu != before.deviation.mu
+        assert after.n == before.n  # moved, but not observed
+
+    @pytest.mark.parametrize(
+        "options",
+        [
+            {},
+            {"gain": "elo"},
+            {"conjunctivity": 3.0},
+            {"guess": 0.2},
+            {"forget_per_week": 0.5},
+            {"update_difficulty": True},
+        ],
+        ids=lambda o: ",".join(o) or "default",
+    )
+    def test_every_option_keeps_a_valid_posterior(self, options):
+        est = RaschEstimator(**options)
+        bank = {
+            f"q{i}": Item(
+                f"q{i}",
+                labels={f"l{i % 4}": 0.7, f"l{(i + 1) % 4}": 0.3} if i % 3 else (),
+                difficulty=0.2 + 0.6 * (i % 5) / 4,
+            )
+            for i in range(20)
+        }
+        rng = random.Random(0)
+        model = LearnerModel(items=bank, estimator=est, log={}, estimates={})
+        for k in range(150):
+            outcome = rng.choice(["correct", "wrong", "unanswered"])
+            model.record("s", f"q{rng.randrange(20)}", outcome, at=k * 2 * 86400.0)
+        state = model.estimates["s"]
+        vg = state["global"]["var"]
+        assert 0 < vg <= est.prior_var
+        for m in est.mastery(state).values():
+            assert m.deviation.var > 0 and m.loading**2 <= m.deviation.var + 1e-12
+        live = state
+        model.estimates.clear()
+        model.replay()
+        assert model.estimates["s"] == live
+        assert 0.0 < model.predict("s", "q1") < 1.0

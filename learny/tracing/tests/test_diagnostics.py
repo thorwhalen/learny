@@ -171,6 +171,26 @@ def _flag_rate(models, n_labels, **gate):
     return sum(flagged) / len(flagged)
 
 
+def _weighted_flag_count(items, *, skill, dev=None, exact=None, n_students=20):
+    """How many of ``n_students`` synthetic students get any label flagged by the
+    default gate (or exactly the labels in ``exact``, if given): 300 responses each,
+    global skill ``skill`` plus the share-weighted ``dev`` of each item's labels."""
+    keys = sorted(items)
+    count = 0
+    for seed in range(n_students):
+        rng = random.Random(seed)
+        model = LearnerModel(items=items, log={}, estimates={})
+        for _ in range(300):
+            item = items[rng.choice(keys)]
+            w = item.weights
+            d = sum((dev or {}).get(k, 0.0) * v for k, v in w.items()) / sum(w.values())
+            p = expit(skill + d - logit(item.difficulty))
+            model.record("s", item.id, "correct" if rng.random() < p else "wrong")
+        found = {m.label for m in model.weakest("s", n=6)}
+        count += found == exact if exact is not None else bool(found)
+    return count
+
+
 class TestFamilyGate:
     """weakest() corrects for testing many labels and for a shared shortfall (#14)."""
 
@@ -181,14 +201,18 @@ class TestFamilyGate:
     def test_no_real_weakness_is_rarely_flagged(self, n_labels):
         models = list(_students(n_labels, n_students=40))
         # the family-wise bound is ~16% at z = 1; the per-label gate flags most students
+        # (measured with multiplicity="none" alone: since #23 the estimator no longer
+        # makes deviations overconfident, so relative_to no longer adds false flags)
         assert _flag_rate(models, n_labels) <= 0.2
-        assert _flag_rate(models, n_labels, **ORIGINAL_GATE) >= 0.4
+        assert _flag_rate(models, n_labels, multiplicity="none") >= 0.4
 
     def test_a_uniform_shortfall_is_not_blamed_on_labels(self):
         models = list(_students(6, n_students=30, skill=-2.5))
         assert _flag_rate(models, 6) <= 0.2
         mean_flags = sum(len(m.weakest("s", n=6, **ORIGINAL_GATE)) for m in models) / 30
-        assert mean_flags >= 2.0  # the mean-field attribution the default removes
+        # The mean-field estimator gave the original gate ~2.6 of 6 labels here (#14);
+        # carrying the global/label covariance (#23) puts the shortfall on the global skill.
+        assert mean_flags <= 1.0
 
     def test_a_real_weakness_is_still_found(self):
         models = list(_students(6, n_students=20, weak=-2.0))
@@ -210,8 +234,19 @@ class TestFamilyGate:
         model = _model(items, [Response("s", f"q{i}", "wrong") for i in range(20)])
         result = model.weakest("s")
         assert result == [] and result.reason == "no_credible_weakness"
-        # against the global skill, the prior split blames the label: the old answer
-        assert [m.label for m in model.weakest("s", **ORIGINAL_GATE)] == ["a"]
+        # Against the global skill, the split of the shortfall between global and label
+        # is not identified from this record. With the covariance carried (#23) the
+        # posterior splits it in the prior ratio (0.25 : 1, so the label takes 0.2 of
+        # it, at every n) and keeps the label's sd near sqrt(0.25 * 1 / 1.25) ~ 0.45
+        # instead of shrinking it as if the split were evidence. Whether the original
+        # gate then flags the label depends on the size of the total shortfall (here
+        # mu + sd is about +0.04; at 50 wrong answers it is below 0), so that is not
+        # asserted.
+        est = model.estimator
+        m = model.mastery("s")["a"]
+        share = est.label_prior_var / (est.prior_var + est.label_prior_var)
+        assert m.deviation.mu == pytest.approx(share * m.mu, rel=1e-6)
+        assert m.deviation.sd > 0.44
 
     def test_a_label_against_unlabelled_items_needs_the_global_comparator(self):
         items = {f"u{i}": Item(f"u{i}") for i in range(20)}
@@ -234,25 +269,43 @@ class TestFamilyGate:
             "no_credible_weakness"
         )
 
-    @pytest.mark.xfail(
-        strict=True, reason="#23: a heavily weighted label absorbs the shared shortfall"
-    )
     def test_a_uniform_shortfall_on_weighted_labels_is_not_blamed(self):
         items = {
-            f"q{i}": Item(f"q{i}", labels={"l0": 0.9, f"l{1 + i % 5}": 0.1})
+            f"q{i}": Item(
+                f"q{i}", labels={"l0": 0.9, f"l{1 + i % 5}": 0.1}, difficulty=0.5
+            )
             for i in range(30)
         }
-        keys = sorted(items)
-        flagged = 0
-        for seed in range(20):
-            rng = random.Random(seed)
-            model = LearnerModel(items=items, log={}, estimates={})
-            for _ in range(300):
-                item = items[rng.choice(keys)]
-                p = expit(-2.5 - logit(item.difficulty))
-                model.record("s", item.id, "correct" if rng.random() < p else "wrong")
-            flagged += bool(model.weakest("s", n=6))
-        assert flagged <= 4
+        assert _weighted_flag_count(items, skill=-2.5) <= 4  # mean-field: 19/20
+
+    @pytest.mark.parametrize(
+        "labels_of",
+        [
+            pytest.param(lambda i: {"l0": 0.6, f"l{1 + i % 5}": 0.4}, id="0.6/0.4"),
+            pytest.param(lambda i: ("hub", f"l{1 + i % 5}"), id="hub"),
+        ],
+    )
+    def test_a_uniform_shortfall_on_shared_labels_is_not_blamed(self, labels_of):
+        """The other #23 variants: a weaker weighting, and a hub label on every item."""
+        items = {
+            f"q{i}": Item(f"q{i}", labels=labels_of(i), difficulty=0.5) for i in range(30)
+        }
+        assert _weighted_flag_count(items, skill=-2.5) <= 2
+
+    @pytest.mark.parametrize(
+        "labels_of, weak",
+        [
+            pytest.param(lambda i: (f"l{i % 6}",), "l0", id="one-label"),
+            pytest.param(lambda i: ("hub", f"l{1 + i % 5}"), "l2", id="hub"),
+        ],
+    )
+    def test_a_genuine_single_label_deficit_is_still_found(self, labels_of, weak):
+        """The fix must move a *shared* shortfall, not suppress flags."""
+        items = {
+            f"q{i}": Item(f"q{i}", labels=labels_of(i), difficulty=0.5) for i in range(30)
+        }
+        found = _weighted_flag_count(items, skill=0.0, dev={weak: -2.0}, exact={weak})
+        assert found >= 10
 
     def test_bool_n_is_refused(self):
         model = _model({"q": Item("q", labels=("a",))}, [])
@@ -509,8 +562,12 @@ class TestWeakestContract:
         model.record("s", "q1", "wrong")
         m = model.mastery("s")["area"]
         state = model.estimates["s"]
-        assert m.deviation.mu == pytest.approx(state["labels"]["area"]["mu"])
-        assert m.deviation.var == pytest.approx(state["labels"]["area"]["var"])
+        # labels are stored as their regression on the global skill (#23)
+        glob, area = state["global"], state["labels"]["area"]
+        dev_mu = area["offset"] + area["slope"] * glob["mu"]
+        dev_var = area["resid_var"] + area["slope"] ** 2 * glob["var"]
+        assert m.deviation.mu == pytest.approx(dev_mu)
+        assert m.deviation.var == pytest.approx(dev_var)
         assert m.mu == pytest.approx(state["global"]["mu"] + m.deviation.mu)
 
     def test_an_estimator_without_deviation_is_an_error_not_silence(self, split_items):

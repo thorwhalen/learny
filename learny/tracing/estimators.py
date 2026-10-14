@@ -6,7 +6,10 @@ an opponent of known strength. Belief about a student is::
 
     logit P(correct) = global_skill + aggregate(label skills) - item_difficulty
 
-where every skill is a posterior ``(mu, var)`` rather than a point. Carrying the variance
+where every skill is a posterior ``(mu, var)`` rather than a point, and each label also
+carries its covariance with the global skill (``cov``), so the posterior is joint: a
+shortfall every item shares is attributed to the global skill, not to whichever label
+has the largest share of each item. Carrying the variance
 is what lets the model say *how sure* it is, decay confidence over time without
 pretending to know which way a skill moved, and behave sanely at zero observations — all
 from one formula instead of three bolted-on heuristics.
@@ -31,6 +34,21 @@ global skill enough precision to serve as every label's prior before any label-s
 evidence exists. So the pooling that makes sparse labels usable happens **across labels
 within one student** — no other student need exist, and none is ever consulted.
 
+**The posterior is joint, but stored in O(labels) and updated in O(labels on the
+item).** Labels are kept conditionally independent given the global skill (a star around
+it), and each is stored as its regression on the global skill: ``label = offset + beta *
+global + e`` with ``Var(e) = cond_var``. Its marginal ``(mu, var)`` and its covariance
+with the global skill are read back from that (``mastery()`` reports them), and
+label-label covariance is implied as ``cov_a * cov_b / var_global``. One response is one
+rank-1 (Laplace) update of the joint covariance, followed by the projection back onto the
+star that keeps every ``(global, label)`` pair exactly; a label the item does not name
+keeps its regression exactly, so only the item's labels are rewritten. Forgetting adds
+independent drift to each skill and leaves the covariances alone; the global skill's
+share of that is carried for all labels at once by a *frame* on the global entry. The
+``conjunctivity`` soft-min shares are linearised at the posterior means, as before.
+States written before this layout -- labels as ``(mu, var)``, optionally with ``cov`` --
+read unchanged, and need no migration.
+
 **A skip is not a wrong answer, and not all skips are alike.** A blank at the end of a
 paper is a clock, not a judgement; a blank with answers after it is an abstention, which
 carries real information about confidence. They are treated differently, and neither is
@@ -42,7 +60,7 @@ from __future__ import annotations
 import math
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, NamedTuple, Protocol, runtime_checkable
 
 from learny.tracing.records import Item, Outcome, Response
 
@@ -58,6 +76,113 @@ __all__ = [
 ]
 
 _WEEK = 7 * 24 * 3600.0
+_MIN_VAR = 1e-12  # floor on a stored variance, so precision-weighted reads stay finite
+
+
+#: Below this frame scale every label is re-expressed in a fresh frame (see ``_Frame``).
+#: The stored slopes grow as ``1 / scale``, so this bounds the cancellation in reading a
+#: label back to about ``1 / scale**2`` ulps (1e4: ~1e-12 at unit scale).
+_FRAME_FLOOR = 1e-2
+
+
+class _Frame(NamedTuple):
+    """What forgetting has done to the global skill since every label was last written.
+
+    A label is stored as its regression on the global skill (``label = offset + beta *
+    global + e``, ``Var(e) = cond_var``), which a response that does not name the label
+    leaves unchanged, so only the item's own labels are rewritten. Forgetting (drift on
+    the global skill that leaves each covariance as it was) does change every label's
+    regression, by the same affine map for all of them; the frame accumulates that map
+    so that no label has to be rewritten either: a label stored as ``(slope, resid_var,
+    offset)`` reads as ``beta = slope * scale``, ``cond_var = resid_var + slope**2 *
+    resid``, ``offset = offset + slope * shift``.
+    """
+
+    scale: float = 1.0
+    resid: float = 0.0
+    shift: float = 0.0
+
+    @classmethod
+    def of(cls, glob: Mapping[str, Any] | None) -> _Frame:
+        frame = (glob or {}).get("frame")
+        if not frame:
+            return cls()
+        return cls(float(frame["scale"]), float(frame["resid"]), float(frame["shift"]))
+
+    def as_dict(self) -> dict[str, float]:
+        return {"scale": self.scale, "resid": self.resid, "shift": self.shift}
+
+    def forget(self, mu: float, var: float, aged: float) -> _Frame:
+        """The frame after the global variance goes from ``var`` to ``aged``."""
+        if aged == var or aged <= 0:
+            return self
+        r = var / aged
+        return _Frame(
+            self.scale * r,
+            self.resid + self.scale**2 * var * (1.0 - r),
+            self.shift + self.scale * (1.0 - r) * mu,
+        )
+
+    def store(self, beta: float, cond_var: float, offset: float) -> dict[str, float]:
+        """A label's regression, as stored in this frame."""
+        slope = beta / self.scale
+        return {
+            "slope": slope,
+            "resid_var": cond_var - slope * slope * self.resid,
+            "offset": offset - slope * self.shift,
+        }
+
+
+def _regression(
+    entry: Mapping[str, Any], frame: _Frame, glob: Skill
+) -> tuple[float, float, float]:
+    """``(beta, cond_var, offset)`` of a stored label on the stored global skill.
+
+    A label written before the regression form (``mu``, ``var`` and an optional ``cov``)
+    is read as its marginals at the stored global skill: ``cov`` absent, ``None`` or 0
+    is the mean-field state (``beta = 0``).
+    """
+    if "slope" in entry:
+        slope = float(entry["slope"])
+        return (
+            slope * frame.scale,
+            float(entry["resid_var"]) + slope * slope * frame.resid,
+            float(entry["offset"]) + slope * frame.shift,
+        )
+    mu, var = float(entry["mu"]), float(entry["var"])
+    cov = float(entry.get("cov") or 0.0)
+    if not cov or glob.var <= 0:
+        return 0.0, var, mu
+    cov = _clamp_cov(cov, glob.var, var)
+    beta = cov / glob.var
+    return beta, max(var - cov * beta, _MIN_VAR), mu - beta * glob.mu
+
+
+def _clamp_cov(c: float, var_a: float, var_b: float) -> float:
+    """Keep a covariance inside ``|c| <= sqrt(var_a * var_b)``, against rounding."""
+    bound = math.sqrt(max(var_a, 0.0) * max(var_b, 0.0))
+    return max(-bound, min(bound, c))
+
+
+class _Label(NamedTuple):
+    """One label's marginal posterior and its regression on the global skill."""
+
+    skill: Skill  # the deviation's marginal (mu, var, n, t)
+    cov: float  # Cov(global, label)
+    beta: float  # cov / var_global
+    cond_var: float  # var - cov * beta: Var(label | global)
+
+
+class _Joint(NamedTuple):
+    """The posterior one response is scored against; see ``RaschEstimator._joint``."""
+
+    glob: Skill  # aged to the response
+    frame: _Frame  # the stored frame, advanced by the global's ageing
+    labels: dict[str, _Label]  # the item's labels, aged to the response
+    shares: dict[str, float]  # each label's coefficient in the linear predictor
+    u0: float  # Cov(global, s)
+    u: dict[str, float]  # label -> Cov(label, s)
+    v_s: float  # Var(s)
 
 
 def expit(x: float) -> float:
@@ -182,6 +307,11 @@ class Mastery:
     skill: Skill
     prior_var: float = 1.0
     deviation: Skill | None = field(default=None, kw_only=True, compare=False)
+    #: The deviation's loading on what every label of this student shares — for the
+    #: default estimator, its covariance with the global skill over the global skill's
+    #: sd — so that two labels' deviations covary by ``loading_a * loading_b``. 0 (the
+    #: default) treats the deviations as independent.
+    loading: float = field(default=0.0, kw_only=True, compare=False)
 
     @property
     def mu(self) -> float:
@@ -335,46 +465,80 @@ class RaschEstimator:
             return float(learned["b"])
         return 0.0 if item.difficulty is None else logit(item.difficulty)
 
-    def _aggregate(
-        self, state: Mapping[str, Any], item: Item, now: float | None
-    ) -> tuple[float, float, dict[str, float]]:
-        """Aggregate label deviations: ``(mean, variance, per-label share)``.
+    def _shares(
+        self, item: Item, skills: Mapping[str, Skill]
+    ) -> dict[str, float]:
+        """Each label's share of the item's linear predictor.
 
-        With ``conjunctivity=0`` this is a reliability-weighted mean of the label
-        deviations — labels compensate for each other. As ``conjunctivity`` grows it
-        becomes a soft minimum, so the label the student is weakest on dominates, which is
-        the conjunctive (weakest-link) reading of a multi-skill item.
+        With ``conjunctivity=0`` these are the normalised label weights, so the label part
+        is a weighted mean of the deviations — labels compensate for each other. As
+        ``conjunctivity`` grows it becomes a soft minimum, so the label the student is
+        weakest on dominates, which is the conjunctive (weakest-link) reading of a
+        multi-skill item. The soft-min shares are evaluated at the posterior means and
+        then held fixed as the linearisation of the predictor (they are not
+        differentiated), exactly as the mean-field update did.
         """
         weights = item.weights
         total = sum(weights.values())
         if not total:
-            return 0.0, 0.0, {}
-
-        labels = state.get("labels", {})
+            return {}
         base = {label: w / total for label, w in weights.items()}
-        skills = {
-            label: self._aged(
-                self._skill(labels.get(label), prior_var=self.label_prior_var),
-                now, self.label_prior_var,
-            )
-            for label in base
-        }
-
         if self.conjunctivity <= 0:
-            shares = base
-        else:  # soft-min: shares are the softmax of -lambda * mu
-            lam = self.conjunctivity
-            lo = min(s.mu for s in skills.values())
-            terms = {
-                label: base[label] * math.exp(-lam * (skills[label].mu - lo))
-                for label in base
-            }
-            denom = sum(terms.values()) or 1.0
-            shares = {label: t / denom for label, t in terms.items()}
+            return base
+        lam = self.conjunctivity  # soft-min: shares are the softmax of -lambda * mu
+        lo = min(skills[label].mu for label in base)
+        terms = {
+            label: base[label] * math.exp(-lam * (skills[label].mu - lo)) for label in base
+        }
+        denom = sum(terms.values()) or 1.0
+        return {label: t / denom for label, t in terms.items()}
 
-        mean = sum(shares[label] * skills[label].mu for label in base)
-        var = sum(shares[label] ** 2 * skills[label].var for label in base)
-        return mean, var, shares
+    def _joint(
+        self, state: Mapping[str, Any], item: Item, now: float | None
+    ) -> _Joint:
+        """The posterior over ``(global, the item's labels)``, aged to ``now``, and its
+        covariance with the item's linear predictor ``s = global + sum(share * label)``.
+
+        Labels are conditionally independent given the global skill (a star around it),
+        so only the item's own labels enter: a label the item does not carry covaries
+        with ``s`` only through the global skill, and is not needed to score or to
+        update. Cost is O(labels on the item), however many labels the state holds.
+        """
+        stored = self._skill(state.get("global"), prior_var=self.prior_var)
+        glob = self._aged(stored, now, self.prior_var)
+        stored_frame = _Frame.of(state.get("global"))
+        frame = stored_frame.forget(stored.mu, stored.var, glob.var)
+        r = stored.var / glob.var if glob.var > 0 else 1.0
+        entries = state.get("labels", {})
+        labels: dict[str, _Label] = {}
+        for label in item.weights:
+            entry = entries.get(label)
+            if entry is None:
+                beta, cond_var, offset = 0.0, self.label_prior_var, 0.0
+                n, t = 0, None
+            else:
+                beta, cond_var, offset = _regression(entry, stored_frame, stored)
+                n, t = int(entry.get("n", 0)), entry.get("t")
+                # the global skill's ageing, which leaves Cov(global, label) as it was
+                cond_var += beta * beta * stored.var * (1.0 - r)
+                offset += beta * (1.0 - r) * stored.mu
+                beta *= r
+            cov = beta * glob.var
+            marginal = Skill(
+                mu=offset + beta * glob.mu, var=cond_var + beta * cov, n=n, t=t
+            )
+            # the label's own ageing: independent drift, so all of it is conditional
+            aged = self._aged(marginal, now, self.label_prior_var)
+            cond_var = max(cond_var + aged.var - marginal.var, _MIN_VAR)
+            labels[label] = _Label(aged, cov, beta, cond_var)
+        shares = self._shares(item, {k: v.skill for k, v in labels.items()})
+        u0 = glob.var + sum(share * labels[k].cov for k, share in shares.items())
+        u = {
+            k: share * labels[k].cond_var + labels[k].beta * u0
+            for k, share in shares.items()
+        }
+        v_s = u0 + sum(share * u[k] for k, share in shares.items())
+        return _Joint(glob, frame, labels, shares, u0, u, max(v_s, 0.0))
 
     def predict(self, state: Mapping[str, Any], item: Item, *, at: float | None = None) -> float:
         """Probability of a correct answer, integrating over the posterior.
@@ -397,15 +561,16 @@ class RaschEstimator:
         >>> round(sure.predict(sure.init(), Item('q', difficulty=0.75)), 3)
         0.25
         """
-        glob = self._aged(
-            self._skill(state.get("global"), prior_var=self.prior_var), at, self.prior_var
+        joint = self._joint(state, item, at)
+        label_mu = sum(
+            share * joint.labels[label].skill.mu for label, share in joint.shares.items()
         )
-        label_mu, label_var, _ = self._aggregate(state, item, at)
-        s = glob.mu + label_mu - self._difficulty(state, item)
-        v = glob.var + label_var
+        s = joint.glob.mu + label_mu - self._difficulty(state, item)
+        # The predictor's variance is h' Sigma h over the joint posterior, covariances
+        # included, so it is the variance of the posterior the update actually carries.
         # MacKay's probit approximation to the logistic integral: uncertainty pulls the
         # prediction toward a coin flip rather than asserting the mean's confidence.
-        q = expit(s / math.sqrt(1.0 + math.pi * v / 8.0))
+        q = expit(s / math.sqrt(1.0 + math.pi * joint.v_s / 8.0))
         return self.guess + (1.0 - self.guess) * q
 
     # -- the update ----------------------------------------------------------------
@@ -428,18 +593,34 @@ class RaschEstimator:
     def observe(
         self, state: Mapping[str, Any], response: Response, item: Item | None
     ) -> dict[str, Any]:
-        """The new state after one response. Pure: ``state`` is not mutated."""
+        """The new state after one response. Pure: ``state`` is not mutated.
+
+        One Newton (Laplace) step on the *joint* log-posterior over the global skill and
+        every label: a rank-1 update of the covariance along ``Cov(skill, s)``. Because
+        the global/label covariance is carried, a shortfall that every item shares is
+        attributed to the global skill rather than to whichever label has the largest
+        share of each item (#23). The result is projected back onto the stored star
+        structure, which keeps every ``(global, label)`` pair exactly and drops only the
+        residual label-label correlation given the global skill.
+
+        Only the global skill and the item's labels are written: every other label is
+        stored as its regression on the global skill, which this update leaves exactly
+        as it was (see ``_Frame``).
+        """
         scored = self._target(response)
         if scored is None:
             return {k: (dict(v) if isinstance(v, dict) else v) for k, v in state.items()}
+        if self.gain not in ("bayes", "elo"):
+            raise ValueError(f"gain must be 'bayes' or 'elo', got {self.gain!r}")
         target, weight = scored
         item = item if item is not None else Item(response.item)
         now = response.at
 
-        glob = self._aged(
-            self._skill(state.get("global"), prior_var=self.prior_var), now, self.prior_var
+        joint = self._joint(state, item, now)
+        glob = joint.glob
+        label_mu = sum(
+            share * joint.labels[label].skill.mu for label, share in joint.shares.items()
         )
-        label_mu, _, shares = self._aggregate(state, item, now)
         s = glob.mu + label_mu - self._difficulty(state, item)
 
         # Plug-in at the posterior mean for the update itself.
@@ -450,22 +631,68 @@ class RaschEstimator:
         score = weight * (target - p) * dp_ds / denom        # gradient of the log-likelihood
         info = weight * dp_ds * dp_ds / denom                # Fisher information
 
+        # Entries are replaced, never edited in place, so unchanged ones are shared.
         new = {
             "global": dict(state.get("global", {})) or dict(self.init()["global"]),
-            "labels": {k: dict(v) for k, v in state.get("labels", {}).items()},
+            "labels": dict(state.get("labels", {})),
         }
         if "items" in state:
             new["items"] = {k: dict(v) for k, v in state["items"].items()}
+        if "frame" not in new["global"]:
+            # Written before the regression form: a label with a covariance is read
+            # relative to the global skill as stored, so pin it there, once.
+            stored = self._skill(state.get("global"), prior_var=self.prior_var)
+            for label, entry in state.get("labels", {}).items():
+                if entry.get("cov"):
+                    new["labels"][label] = {
+                        **_Frame().store(*_regression(entry, _Frame(), stored)),
+                        "n": int(entry.get("n", 0)), "t": entry.get("t"),
+                    }
 
-        new["global"] = self._step(glob, score, info, 1.0, now)
+        # Bayes: the posterior gain Sigma h / (1 + info * h' Sigma h). Elo: the fixed gain
+        # elo_rate * h of classical Elo, which moves only the skills the item names; the
+        # covariance is tracked as in Bayes either way, for reporting.
+        shrink = info / (1.0 + info * joint.v_s)
+        bayes = self.gain == "bayes"
+        step = score / (1.0 + info * joint.v_s)
 
-        labels = state.get("labels", {})
-        for label, share in shares.items():
-            skill = self._aged(
-                self._skill(labels.get(label), prior_var=self.label_prior_var),
-                now, self.label_prior_var,
-            )
-            new["labels"][label] = self._step(skill, score, info, share, now)
+        u0 = joint.u0
+        moved = u0 * step if bayes else self.elo_rate * score
+        mu_g = glob.mu + moved
+        vg = max(glob.var - shrink * u0 * u0, _MIN_VAR)
+        frame = joint.frame
+        if not bayes:
+            # A label Elo does not name keeps its mean although the global skill moved.
+            frame = frame._replace(shift=frame.shift - frame.scale * moved)
+        for label, share in joint.shares.items():
+            lab, u = joint.labels[label], joint.u[label]
+            mu = lab.skill.mu + (u * step if bayes else self.elo_rate * share * score)
+            var = max(lab.skill.var - shrink * u * u, _MIN_VAR)
+            cov = _clamp_cov(lab.cov - shrink * u0 * u, vg, var)
+            beta = cov / vg
+            new["labels"][label] = {
+                **frame.store(beta, max(var - cov * beta, _MIN_VAR), mu - beta * mu_g),
+                "n": lab.skill.n + 1,
+                "t": now if now is not None else lab.skill.t,
+            }
+        if frame.scale < _FRAME_FLOOR:
+            # Re-express every label in a fresh frame before the stored slopes grow
+            # large enough to cost precision: O(labels), once per many weeks of drift.
+            here, fresh = Skill(mu=mu_g, var=vg), _Frame()
+            for label, entry in new["labels"].items():
+                if "slope" in entry:
+                    new["labels"][label] = {
+                        **fresh.store(*_regression(entry, frame, here)),
+                        "n": entry["n"], "t": entry["t"],
+                    }
+            frame = fresh
+        new["global"] = {
+            "mu": mu_g,
+            "var": vg,
+            "n": glob.n + 1,
+            "t": now if now is not None else glob.t,
+            "frame": frame.as_dict(),
+        }
 
         if self.update_difficulty:
             items = new.setdefault("items", {})
@@ -476,38 +703,38 @@ class RaschEstimator:
 
         return new
 
-    def _step(
-        self, skill: Skill, score: float, info: float, share: float, now: float | None
-    ) -> dict[str, Any]:
-        """One Newton step on the log-posterior for a single skill."""
-        if self.gain == "elo":
-            # Classical Elo: a fixed step size, variance reported but not used as gain.
-            precision = 1.0 / skill.var + share * share * info
-            mu = skill.mu + self.elo_rate * share * score
-            var = 1.0 / precision
-        elif self.gain == "bayes":
-            precision = 1.0 / skill.var + share * share * info
-            mu = skill.mu + share * score / precision
-            var = 1.0 / precision
-        else:
-            raise ValueError(f"gain must be 'bayes' or 'elo', got {self.gain!r}")
-        return {"mu": mu, "var": var, "n": skill.n + 1, "t": now if now is not None else skill.t}
-
     # -- reading it back -------------------------------------------------------------
+
+    def _labels(self, state: Mapping[str, Any]) -> Iterable[tuple[str, _Label]]:
+        """Every stored label's marginal posterior, at the stored global skill."""
+        glob = self._skill(state.get("global"), prior_var=self.prior_var)
+        frame = _Frame.of(state.get("global"))
+        for label, entry in state.get("labels", {}).items():
+            beta, cond_var, offset = _regression(entry, frame, glob)
+            cov = beta * glob.var
+            skill = Skill(
+                mu=offset + beta * glob.mu,
+                var=cond_var + beta * cov,
+                n=int(entry.get("n", 0)),
+                t=entry.get("t"),
+            )
+            yield label, _Label(skill, cov, beta, cond_var)
 
     def mastery(self, state: Mapping[str, Any]) -> dict[str, Mastery]:
         """Per-label mastery: the student's global skill adjusted by each label."""
         glob = self._skill(state.get("global"), prior_var=self.prior_var)
         out: dict[str, Mastery] = {}
-        for label, entry in state.get("labels", {}).items():
-            dev = self._skill(entry, prior_var=self.label_prior_var)
+        for label, lab in self._labels(state):
+            dev = lab.skill
+            # Var(global + deviation) includes their covariance, which the joint update
+            # makes negative: the two are not learned independently.
+            var = glob.var + dev.var + 2.0 * lab.cov
             out[label] = Mastery(
                 label=label,
-                skill=Skill(
-                    mu=glob.mu + dev.mu, var=glob.var + dev.var, n=dev.n, t=dev.t
-                ),
+                skill=Skill(mu=glob.mu + dev.mu, var=max(var, _MIN_VAR), n=dev.n, t=dev.t),
                 prior_var=self.prior_var + self.label_prior_var,
                 deviation=dev,
+                loading=lab.cov / glob.sd if glob.var > 0 else 0.0,
             )
         return out
 
