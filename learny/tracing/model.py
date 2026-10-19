@@ -42,10 +42,10 @@ __all__ = [
 
 #: How many posterior standard deviations below its comparator a label must be before
 #: :meth:`LearnerModel.weakest` calls it a weakness. 1.0 is a one-sided ~84% credible
-#: bound. With the default ``multiplicity="bonferroni"`` it is the bound for the *whole
-#: set* of labels tested — a student with no real weakness gets a label flagged at most
-#: about one time in six, however many labels there are — and with ``multiplicity="none"`` it is per
-#: label. It stops a set of labels that never vary independently (many labels on every
+#: bound. With the default ``multiplicity="calibrated"`` (and ``"bonferroni"``) it is the
+#: bound for the *whole set* of labels tested — a student with no real weakness gets a
+#: label flagged about one time in six at most, however many labels there are — and with
+#: ``multiplicity="none"`` it is per label. It stops a set of labels that never vary independently (many labels on every
 #: item) from being ranked at all. Raise it when a false "practise this" is costly.
 DEFAULT_CREDIBLE_BELOW = 1.0
 
@@ -57,20 +57,22 @@ DEFAULT_CREDIBLE_BELOW = 1.0
 #: with, so nothing is credibly weak.
 DEFAULT_RELATIVE_TO = "labels"
 
-#: How the bound accounts for testing several labels at once. ``"bonferroni"`` raises the
-#: per-label z so the chance of *any* false flag is at most ``1 - Phi(credible_below)``,
-#: whatever the dependence between labels (far less with little evidence, where a shrunk
-#: posterior's sd overstates how far its mean wanders — the cost is power, see
-#: :meth:`LearnerModel.weakest`);
-#: ``"none"`` applies ``credible_below`` to each label separately, as the original
-#: gate did.
-DEFAULT_MULTIPLICITY = "bonferroni"
+#: How the bound accounts for testing several labels at once. ``"calibrated"`` raises the
+#: per-label z as Bonferroni does, so the chance of *any* false flag is about
+#: ``1 - Phi(credible_below)``, and measures each label against how far its contrast
+#: would wander with no real weakness (:attr:`Mastery.null_var
+#: <learny.tracing.estimators.Mastery.null_var>`) rather than against its posterior sd,
+#: which a shrunk posterior mean stays well inside (#22). ``"bonferroni"`` does the same
+#: on the posterior sd: a bound rather than a calibration, far below its target with
+#: little evidence, so it costs power at cold start. ``"none"`` applies
+#: ``credible_below`` to each label separately, as the original gate did.
+DEFAULT_MULTIPLICITY = "calibrated"
 
 WeakestReason = Literal["no_evidence", "no_credible_weakness"]
 RelativeTo = Literal["labels", "global"]
-Multiplicity = Literal["bonferroni", "none"]
+Multiplicity = Literal["calibrated", "bonferroni", "none"]
 _RELATIVE_TO = ("labels", "global")
-_MULTIPLICITY = ("bonferroni", "none")
+_MULTIPLICITY = ("calibrated", "bonferroni", "none")
 
 
 def _bonferroni_z(z: float, m: int) -> float:
@@ -91,6 +93,50 @@ def _bonferroni_z(z: float, m: int) -> float:
     if m <= 1 or alpha == 0.0:  # one test, or a tail beyond float resolution
         return z
     return -NormalDist().inv_cdf(alpha / m)
+
+
+def _null_sds(masteries: Sequence[Mastery], relative_to: RelativeTo) -> list[float] | None:
+    """Each contrast's spread for a test calibrated to "no real weakness".
+
+    The contrast and its weights are :func:`_contrasts`'s. Its posterior variance has two
+    parts: each label's own residual (``var - loading**2``) and the part the labels share
+    through the global skill (``(loading_i - weighted loadings)**2``). Only the first is
+    sampling noise that shrinkage overstates, so only it is replaced, by each label's
+    :attr:`Mastery.null_var <learny.tracing.estimators.Mastery.null_var>`. The shared
+    part is kept at its posterior size: it is the direction in which the record cannot
+    tell "weak overall" from "weak on this label", where a label's mean is moved by the
+    priors' split of a shortfall rather than by chance (#23), and a test that ignored it
+    would blame the most heavily weighted label for every shortfall. ``None`` when any
+    label lacks a ``null_var``: the caller falls back to the posterior spread.
+
+    >>> from learny.tracing.estimators import Skill
+    >>> ms = [Mastery(k, Skill(0.0, 1.0), deviation=Skill(0.0, 0.2), null_var=0.05)
+    ...       for k in 'ab']
+    >>> [round(sd, 3) for sd in _null_sds(ms, 'labels')]
+    [0.316, 0.316]
+    >>> heavy = [Mastery('a', Skill(0.0, 1.0), deviation=Skill(0.0, 0.2), null_var=0.05,
+    ...                  loading=-0.4), ms[1]]
+    >>> [round(sd, 3) for sd in _null_sds(heavy, 'labels')]  # the shared part stays
+    [0.51, 0.51]
+    >>> _null_sds([Mastery('a', Skill(0.0, 1.0), deviation=Skill(0.0, 0.2))], 'global')
+    """
+    nvs = [m.null_var for m in masteries]
+    if any(nv is None for nv in nvs):
+        return None
+    nvs = [max(nv, 0.0) for nv in nvs]
+    loads = [float(getattr(m, "loading", 0.0) or 0.0) for m in masteries]
+    if relative_to == "global":
+        return [math.sqrt(nv + a * a) for nv, a in zip(nvs, loads)]
+    devs = [m.deviation for m in masteries]
+
+    def sd(i: int) -> float:
+        rest = [j for j in range(len(devs)) if j != i]
+        rest_prec = sum(1.0 / devs[j].var for j in rest)
+        w = {j: 1.0 / devs[j].var / rest_prec for j in rest}
+        shared = loads[i] - sum(w[j] * loads[j] for j in rest)
+        return math.sqrt(nvs[i] + sum(w[j] ** 2 * nvs[j] for j in rest) + shared**2)
+
+    return [sd(i) for i in range(len(devs))]
 
 
 def _contrasts(
@@ -285,14 +331,19 @@ class LearnerModel:
           comparator on average. ``None`` switches the gate off and ranks every
           label with evidence by posterior mean — check :meth:`separation` before
           believing that ranking.
-        * ``multiplicity`` — ``"bonferroni"`` (default) corrects for testing every label with
-          evidence at once, so ``z`` bounds the chance of *any* false flag; ``"none"``
-          applies ``z`` to each label separately, which with six labels, a few hundred
-          responses and no real weakness flags something more often than not. The
-          correction is on posterior bounds, which shrinkage already makes cautious
-          when evidence is thin, so in cold start it mostly costs power: with a few
-          responses per label even a large real weakness is rarely returned. Pass
-          ``"none"`` there if a missed weakness costs more than a false one (#22).
+        * ``multiplicity`` — ``"calibrated"`` (default) corrects for testing every label
+          with evidence at once, so ``z`` sets the chance of *any* false flag (about
+          one student in six with no real weakness, at ``z = 1``), and measures each
+          contrast against its sampling spread under no real weakness
+          (:attr:`Mastery.null_var <learny.tracing.estimators.Mastery.null_var>`), so
+          the correction costs little power at cold start (#22). An estimator that does
+          not fill ``null_var`` gets ``"bonferroni"``: the same correction on the
+          posterior sd, which shrinkage already makes cautious when evidence is thin, so
+          with a few responses per label even a large real weakness is rarely returned.
+          ``"none"`` applies ``z`` to each label separately, which with six labels, a few
+          hundred responses and no real weakness flags something more often than not.
+          Under ``relative_to="global"`` the calibrated spread is conservative (the part
+          of a label's spread it shares with the others is counted, not removed).
         * ``relative_to`` — ``"labels"`` (default) as above; ``"global"`` measures each
           label's deviation against zero, the student's global skill. The default
           estimator carries the global/label covariance, so a shortfall every item
@@ -374,15 +425,16 @@ class LearnerModel:
         if relative_to == "labels" and len(ranked) < 2:
             return Weakest(reason="no_credible_weakness")
         z = (
-            _bonferroni_z(credible_below, len(ranked))
-            if multiplicity == "bonferroni"
-            else credible_below
+            credible_below
+            if multiplicity == "none"
+            else _bonferroni_z(credible_below, len(ranked))
         )
-        credible = [
-            m
-            for m, (mu, sd) in zip(ranked, _contrasts(ranked, relative_to))
-            if mu + z * sd < 0.0
-        ]
+        contrasts = _contrasts(ranked, relative_to)
+        if multiplicity == "calibrated":
+            null = _null_sds(ranked, relative_to)
+            if null is not None:
+                contrasts = [(mu, sd) for (mu, _), sd in zip(contrasts, null)]
+        credible = [m for m, (mu, sd) in zip(ranked, contrasts) if mu + z * sd < 0.0]
         if not credible:
             return Weakest(reason="no_credible_weakness")
         return Weakest(credible[:n])

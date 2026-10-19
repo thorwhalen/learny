@@ -490,6 +490,7 @@ class TestJointPosterior:
         for label in a:
             assert a[label].mu == pytest.approx(b[label].mu, abs=1e-9)
             assert a[label].skill.var == pytest.approx(b[label].skill.var, abs=1e-9)
+            assert a[label].null_var == pytest.approx(b[label].null_var, abs=1e-9)
 
     def test_prediction_counts_the_covariance(self):
         """A negative global/label covariance narrows Var(global + label)."""

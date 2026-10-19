@@ -195,15 +195,17 @@ class TestFamilyGate:
     """weakest() corrects for testing many labels and for a shared shortfall (#14)."""
 
     def test_defaults_are_the_corrected_gate(self):
-        assert (DEFAULT_RELATIVE_TO, DEFAULT_MULTIPLICITY) == ("labels", "bonferroni")
+        assert (DEFAULT_RELATIVE_TO, DEFAULT_MULTIPLICITY) == ("labels", "calibrated")
 
     @pytest.mark.parametrize("n_labels", [6, 20])
     def test_no_real_weakness_is_rarely_flagged(self, n_labels):
-        models = list(_students(n_labels, n_students=40))
-        # the family-wise bound is ~16% at z = 1; the per-label gate flags most students
-        # (measured with multiplicity="none" alone: since #23 the estimator no longer
-        # makes deviations overconfident, so relative_to no longer adds false flags)
-        assert _flag_rate(models, n_labels) <= 0.2
+        n = 40
+        models = list(_students(n_labels, n_students=n))
+        # The family-wise rate is ~16% at z = 1 (measured on 400 students: 0.15 at 6
+        # labels, 0.17 at 20), so allow 2.5 Monte Carlo sd for n students; the per-label
+        # gate flags most students (multiplicity="none" alone: since #23 the estimator
+        # no longer makes deviations overconfident, so relative_to adds no false flags).
+        assert _flag_rate(models, n_labels) <= 0.16 + 2.5 * (0.16 * 0.84 / n) ** 0.5
         assert _flag_rate(models, n_labels, multiplicity="none") >= 0.4
 
     def test_a_uniform_shortfall_is_not_blamed_on_labels(self):
