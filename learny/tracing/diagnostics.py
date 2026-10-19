@@ -319,6 +319,12 @@ def calibration(
     pooled into one table. Skips are replayed (they move the state) but not scored:
     there is no right answer to compare them to.
 
+    A response with an ordered score is scored here like any other, as ``predict()``
+    against its right/wrong ``outcome``. For a score that ``outcome`` is the caller's own
+    reading of the attempt (correct only at full marks, say), not the event a score
+    model's ``predict()`` forecasts, so a well-calibrated score model can read as
+    miscalibrated. Calibrating score predictions is not built yet (#31).
+
     >>> from learny.tracing.estimators import RaschEstimator
     >>> items = {f'q{i}': Item(f'q{i}', labels=('x',), difficulty=0.5) for i in range(4)}
     >>> log = {'a': [Response('a', f'q{i}', 'correct') for i in range(4)]}

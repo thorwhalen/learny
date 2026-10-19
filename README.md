@@ -60,6 +60,17 @@ model = LearnerModel(
 
 **No student's data ever informs another's estimate.** Pooling happens across *labels within one student*: a label carries only a deviation from that student's overall skill, so their first paper gives every label a usable prior. The single-student case is the default path, not a degenerate one.
 
+**Scores, not just right/wrong.** A response can carry an ordered score — 1–5 stars, partial credit — as `score` out of `max_score` (levels `0..max_score`, so 1–5 stars is `score=stars - 1, max_score=4`). The default estimator still reads only the outcome; `PartialCreditEstimator` reads the score (Masters' Partial Credit Model on the same predictor) and scores a plain right/wrong response exactly as the default does:
+
+```python
+from learny.tracing import LearnerModel, PartialCreditEstimator
+
+model = LearnerModel(items=items, estimator=PartialCreditEstimator())
+model.record('ada', 'song-7/tempo', 'correct', score=3, max_score=4)
+```
+
+An attempt with several sub-scores is several responses, one per sub-score item, each labelled by its facet.
+
 ### When to believe it
 
 ```python

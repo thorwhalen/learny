@@ -18,6 +18,11 @@ Elo is the same update with the information term frozen: Elo's uncertainty funct
 ``U(n) = a/(1 + b*n)`` is exactly ``1/(1/var + n*I)`` for constant information ``I``. So
 ``gain='elo'`` is not a different estimator, it is this one with a constant step size.
 
+An ordered score — 1 to 5 stars, partial credit — is read by
+:class:`PartialCreditEstimator`, Masters' Partial Credit Model on the same predictor. It is
+this estimator with one method replaced (the likelihood of a response), so everything
+below holds for it too, and a right/wrong response is scored exactly as here.
+
 Three decisions worth knowing before reading the code:
 
 **Item difficulty does not update by default.** Textbook Elo moves ability and item
@@ -58,8 +63,9 @@ scored as wrong.
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass, field, replace
+from numbers import Real
 from typing import Any, NamedTuple, Protocol, runtime_checkable
 
 from learny.tracing.records import Item, Outcome, Response
@@ -67,6 +73,8 @@ from learny.tracing.records import Item, Outcome, Response
 __all__ = [
     "Estimator",
     "RaschEstimator",
+    "PartialCreditEstimator",
+    "binomial_thresholds",
     "Mastery",
     "Skill",
     "logit",
@@ -173,6 +181,15 @@ class _Label(NamedTuple):
     cond_var: float  # var - cov * beta: Var(label | global)
 
 
+class _Evidence(NamedTuple):
+    """What one response says about the item's linear predictor ``s``."""
+
+    gradient: float  # what the Bayes step moves s by, times (1 + information * v_s)
+    information: float  # the curvature that shrinks the posterior along s
+    residual: float  # observed minus expected, unit scale: moves a co-estimated difficulty
+    elo: float  # the fixed-gain (gain='elo') step, before elo_rate
+
+
 class _Joint(NamedTuple):
     """The posterior one response is scored against; see ``RaschEstimator._joint``."""
 
@@ -250,9 +267,7 @@ def mark_not_reached(responses: Sequence[Response]) -> list[Response]:
     for i in range(len(out) - 1, -1, -1):
         if out[i].outcome is not Outcome.SKIPPED:
             break
-        meta = dict(out[i].meta)
-        meta["not_reached"] = True
-        out[i] = Response(out[i].student, out[i].item, out[i].outcome, at=out[i].at, meta=meta)
+        out[i] = replace(out[i], meta={**out[i].meta, "not_reached": True})
     return out
 
 
@@ -561,17 +576,26 @@ class RaschEstimator:
         >>> round(sure.predict(sure.init(), Item('q', difficulty=0.75)), 3)
         0.25
         """
+        q = expit(self._integrated_predictor(state, item, at))
+        return self.guess + (1.0 - self.guess) * q
+
+    def _integrated_predictor(
+        self, state: Mapping[str, Any], item: Item, at: float | None
+    ) -> float:
+        """The item's linear predictor ``s``, scaled for its posterior uncertainty.
+
+        The predictor's variance is h' Sigma h over the joint posterior, covariances
+        included, so it is the variance of the posterior the update actually carries.
+        MacKay's probit approximation to the logistic integral: ``expit`` of the result
+        is ``E[expit(s)]``, so uncertainty pulls a prediction toward a coin flip rather
+        than asserting the mean's confidence.
+        """
         joint = self._joint(state, item, at)
         label_mu = sum(
             share * joint.labels[label].skill.mu for label, share in joint.shares.items()
         )
         s = joint.glob.mu + label_mu - self._difficulty(state, item)
-        # The predictor's variance is h' Sigma h over the joint posterior, covariances
-        # included, so it is the variance of the posterior the update actually carries.
-        # MacKay's probit approximation to the logistic integral: uncertainty pulls the
-        # prediction toward a coin flip rather than asserting the mean's confidence.
-        q = expit(s / math.sqrt(1.0 + math.pi * joint.v_s / 8.0))
-        return self.guess + (1.0 - self.guess) * q
+        return s / math.sqrt(1.0 + math.pi * joint.v_s / 8.0)
 
     # -- the update ----------------------------------------------------------------
 
@@ -590,6 +614,28 @@ class RaschEstimator:
         # guessing rate, never a wrong answer.
         return self.guess, self.abstain_weight
 
+    def _likelihood(
+        self, response: Response, item: Item, s: float, v_s: float
+    ) -> _Evidence:
+        """What one response says about the predictor, whose posterior is ``N(s, v_s)``.
+
+        The gradient and Fisher information of the response's log-likelihood with respect
+        to the item's linear predictor, which is all the joint update needs; the residual
+        (observed minus expected, on the unit scale) that moves a co-estimated item
+        difficulty; and Elo's fixed-gain step. Here they are evaluated at the posterior
+        mean (one Newton step), for a response :meth:`_target` did not discard. This is
+        the one place the dichotomous model lives, so a different response model
+        overrides it and inherits the rest.
+        """
+        target, weight = self._target(response)
+        q = expit(s)
+        p = self.guess + (1.0 - self.guess) * q
+        dp_ds = (1.0 - self.guess) * q * (1.0 - q)
+        denom = max(p * (1.0 - p), 1e-9)
+        score = weight * (target - p) * dp_ds / denom        # gradient of the log-likelihood
+        info = weight * dp_ds * dp_ds / denom                # Fisher information
+        return _Evidence(score, info, target - p, score)
+
     def observe(
         self, state: Mapping[str, Any], response: Response, item: Item | None
     ) -> dict[str, Any]:
@@ -607,12 +653,10 @@ class RaschEstimator:
         stored as its regression on the global skill, which this update leaves exactly
         as it was (see ``_Frame``).
         """
-        scored = self._target(response)
-        if scored is None:
+        if self._target(response) is None:
             return {k: (dict(v) if isinstance(v, dict) else v) for k, v in state.items()}
         if self.gain not in ("bayes", "elo"):
             raise ValueError(f"gain must be 'bayes' or 'elo', got {self.gain!r}")
-        target, weight = scored
         item = item if item is not None else Item(response.item)
         now = response.at
 
@@ -623,13 +667,7 @@ class RaschEstimator:
         )
         s = glob.mu + label_mu - self._difficulty(state, item)
 
-        # Plug-in at the posterior mean for the update itself.
-        q = expit(s)
-        p = self.guess + (1.0 - self.guess) * q
-        dp_ds = (1.0 - self.guess) * q * (1.0 - q)
-        denom = max(p * (1.0 - p), 1e-9)
-        score = weight * (target - p) * dp_ds / denom        # gradient of the log-likelihood
-        info = weight * dp_ds * dp_ds / denom                # Fisher information
+        score, info, residual, elo = self._likelihood(response, item, s, joint.v_s)
 
         # Entries are replaced, never edited in place, so unchanged ones are shared.
         new = {
@@ -660,7 +698,7 @@ class RaschEstimator:
         step = score / (1.0 + info * joint.v_s)
 
         u0 = joint.u0
-        moved = u0 * step if bayes else self.elo_rate * score
+        moved = u0 * step if bayes else self.elo_rate * elo
         mu_g = glob.mu + moved
         vg = max(glob.var - shrink * u0 * u0, _MIN_VAR)
         frame = joint.frame
@@ -682,7 +720,7 @@ class RaschEstimator:
             frame = fresh
         for label, share in joint.shares.items():
             lab, u = joint.labels[label], joint.u[label]
-            mu = lab.skill.mu + (u * step if bayes else self.elo_rate * share * score)
+            mu = lab.skill.mu + (u * step if bayes else self.elo_rate * share * elo)
             var = max(lab.skill.var - shrink * u * u, _MIN_VAR)
             cov = _clamp_cov(lab.cov - shrink * u0 * u, vg, var)
             beta = cov / vg
@@ -703,7 +741,7 @@ class RaschEstimator:
             items = new.setdefault("items", {})
             entry = items.setdefault(item.id, {"b": self._difficulty(state, item), "n": 0})
             rate = self.elo_rate / (1.0 + 0.05 * entry["n"])
-            entry["b"] -= rate * (target - p)
+            entry["b"] -= rate * residual
             entry["n"] += 1
 
         return new
@@ -746,3 +784,223 @@ class RaschEstimator:
     def skill(self, state: Mapping[str, Any]) -> Skill:
         """The student's global skill, independent of any label."""
         return self._skill(state.get("global"), prior_var=self.prior_var)
+
+
+# -- ordered scores ----------------------------------------------------------------
+
+#: Step thresholds for an item scored ``0..max_score``: ``max_score`` logits, step ``k``
+#: being the predictor at which levels ``k - 1`` and ``k`` are equally likely, relative to
+#: the item's difficulty. The ``thresholds`` seam of :class:`PartialCreditEstimator`.
+Thresholds = Callable[[Item, int], Sequence[float]]
+
+
+def binomial_thresholds(item: Item, max_score: int) -> list[float]:
+    """Thresholds under which a score out of ``m`` is ``m`` steps taken at one rate.
+
+    ``tau_k = log(k / (m - k + 1))``. With these, the Partial Credit Model's distribution
+    of the score is binomial with step rate ``expit(skill - difficulty)``, so the expected
+    *fraction* of the maximum equals the right/wrong model's probability of a correct
+    answer, and an item's ``difficulty`` means the same thing however it is scored. That
+    is why it is the default: it is the one choice that keeps an externally calibrated
+    difficulty meaningful with no new parameters (with ``guess=0``: a score is never a
+    guess). It is not a claim that the steps really are independent, and it makes a score
+    out of ``m`` carry up to ``m`` times the evidence of one right/wrong answer; thresholds
+    spread wider apart carry less.
+
+    >>> binomial_thresholds(Item('q'), 1)  # one step: the right/wrong model
+    [0.0]
+    >>> [round(t, 3) for t in binomial_thresholds(Item('q'), 4)]
+    [-1.386, -0.405, 0.405, 1.386]
+    """
+    return [math.log(k / (max_score - k + 1)) for k in range(1, max_score + 1)]
+
+
+def _level_probabilities(s: float, taus: Sequence[float]) -> list[float]:
+    """``P(X = k)`` for ``k = 0..len(taus)`` under the Partial Credit Model at ``s``."""
+    eta = [0.0]
+    for tau in taus:
+        eta.append(eta[-1] + s - tau)
+    top = max(eta)  # subtracted before exponentiating, so no level overflows
+    weights = [math.exp(e - top) for e in eta]
+    total = sum(weights)
+    return [w / total for w in weights]
+
+
+def _posterior_mode(
+    s: float,
+    v: float,
+    gradient: Callable[[float], float],
+    information: Callable[[float], float],
+    *,
+    steps: int,
+    tol: float = 1e-12,
+) -> float | None:
+    """The mode of ``N(t; s, v) * likelihood(t)`` for a log-concave likelihood.
+
+    ``gradient`` and ``information`` are the log-likelihood's first derivative and minus
+    its second. The objective's derivative ``f`` falls monotonically, so the mode lies
+    between ``s`` and the first Newton step from it. Safeguarded Newton inside that
+    bracket: a Newton step is taken only when it lands strictly inside the bracket and
+    the previous step converged fast enough, otherwise the bracket is bisected, and the
+    bracket shrinks at every evaluation, so it cannot cycle. ``None`` when there is
+    nothing to iterate (``steps <= 1``, or no posterior width).
+    """
+    if steps <= 1 or not v > 0:
+        return None
+
+    def f(t: float) -> float:
+        return -(t - s) / v + gradient(t)
+
+    lo, hi = sorted((s, s + v * gradient(s)))
+    t, ft = s, f(s)
+    dx = dx_old = hi - lo
+    for _ in range(steps):
+        if ft == 0.0 or hi - lo <= tol * (1.0 + abs(t)):
+            return t
+        slope = 1.0 / v + information(t)  # -f'(t) > 0
+        newton = t + ft / slope
+        dx_old, dx = dx, (newton - t)
+        if not lo < newton < hi or abs(2.0 * ft) > abs(dx_old * slope):
+            dx = 0.5 * (hi - lo)
+            newton = lo + dx
+        if abs(newton - t) <= tol * (1.0 + abs(t)):
+            return newton
+        t, ft = newton, f(newton)
+        if ft > 0:
+            lo = t
+        else:
+            hi = t
+    return t
+
+
+@dataclass
+class PartialCreditEstimator(RaschEstimator):
+    """Masters' Partial Credit Model on the Rasch predictor: reads an ordered score.
+
+    A response with a ``score`` out of ``max_score`` is scored on its levels
+    ``0..max_score``, with ``s`` the same predictor as :class:`RaschEstimator`'s (global
+    skill plus label deviations minus item difficulty)::
+
+        P(X = k)  proportional to  exp(sum over j <= k of (s - tau_j))
+
+    The thresholds ``tau_j`` come from the ``thresholds`` seam, by default
+    :func:`binomial_thresholds`. The log-likelihood's gradient in ``s`` is
+    ``k - E[X]`` and its Fisher information ``Var[X]``, which is all the joint update
+    needs, so the hierarchy, forgetting, the global/label covariance and replay are the
+    default estimator's, unchanged. For a score the update iterates to the posterior mode
+    along the predictor (``mode_steps``), since one Newton step overshoots on a surprising
+    score out of many levels. A response *without* a score is a right/wrong answer and is
+    scored exactly as :class:`RaschEstimator` scores it — guessing, skips and all.
+
+    **``guess`` applies only to responses without a score**: a score is never modelled as
+    a guess, so on a multiple-choice item that is also scored, ``expected_score`` is not
+    ``max_score * predict()`` unless ``guess=0``. For a score, ``outcome`` is not read,
+    and a score that contradicts it is not an error: the outcome is the caller's own
+    right/wrong reading of the attempt.
+
+    >>> est = PartialCreditEstimator()
+    >>> item = Item('song-7/tempo', labels=('tempo',), difficulty=0.5)
+    >>> def skill_after(stars):
+    ...     r = Response('ada', item.id, 'correct', score=stars - 1, max_score=4)
+    ...     return est.observe(est.init(), r, item)['global']['mu']
+    >>> skill_after(2) < skill_after(3) < skill_after(4) < skill_after(5)
+    True
+    >>> skill_after(3)  # the middle of the scale on an average item is no news
+    0.0
+    >>> est.expected_score(est.init(), item, 4)
+    2.0
+
+    ``predict`` keeps the :class:`Estimator` meaning, the probability of a correct
+    answer on a right/wrong reading of the item; :meth:`expected_score` and
+    :meth:`score_probabilities` answer for a score.
+    """
+
+    #: How an item scored ``0..max_score`` places its steps; see :data:`Thresholds`.
+    thresholds: Thresholds = binomial_thresholds
+    #: Newton iterations allowed to find the posterior mode along the predictor for a
+    #: score. One step (the right/wrong update's plug-in) is fine for a few stars but
+    #: overshoots on a surprising score out of many levels, whose gradient is bounded by
+    #: ``max_score`` rather than by 1; iterating to the mode (a Laplace step) does not.
+    #: ``1`` restores the plain one-step update.
+    mode_steps: int = 50
+
+    def __post_init__(self) -> None:
+        if isinstance(self.mode_steps, bool) or not isinstance(self.mode_steps, int) \
+                or self.mode_steps < 1:
+            raise ValueError(f"mode_steps must be an int >= 1, got {self.mode_steps!r}")
+
+    def _taus(self, item: Item, max_score: int) -> list[float]:
+        taus = list(self.thresholds(item, max_score))
+        if len(taus) != max_score:
+            raise ValueError(
+                f"thresholds({item.id!r}, {max_score}) returned {len(taus)} thresholds; "
+                f"a score out of {max_score} needs exactly {max_score}"
+            )
+        bad = [t for t in taus if isinstance(t, bool) or not isinstance(t, Real)
+               or not math.isfinite(t)]
+        if bad:
+            raise ValueError(
+                f"thresholds({item.id!r}, {max_score}) must be finite numbers (logits), "
+                f"got {bad!r}"
+            )
+        return [float(t) for t in taus]
+
+    def _likelihood(
+        self, response: Response, item: Item, s: float, v_s: float
+    ) -> _Evidence:
+        if response.score is None:
+            return super()._likelihood(response, item, s, v_s)
+        k, m = response.score, response.max_score
+        taus = self._taus(item, m)
+
+        def moments(t: float) -> tuple[float, float]:
+            probs = _level_probabilities(t, taus)
+            mean = sum(j * p for j, p in enumerate(probs))
+            return mean, max(sum(j * j * p for j, p in enumerate(probs)) - mean * mean, 0.0)
+
+        mean, var = moments(s)
+        residual = k - mean
+        mode = _posterior_mode(s, v_s, lambda t: k - moments(t)[0],
+                               lambda t: moments(t)[1], steps=self.mode_steps)
+        if mode is None:  # one step, or no posterior width to move in
+            gradient, info = residual, var
+        else:
+            info = moments(mode)[1]
+            # the gradient that makes the shared rank-1 update land on the mode, with the
+            # posterior's curvature taken there: a Laplace step along the predictor
+            gradient = (mode - s) * (1.0 + info * v_s) / v_s
+        return _Evidence(gradient, info, residual / m, residual / m)
+
+    def score_probabilities(
+        self,
+        state: Mapping[str, Any],
+        item: Item,
+        max_score: int,
+        *,
+        at: float | None = None,
+    ) -> list[float]:
+        """``P(score = k)`` for ``k = 0..max_score``, over the posterior.
+
+        The posterior is integrated with the same probit approximation as
+        :meth:`~RaschEstimator.predict`, so with the default thresholds and ``guess=0``
+        the expected score is exactly ``max_score * predict()``; both are approximations
+        to the posterior integral. Guessing is not modelled for a score (see the class).
+
+        >>> est = PartialCreditEstimator()
+        >>> [round(p, 3) for p in est.score_probabilities(est.init(), Item('q'), 2)]
+        [0.25, 0.5, 0.25]
+        """
+        s = self._integrated_predictor(state, item, at)
+        return _level_probabilities(s, self._taus(item, max_score))
+
+    def expected_score(
+        self,
+        state: Mapping[str, Any],
+        item: Item,
+        max_score: int,
+        *,
+        at: float | None = None,
+    ) -> float:
+        """The expected score out of ``max_score``; see :meth:`score_probabilities`."""
+        probs = self.score_probabilities(state, item, max_score, at=at)
+        return sum(k * p for k, p in enumerate(probs))

@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, field, asdict, replace
 from enum import Enum
+from numbers import Integral
 from typing import Any
 
 __all__ = ["Outcome", "Item", "Response", "LabelWeights", "restrict_labels"]
@@ -151,6 +152,26 @@ class Response:
     True
     >>> Response.from_dict(r.to_dict()) == r
     True
+
+    **An ordered score** — 1 to 5 stars, partial credit — goes in ``score`` out of
+    ``max_score``, on the consecutive levels ``0..max_score``: map 1–5 stars to
+    ``score=stars - 1, max_score=4``, and three ordered levels such as 1/3/5 stars to
+    ``0, 1, 2`` of ``2`` (a level that can never occur is not a level). ``outcome`` stays
+    the dichotomous view of the same attempt, so an estimator that only reads outcomes
+    (the default) is unaffected, and one that reads scores
+    (:class:`~learny.tracing.estimators.PartialCreditEstimator`) can replay the same log.
+    One response carries one score: an attempt scored on several sub-scales is several
+    responses, one per sub-scale.
+
+    >>> r = Response("cora", "song-7/tempo", "correct", score=3, max_score=4)
+    >>> r.to_dict()['score'], Response.from_dict(r.to_dict()) == r
+    (3, True)
+    >>> 'score' in Response("cora", "2004-q7", "correct").to_dict()  # unscored: as before
+    False
+    >>> Response("cora", "q", "skipped", score=0, max_score=4)
+    Traceback (most recent call last):
+        ...
+    ValueError: Response 'q': a skipped response has no score (got score=0)
     """
 
     student: str
@@ -158,10 +179,36 @@ class Response:
     outcome: Outcome
     at: float | None = None
     meta: Mapping[str, Any] = field(default_factory=dict)
+    #: The ordered score, in ``0..max_score``; ``None`` for a right/wrong response.
+    score: int | None = field(default=None, kw_only=True)
+    #: The highest score this attempt could have earned; set exactly when ``score`` is.
+    max_score: int | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         # Accept a plain string so callers can build from JSON without importing Outcome.
         object.__setattr__(self, "outcome", Outcome(self.outcome))
+        if self.score is None and self.max_score is None:
+            return
+        if self.score is None or self.max_score is None:
+            raise ValueError(
+                f"Response {self.item!r}: score and max_score go together, got "
+                f"score={self.score!r}, max_score={self.max_score!r}"
+            )
+        if not self.outcome.is_scored:
+            raise ValueError(
+                f"Response {self.item!r}: a skipped response has no score "
+                f"(got score={self.score!r})"
+            )
+        for name in ("score", "max_score"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, Integral):
+                raise TypeError(f"Response {self.item!r}: {name} must be an int, got {value!r}")
+            object.__setattr__(self, name, int(value))  # a numpy int serialises as int
+        if not 0 <= self.score <= self.max_score or self.max_score < 1:
+            raise ValueError(
+                f"Response {self.item!r}: need 0 <= score <= max_score and max_score >= 1, "
+                f"got score={self.score!r}, max_score={self.max_score!r}"
+            )
 
     @property
     def correct(self) -> bool:
@@ -169,15 +216,21 @@ class Response:
         return self.outcome is Outcome.CORRECT
 
     def to_dict(self) -> dict[str, Any]:
-        """A JSON-ready dict. ``Outcome`` is a ``str`` enum, so it needs no encoding."""
+        """A JSON-ready dict. ``Outcome`` is a ``str`` enum, so it needs no encoding.
+
+        An unscored response leaves ``score`` and ``max_score`` out, so a right/wrong log
+        is written exactly as it was before scores existed.
+        """
         d = asdict(self)
         d["outcome"] = self.outcome.value
+        if self.score is None:
+            del d["score"], d["max_score"]
         return d
 
     @classmethod
     def from_dict(cls, d: Mapping[str, Any]) -> "Response":
         """Inverse of :meth:`to_dict`, tolerant of unknown keys from a future version."""
-        known = {f for f in ("student", "item", "outcome", "at", "meta")}
+        known = {"student", "item", "outcome", "at", "meta", "score", "max_score"}
         return cls(**{k: v for k, v in d.items() if k in known})
 
 
