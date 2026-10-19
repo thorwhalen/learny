@@ -7,6 +7,21 @@ them, says where each lives in the repository, and points at the
 machine-readable copies of this documentation.
 
 
+## Skills
+
+Skills are folders holding a `SKILL.md` (the [Agent Skills](https://agentskills.io) format): a description that tells an agent when to use it and a body with the procedure. Install one into your agent with `gh skill` (any host: `--agent claude-code`, `copilot`, `cursor`, `codex`, `gemini`), or use the copy bundled in the wheel.
+
+### `learning-game-patterns`
+
+A pattern language for games that teach symbols (characters of another script) and vocabulary: the ten learning families (match, produce, construct, order, discriminate, context, explore, encode, schedule, assess), the six matching patterns (pick-the-match, pair-off field, hidden pair, route the stream, find in a field, chain), nine pressure renderings (countdown bar, falling object, overflow container, time bank, and more), and which to use in which learning phase. Use when designing or choosing a mechanic for a language-learning, kana, kanji, alphabet or vocabulary game, when asked "what kinds of matching games are there", "how should the timer work", "which game form for look-alike characters", or when deciding what a game must log for the learner model.
+
+```bash
+gh skill install thorwhalen/learny learning-game-patterns --agent claude-code
+```
+
+Source: [`skills/learning-game-patterns`](https://github.com/thorwhalen/learny/tree/HEAD/skills/learning-game-patterns).
+
+
 ## Instruction files
 
 Files agents read before working in this repository.

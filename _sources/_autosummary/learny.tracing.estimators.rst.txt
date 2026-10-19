@@ -8,6 +8,7 @@ learny.tracing.estimators
 
    .. autosummary::
    
+      binomial_thresholds
       logit
       expit
       difficulty_from_rank
@@ -19,6 +20,7 @@ learny.tracing.estimators
    
       Estimator
       RaschEstimator
+      PartialCreditEstimator
       Mastery
       Skill
    

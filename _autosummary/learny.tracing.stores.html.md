@@ -81,9 +81,6 @@ Resolution order: the `LEARNY_DATA_DIR` environment variable, then
 default. Data is always written under a *kind* subfolder so the root stays free for
 kinds that do not exist yet.
 
-* **Return type:**
-  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
-
 ```pycon
 >>> import tempfile, os
 >>> os.environ['LEARNY_DATA_DIR'] = tmp = tempfile.mkdtemp()
@@ -92,6 +89,9 @@ True
 >>> data_dir('responses').is_dir()
 True
 ```
+
+* **Return type:**
+  [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)
 
 ### learny.tracing.stores.estimate_store(, rootdir=None)
 

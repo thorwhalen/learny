@@ -110,12 +110,26 @@ Probability that `student` answers `item` correctly.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-#### record(student, item, outcome, , at=None, \*\*meta)
+#### record(student, item, outcome, , at=None, score=None, max_score=None, \*\*meta)
 
 Log one response and fold it into the student’s estimate.
 
 The log is written first: if updating the cache fails, the evidence survives and
-[`replay()`](#learny.tracing.model.LearnerModel.replay) can rebuild from it.
+[`replay()`](#learny.tracing.model.LearnerModel.replay) can rebuild from it. `score` out of `max_score` records an
+ordered score alongside the right/wrong `outcome` (see
+[`Response`](learny.tracing.records.html.md#learny.tracing.records.Response)); the default estimator reads only the
+outcome, [`PartialCreditEstimator`](learny.tracing.estimators.html.md#learny.tracing.estimators.PartialCreditEstimator) the score.
+
+```pycon
+>>> from learny.tracing.estimators import PartialCreditEstimator
+>>> items = {'song-7/tempo': Item('song-7/tempo', labels=('tempo',))}
+>>> model = LearnerModel(
+...     items=items, estimator=PartialCreditEstimator(), log={}, estimates={}
+... )
+>>> model.record('ada', 'song-7/tempo', 'correct', score=4, max_score=4)
+>>> model.mastery('ada')['tempo'].mu > 0
+True
+```
 
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)

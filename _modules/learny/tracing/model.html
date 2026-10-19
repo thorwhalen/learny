@@ -31,6 +31,7 @@
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/epythet.css?v=1ba707ae" />
   
@@ -729,6 +730,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">statistics</span><span class="w"> </span><span class="kn">import</span> <span class="n">NormalDist</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
 
@@ -927,18 +929,32 @@ window.runMermaid = runMermaid;</script>
         <span class="n">outcome</span><span class="p">:</span> <span class="n">Outcome</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">at</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">score</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_score</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">meta</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Log one response and fold it into the student's estimate.</span>
 
 <span class="sd">        The log is written first: if updating the cache fails, the evidence survives and</span>
-<span class="sd">        :meth:`replay` can rebuild from it.</span>
+<span class="sd">        :meth:`replay` can rebuild from it. ``score`` out of ``max_score`` records an</span>
+<span class="sd">        ordered score alongside the right/wrong ``outcome`` (see</span>
+<span class="sd">        :class:`~learny.tracing.records.Response`); the default estimator reads only the</span>
+<span class="sd">        outcome, :class:`~learny.tracing.estimators.PartialCreditEstimator` the score.</span>
+
+<span class="sd">        &gt;&gt;&gt; from learny.tracing.estimators import PartialCreditEstimator</span>
+<span class="sd">        &gt;&gt;&gt; items = {'song-7/tempo': Item('song-7/tempo', labels=('tempo',))}</span>
+<span class="sd">        &gt;&gt;&gt; model = LearnerModel(</span>
+<span class="sd">        ...     items=items, estimator=PartialCreditEstimator(), log={}, estimates={}</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; model.record('ada', 'song-7/tempo', 'correct', score=4, max_score=4)</span>
+<span class="sd">        &gt;&gt;&gt; model.mastery('ada')['tempo'].mu &gt; 0</span>
+<span class="sd">        True</span>
 <span class="sd">        """</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="n">student</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">Outcome</span><span class="p">(</span><span class="n">outcome</span><span class="p">),</span> <span class="n">at</span><span class="o">=</span><span class="n">at</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">(</span><span class="n">student</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span><span class="p">[</span><span class="n">student</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span>
-            <span class="n">state</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fold</span><span class="p">(</span>
+            <span class="n">Response</span><span class="p">(</span>
+                <span class="n">student</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">Outcome</span><span class="p">(</span><span class="n">outcome</span><span class="p">),</span> <span class="n">at</span><span class="o">=</span><span class="n">at</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span>
+                <span class="n">score</span><span class="o">=</span><span class="n">score</span><span class="p">,</span> <span class="n">max_score</span><span class="o">=</span><span class="n">max_score</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="p">)</span></div>
 
 
@@ -947,14 +963,15 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">record_many</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">responses</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Response</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Record a batch — a whole paper, say — in the order given."""</span>
         <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="n">responses</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="p">(</span>
-                <span class="n">response</span><span class="o">.</span><span class="n">student</span><span class="p">,</span>
-                <span class="n">response</span><span class="o">.</span><span class="n">item</span><span class="p">,</span>
-                <span class="n">response</span><span class="o">.</span><span class="n">outcome</span><span class="p">,</span>
-                <span class="n">at</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">at</span><span class="p">,</span>
-                <span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">meta</span><span class="p">),</span>
-            <span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fold</span><span class="p">(</span><span class="n">replace</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">meta</span><span class="p">)))</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">student</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span><span class="p">[</span><span class="n">response</span><span class="o">.</span><span class="n">student</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="c1"># -- asking ------------------------------------------------------------------</span>
 

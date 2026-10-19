@@ -25,12 +25,12 @@ the log records what happened.
 
 ### Classes
 
-| [`Outcome`](#learny.tracing.records.Outcome)(\*values)                            | What happened when a student met an item.                                   |
-|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| [`Item`](#learny.tracing.records.Item)(id[, labels, difficulty, meta])         | A question, with the skill labels it exercises and its observed difficulty. |
-| [`Response`](#learny.tracing.records.Response)(student, item, outcome[, at, meta]) | One student meeting one item, once.                                         |
+| [`Outcome`](#learny.tracing.records.Outcome)(\*values)                                 | What happened when a student met an item.                                   |
+|----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [`Item`](#learny.tracing.records.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty. |
+| [`Response`](#learny.tracing.records.Response)(student, item, outcome[, at, meta, ...]) | One student meeting one item, once.                                         |
 
-### *class* learny.tracing.records.Item(id, labels=(), difficulty=None, meta=<factory>)
+### *class* learny.tracing.records.Item(id, labels=(), difficulty=None, meta=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -91,7 +91,7 @@ could have answered, so estimators are entitled to ignore it.
 [True, True, False]
 ```
 
-### *class* learny.tracing.records.Response(student, item, outcome, at=None, meta=<factory>)
+### *class* learny.tracing.records.Response(student, item, outcome, at=None, meta=dict(), , score=None, max_score=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -109,6 +109,28 @@ True
 True
 ```
 
+**An ordered score** — 1 to 5 stars, partial credit — goes in `score` out of
+`max_score`, on the consecutive levels `0..max_score`: map 1–5 stars to
+`score=stars - 1, max_score=4`, and three ordered levels such as 1/3/5 stars to
+`0, 1, 2` of `2` (a level that can never occur is not a level). `outcome` stays
+the dichotomous view of the same attempt, so an estimator that only reads outcomes
+(the default) is unaffected, and one that reads scores
+([`PartialCreditEstimator`](learny.tracing.estimators.html.md#learny.tracing.estimators.PartialCreditEstimator)) can replay the same log.
+One response carries one score: an attempt scored on several sub-scales is several
+responses, one per sub-scale.
+
+```pycon
+>>> r = Response("cora", "song-7/tempo", "correct", score=3, max_score=4)
+>>> r.to_dict()['score'], Response.from_dict(r.to_dict()) == r
+(3, True)
+>>> 'score' in Response("cora", "2004-q7", "correct").to_dict()  # unscored: as before
+False
+>>> Response("cora", "q", "skipped", score=0, max_score=4)
+Traceback (most recent call last):
+    ...
+ValueError: Response 'q': a skipped response has no score (got score=0)
+```
+
 #### *property* correct *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
 True only for an outright correct answer; a skip is not a correct answer.
@@ -120,9 +142,20 @@ Inverse of [`to_dict()`](#learny.tracing.records.Response.to_dict), tolerant of 
 * **Return type:**
   [`Response`](#learny.tracing.records.Response)
 
+#### max_score *: [int](https://docs.python.org/3/builtins/functions.html#int) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+The highest score this attempt could have earned; set exactly when `score` is.
+
+#### score *: [int](https://docs.python.org/3/builtins/functions.html#int) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+The ordered score, in `0..max_score`; `None` for a right/wrong response.
+
 #### to_dict()
 
 A JSON-ready dict. `Outcome` is a `str` enum, so it needs no encoding.
+
+An unscored response leaves `score` and `max_score` out, so a right/wrong log
+is written exactly as it was before scores existed.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
@@ -142,9 +175,6 @@ never collapses anything by itself; this is the explicit, opt-in way to do it.
 An item left with no labels still carries its difficulty and still informs the
 student’s global skill, so it is kept unless `drop_unlabelled=True`.
 
-* **Return type:**
-  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Item`](#learny.tracing.records.Item)]
-
 ```pycon
 >>> bank = {
 ...     'q1': Item('q1', labels={'topic:fractions': 1.0, 'trap:units': 0.6}),
@@ -156,3 +186,6 @@ student’s global skill, so it is kept unless `drop_unlabelled=True`.
 >>> sorted(restrict_labels(bank, keep={'topic:fractions'}, drop_unlabelled=True))
 ['q1']
 ```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Item`](#learny.tracing.records.Item)]

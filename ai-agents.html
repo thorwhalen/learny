@@ -34,6 +34,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/epythet.css?v=1ba707ae" />
   
@@ -378,6 +379,18 @@
 <p><code class="docutils literal notranslate"><span class="pre">learny</span></code> ships artifacts for coding agents alongside its code. This page lists
 them, says where each lives in the repository, and points at the
 machine-readable copies of this documentation.</p>
+<section id="skills">
+<h2>Skills<a class="headerlink" href="#skills" title="Link to this heading">#</a></h2>
+<p>Skills are folders holding a <code class="docutils literal notranslate"><span class="pre">SKILL.md</span></code> (the <a class="reference external" href="https://agentskills.io">Agent Skills</a> format): a description that tells an agent when to use it and a body with the procedure. Install one into your agent with <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">skill</span></code> (any host: <code class="docutils literal notranslate"><span class="pre">--agent</span> <span class="pre">claude-code</span></code>, <code class="docutils literal notranslate"><span class="pre">copilot</span></code>, <code class="docutils literal notranslate"><span class="pre">cursor</span></code>, <code class="docutils literal notranslate"><span class="pre">codex</span></code>, <code class="docutils literal notranslate"><span class="pre">gemini</span></code>), or use the copy bundled in the wheel.</p>
+<section id="learning-game-patterns">
+<h3><code class="docutils literal notranslate"><span class="pre">learning-game-patterns</span></code><a class="headerlink" href="#learning-game-patterns" title="Link to this heading">#</a></h3>
+<p>A pattern language for games that teach symbols (characters of another script) and vocabulary: the ten learning families (match, produce, construct, order, discriminate, context, explore, encode, schedule, assess), the six matching patterns (pick-the-match, pair-off field, hidden pair, route the stream, find in a field, chain), nine pressure renderings (countdown bar, falling object, overflow container, time bank, and more), and which to use in which learning phase. Use when designing or choosing a mechanic for a language-learning, kana, kanji, alphabet or vocabulary game, when asked “what kinds of matching games are there”, “how should the timer work”, “which game form for look-alike characters”, or when deciding what a game must log for the learner model.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gh<span class="w"> </span>skill<span class="w"> </span>install<span class="w"> </span>thorwhalen/learny<span class="w"> </span>learning-game-patterns<span class="w"> </span>--agent<span class="w"> </span>claude-code
+</pre></div>
+</div>
+<p>Source: <a class="reference external" href="https://github.com/thorwhalen/learny/tree/HEAD/skills/learning-game-patterns"><code class="docutils literal notranslate"><span class="pre">skills/learning-game-patterns</span></code></a>.</p>
+</section>
+</section>
 <section id="instruction-files">
 <h2>Instruction files<a class="headerlink" href="#instruction-files" title="Link to this heading">#</a></h2>
 <p>Files agents read before working in this repository.</p>
@@ -435,6 +448,10 @@ machine-readable copies of this documentation.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#skills">Skills</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learning-game-patterns"><code class="docutils literal notranslate"><span class="pre">learning-game-patterns</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instruction-files">Instruction files</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#machine-readable-documentation">Machine-readable documentation</a></li>
 </ul>

@@ -34,6 +34,7 @@
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/epythet.css?v=1ba707ae" />
   
@@ -549,13 +550,26 @@ exercises than a student who has answered nothing:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="learny.tracing.model.LearnerModel.record">
-<span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outcome</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.record" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outcome</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">meta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.record" title="Link to this definition">#</a></dt>
 <dd><p>Log one response and fold it into the student’s estimate.</p>
 <p>The log is written first: if updating the cache fails, the evidence survives and
-<a class="reference internal" href="#learny.tracing.model.LearnerModel.replay" title="learny.tracing.model.LearnerModel.replay"><code class="xref py py-meth docutils literal notranslate"><span class="pre">replay()</span></code></a> can rebuild from it.</p>
+<a class="reference internal" href="#learny.tracing.model.LearnerModel.replay" title="learny.tracing.model.LearnerModel.replay"><code class="xref py py-meth docutils literal notranslate"><span class="pre">replay()</span></code></a> can rebuild from it. <code class="docutils literal notranslate"><span class="pre">score</span></code> out of <code class="docutils literal notranslate"><span class="pre">max_score</span></code> records an
+ordered score alongside the right/wrong <code class="docutils literal notranslate"><span class="pre">outcome</span></code> (see
+<a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Response" title="learny.tracing.records.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a>); the default estimator reads only the
+outcome, <a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.PartialCreditEstimator" title="learny.tracing.estimators.PartialCreditEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a> the score.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">PartialCreditEstimator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'song-7/tempo'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'song-7/tempo'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'tempo'</span><span class="p">,))}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">LearnerModel</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">PartialCreditEstimator</span><span class="p">(),</span> <span class="n">log</span><span class="o">=</span><span class="p">{},</span> <span class="n">estimates</span><span class="o">=</span><span class="p">{}</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="s1">'song-7/tempo'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">,</span> <span class="n">score</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">max_score</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">mastery</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">)[</span><span class="s1">'tempo'</span><span class="p">]</span><span class="o">.</span><span class="n">mu</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -566,7 +580,7 @@ exercises than a student who has answered nothing:</p>
 <dd><p>Record a batch — a whole paper, say — in the order given.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -580,7 +594,7 @@ it is asserted by the tests: folding <code class="docutils literal notranslate">
 state that live recording produced.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
 </dd>
 </dl>
 </dd></dl>

@@ -34,6 +34,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/epythet.css?v=1ba707ae" />
   
@@ -386,6 +387,14 @@
 <p><strong>A skip is not a wrong answer.</strong> <code class="docutils literal notranslate"><span class="pre">Outcome</span></code> has three values. A blank at the end of a paper is the clock running out; a blank with answers after it is a decision. <code class="docutils literal notranslate"><span class="pre">mark_not_reached</span></code> separates them, and neither is ever scored as wrong.</p>
 <p><strong>Item difficulty does not update by default.</strong> With one or two learners, a student’s ability and an item’s difficulty are not jointly identifiable — they absorb each other and you get a model that fits the past and predicts nothing. So difficulty is taken as given from the bank. Pass <code class="docutils literal notranslate"><span class="pre">update_difficulty=True</span></code> when you genuinely have a population.</p>
 <p><strong>No student’s data ever informs another’s estimate.</strong> Pooling happens across <em>labels within one student</em>: a label carries only a deviation from that student’s overall skill, so their first paper gives every label a usable prior. The single-student case is the default path, not a degenerate one.</p>
+<p><strong>Scores, not just right/wrong.</strong> A response can carry an ordered score — 1–5 stars, partial credit — as <code class="docutils literal notranslate"><span class="pre">score</span></code> out of <code class="docutils literal notranslate"><span class="pre">max_score</span></code> (levels <code class="docutils literal notranslate"><span class="pre">0..max_score</span></code>, so 1–5 stars is <code class="docutils literal notranslate"><span class="pre">score=stars</span> <span class="pre">-</span> <span class="pre">1,</span> <span class="pre">max_score=4</span></code>). The default estimator still reads only the outcome; <code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code> reads the score (Masters’ Partial Credit Model on the same predictor) and scores a plain right/wrong response exactly as the default does:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">LearnerModel</span><span class="p">,</span> <span class="n">PartialCreditEstimator</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">LearnerModel</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">PartialCreditEstimator</span><span class="p">())</span>
+<span class="n">model</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="s1">'song-7/tempo'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">,</span> <span class="n">score</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_score</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>An attempt with several sub-scores is several responses, one per sub-score item, each labelled by its facet.</p>
 </section>
 <section id="when-to-believe-it">
 <h3>When to believe it<a class="headerlink" href="#when-to-believe-it" title="Link to this heading">#</a></h3>
@@ -420,7 +429,7 @@
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-14 01:14 UTC from <a href="https://github.com/thorwhalen/learny/commit/fe5d665a25351684e1c9497e825216d884463bb8">fe5d665</a> (main) · learny 0.0.1 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 10:44 UTC from <a href="https://github.com/thorwhalen/learny/commit/fe00938d799629d8950a50d37e52e2bdf610f156">fe00938</a> (main) · learny 0.0.1 · <a href="about-this-build.html">about this build</a></p>
 
                 </article>
               

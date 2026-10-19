@@ -71,9 +71,6 @@ so `log_loss < base_log_loss` means the model beats knowing only the average.
 
 Build a report from `(predicted, observed)` pairs, observed in `{0, 1}`.
 
-* **Return type:**
-  [`CalibrationReport`](#learny.tracing.diagnostics.CalibrationReport)
-
 ```pycon
 >>> r = CalibrationReport.from_pairs([(0.9, 1), (0.9, 1), (0.1, 0), (0.1, 1)])
 >>> r.n, round(r.brier, 3), round(r.ece, 3)
@@ -81,6 +78,9 @@ Build a report from `(predicted, observed)` pairs, observed in `{0, 1}`.
 >>> [(b.n, b.observed_rate) for b in r.bins]
 [(2, 0.5), (2, 1.0)]
 ```
+
+* **Return type:**
+  [`CalibrationReport`](#learny.tracing.diagnostics.CalibrationReport)
 
 ### learny.tracing.diagnostics.DEFAULT_N_BINS *= 10*
 
@@ -151,8 +151,11 @@ predictions, exactly as in live use — and only then are the scored predictions
 pooled into one table. Skips are replayed (they move the state) but not scored:
 there is no right answer to compare them to.
 
-* **Return type:**
-  [`CalibrationReport`](#learny.tracing.diagnostics.CalibrationReport)
+A response with an ordered score is scored here like any other, as `predict()`
+against its right/wrong `outcome`. For a score that `outcome` is the caller’s own
+reading of the attempt (correct only at full marks, say), not the event a score
+model’s `predict()` forecasts, so a well-calibrated score model can read as
+miscalibrated. Calibrating score predictions is not built yet (#31).
 
 ```pycon
 >>> from learny.tracing.estimators import RaschEstimator
@@ -164,6 +167,9 @@ there is no right answer to compare them to.
 >>> report.log_loss < math.log(2)   # beats a coin flip once it has learned
 True
 ```
+
+* **Return type:**
+  [`CalibrationReport`](#learny.tracing.diagnostics.CalibrationReport)
 
 ### learny.tracing.diagnostics.label_separation(state, , estimator=None, min_n=1, threshold=2.0)
 
@@ -196,9 +202,6 @@ loading**2`). What the deviations share through the global skill – how much of
 the student’s level is “overall” rather than “this label”, which a record often
 cannot tell – moves them all together, so it blurs no ordering among them.
 
-* **Return type:**
-  [`LabelSeparation`](#learny.tracing.diagnostics.LabelSeparation)
-
 ```pycon
 >>> state = {"labels": {
 ...     "fractions": {"mu": 0.9, "var": 0.02, "n": 30},
@@ -212,6 +215,9 @@ True
 False
 ```
 
+* **Return type:**
+  [`LabelSeparation`](#learny.tracing.diagnostics.LabelSeparation)
+
 ### learny.tracing.diagnostics.prequential(responses, , items, estimator)
 
 Yield `(response, p)` where `p` was predicted *before* the response was seen.
@@ -221,9 +227,6 @@ that came before it, so this is the honest out-of-sample stream that calibration
 and any later hyperparameter fit, should be scored on. Every response is yielded,
 skips included; filter on `response.outcome.is_scored` to score.
 
-* **Return type:**
-  [`Iterator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Response`](learny.tracing.records.html.md#learny.tracing.records.Response), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
-
 ```pycon
 >>> from learny.tracing.estimators import RaschEstimator
 >>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
@@ -231,3 +234,6 @@ skips included; filter on `response.outcome.is_scored` to score.
 >>> [round(p, 3) for _, p in prequential(rs, items=items, estimator=RaschEstimator())]
 [0.5, 0.6]
 ```
+
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Response`](learny.tracing.records.html.md#learny.tracing.records.Response), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]

@@ -22,6 +22,11 @@ Elo is the same update with the information term frozen: Elo’s uncertainty fun
 `U(n) = a/(1 + b*n)` is exactly `1/(1/var + n*I)` for constant information `I`. So
 `gain='elo'` is not a different estimator, it is this one with a constant step size.
 
+An ordered score — 1 to 5 stars, partial credit — is read by
+[`PartialCreditEstimator`](#learny.tracing.estimators.PartialCreditEstimator), Masters’ Partial Credit Model on the same predictor. It is
+this estimator with one method replaced (the likelihood of a response), so everything
+below holds for it too, and a right/wrong response is scored exactly as here.
+
 Three decisions worth knowing before reading the code:
 
 **Item difficulty does not update by default.** Textbook Elo moves ability and item
@@ -60,19 +65,21 @@ scored as wrong.
 
 ### Functions
 
-| [`logit`](#learny.tracing.estimators.logit)(p, \*[, eps])                 | Inverse of [`expit()`](#learny.tracing.estimators.expit), clamped away from 0 and 1 so it stays finite.   |
-|--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| [`expit`](#learny.tracing.estimators.expit)(x)                            | The logistic function, overflow-safe at the tails.                                                                   |
-| [`difficulty_from_rank`](#learny.tracing.estimators.difficulty_from_rank)(rank, n_ranks) | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                     |
-| [`mark_not_reached`](#learny.tracing.estimators.mark_not_reached)(responses)         | Flag the trailing run of blanks in one sitting as *not reached*.                                                     |
+| [`binomial_thresholds`](#learny.tracing.estimators.binomial_thresholds)(item, max_score)   | Thresholds under which a score out of `m` is `m` steps taken at one rate.                                          |
+|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [`logit`](#learny.tracing.estimators.logit)(p, \*[, eps])                    | Inverse of [`expit()`](#learny.tracing.estimators.expit), clamped away from 0 and 1 so it stays finite. |
+| [`expit`](#learny.tracing.estimators.expit)(x)                               | The logistic function, overflow-safe at the tails.                                                                 |
+| [`difficulty_from_rank`](#learny.tracing.estimators.difficulty_from_rank)(rank, n_ranks)    | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
+| [`mark_not_reached`](#learny.tracing.estimators.mark_not_reached)(responses)            | Flag the trailing run of blanks in one sitting as *not reached*.                                                   |
 
 ### Classes
 
-| [`Estimator`](#learny.tracing.estimators.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                |
-|----------------------------------------------------------------------------------------------------|----------------------------------------------------------|
-| [`RaschEstimator`](#learny.tracing.estimators.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                  |
-| [`Mastery`](#learny.tracing.estimators.Mastery)(label, skill[, prior_var, ...])           | What the model believes about one student and one label. |
-| [`Skill`](#learny.tracing.estimators.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.   |
+| [`Estimator`](#learny.tracing.estimators.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                     |
+|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| [`RaschEstimator`](#learny.tracing.estimators.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                       |
+| [`PartialCreditEstimator`](#learny.tracing.estimators.PartialCreditEstimator)([prior_var, ...])          | Masters' Partial Credit Model on the Rasch predictor: reads an ordered score. |
+| [`Mastery`](#learny.tracing.estimators.Mastery)(label, skill[, prior_var, ...])           | What the model believes about one student and one label.                      |
+| [`Skill`](#learny.tracing.estimators.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                        |
 
 ### *class* learny.tracing.estimators.Estimator(\*args, \*\*kwargs)
 
@@ -161,6 +168,93 @@ default) treats the deviations as independent.
 #### *property* probability *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 
 Probability of success on an item of average difficulty for this label.
+
+### *class* learny.tracing.estimators.PartialCreditEstimator(prior_var=1.0, label_prior_var=0.25, guess=0.0, forget_per_week=0.02, abstain_weight=0.5, conjunctivity=0.0, gain='bayes', elo_rate=0.6, update_difficulty=False, thresholds=<function binomial_thresholds>, mode_steps=50)
+
+Bases: [`RaschEstimator`](#learny.tracing.estimators.RaschEstimator)
+
+Masters’ Partial Credit Model on the Rasch predictor: reads an ordered score.
+
+A response with a `score` out of `max_score` is scored on its levels
+`0..max_score`, with `s` the same predictor as [`RaschEstimator`](#learny.tracing.estimators.RaschEstimator)’s (global
+skill plus label deviations minus item difficulty):
+
+```default
+P(X = k)  proportional to  exp(sum over j <= k of (s - tau_j))
+```
+
+The thresholds `tau_j` come from the `thresholds` seam, by default
+[`binomial_thresholds()`](#learny.tracing.estimators.binomial_thresholds). The log-likelihood’s gradient in `s` is
+`k - E[X]` and its Fisher information `Var[X]`, which is all the joint update
+needs, so the hierarchy, forgetting, the global/label covariance and replay are the
+default estimator’s, unchanged. For a score the update iterates to the posterior mode
+along the predictor (`mode_steps`), since one Newton step overshoots on a surprising
+score out of many levels. A response *without* a score is a right/wrong answer and is
+scored exactly as [`RaschEstimator`](#learny.tracing.estimators.RaschEstimator) scores it — guessing, skips and all.
+
+**\`\`guess\`\` applies only to responses without a score**: a score is never modelled as
+a guess, so on a multiple-choice item that is also scored, `expected_score` is not
+`max_score * predict()` unless `guess=0`. For a score, `outcome` is not read,
+and a score that contradicts it is not an error: the outcome is the caller’s own
+right/wrong reading of the attempt.
+
+```pycon
+>>> est = PartialCreditEstimator()
+>>> item = Item('song-7/tempo', labels=('tempo',), difficulty=0.5)
+>>> def skill_after(stars):
+...     r = Response('ada', item.id, 'correct', score=stars - 1, max_score=4)
+...     return est.observe(est.init(), r, item)['global']['mu']
+>>> skill_after(2) < skill_after(3) < skill_after(4) < skill_after(5)
+True
+>>> skill_after(3)  # the middle of the scale on an average item is no news
+0.0
+>>> est.expected_score(est.init(), item, 4)
+2.0
+```
+
+`predict` keeps the [`Estimator`](#learny.tracing.estimators.Estimator) meaning, the probability of a correct
+answer on a right/wrong reading of the item; [`expected_score()`](#learny.tracing.estimators.PartialCreditEstimator.expected_score) and
+[`score_probabilities()`](#learny.tracing.estimators.PartialCreditEstimator.score_probabilities) answer for a score.
+
+#### expected_score(state, item, max_score, , at=None)
+
+The expected score out of `max_score`; see [`score_probabilities()`](#learny.tracing.estimators.PartialCreditEstimator.score_probabilities).
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
+#### mode_steps *: [int](https://docs.python.org/3/builtins/functions.html#int)* *= 50*
+
+Newton iterations allowed to find the posterior mode along the predictor for a
+score. One step (the right/wrong update’s plug-in) is fine for a few stars but
+overshoots on a surprising score out of many levels, whose gradient is bounded by
+`max_score` rather than by 1; iterating to the mode (a Laplace step) does not.
+`1` restores the plain one-step update.
+
+#### score_probabilities(state, item, max_score, , at=None)
+
+`P(score = k)` for `k = 0..max_score`, over the posterior.
+
+The posterior is integrated with the same probit approximation as
+[`predict()`](#learny.tracing.estimators.RaschEstimator.predict), so with the default thresholds and `guess=0`
+the expected score is exactly `max_score * predict()`; both are approximations
+to the posterior integral. Guessing is not modelled for a score (see the class).
+
+```pycon
+>>> est = PartialCreditEstimator()
+>>> [round(p, 3) for p in est.score_probabilities(est.init(), Item('q'), 2)]
+[0.25, 0.5, 0.25]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
+#### thresholds(max_score)
+
+How an item scored `0..max_score` places its steps; see `Thresholds`.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
 ### *class* learny.tracing.estimators.RaschEstimator(prior_var=1.0, label_prior_var=0.25, guess=0.0, forget_per_week=0.02, abstain_weight=0.5, conjunctivity=0.0, gain='bayes', elo_rate=0.6, update_difficulty=False)
 
@@ -275,9 +369,6 @@ With no evidence the prediction sits near the item’s own base rate, but pulled
 toward a coin flip — because the model is being honest that it knows nothing about
 *this* student, not just repeating what it knows about the item:
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> est = RaschEstimator()
 >>> base_rate = 1 - 0.75
@@ -295,6 +386,9 @@ Shrink the prior and it converges on the base rate, as it should:
 >>> round(sure.predict(sure.init(), Item('q', difficulty=0.75)), 3)
 0.25
 ```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 #### prior_var *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 1.0*
 
@@ -335,6 +429,30 @@ A credible interval on the logit scale.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
+### learny.tracing.estimators.binomial_thresholds(item, max_score)
+
+Thresholds under which a score out of `m` is `m` steps taken at one rate.
+
+`tau_k = log(k / (m - k + 1))`. With these, the Partial Credit Model’s distribution
+of the score is binomial with step rate `expit(skill - difficulty)`, so the expected
+*fraction* of the maximum equals the right/wrong model’s probability of a correct
+answer, and an item’s `difficulty` means the same thing however it is scored. That
+is why it is the default: it is the one choice that keeps an externally calibrated
+difficulty meaningful with no new parameters (with `guess=0`: a score is never a
+guess). It is not a claim that the steps really are independent, and it makes a score
+out of `m` carry up to `m` times the evidence of one right/wrong answer; thresholds
+spread wider apart carry less.
+
+```pycon
+>>> binomial_thresholds(Item('q'), 1)  # one step: the right/wrong model
+[0.0]
+>>> [round(t, 3) for t in binomial_thresholds(Item('q'), 4)]
+[-1.386, -0.405, 0.405, 1.386]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
 ### learny.tracing.estimators.difficulty_from_rank(rank, n_ranks)
 
 Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).
@@ -344,9 +462,6 @@ spreads `n_ranks` bands evenly across the open unit interval. It is a *prior*, n
 measurement: it says band 3 is harder than band 2, and how much is then corrected by
 data.
 
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
-
 ```pycon
 >>> [round(difficulty_from_rank(r, 3), 3) for r in (1, 2, 3)]
 [0.25, 0.5, 0.75]
@@ -354,12 +469,12 @@ data.
 0.5
 ```
 
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
 ### learny.tracing.estimators.expit(x)
 
 The logistic function, overflow-safe at the tails.
-
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ```pycon
 >>> expit(0.0)
@@ -370,12 +485,12 @@ The logistic function, overflow-safe at the tails.
 0.0
 ```
 
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
 ### learny.tracing.estimators.logit(p, , eps=1e-06)
 
 Inverse of [`expit()`](#learny.tracing.estimators.expit), clamped away from 0 and 1 so it stays finite.
-
-* **Return type:**
-  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ```pycon
 >>> logit(0.5)
@@ -386,6 +501,9 @@ Inverse of [`expit()`](#learny.tracing.estimators.expit), clamped away from 0 an
 True
 ```
 
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
 ### learny.tracing.estimators.mark_not_reached(responses)
 
 Flag the trailing run of blanks in one sitting as *not reached*.
@@ -394,9 +512,6 @@ A blank at the end of a paper usually means the clock ran out; a blank with answ
 questions after it is a decision to skip. Only the second is evidence about the
 student. Pass one sitting’s responses **in the order they were presented**.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Response`](learny.tracing.records.html.md#learny.tracing.records.Response)]
-
 ```pycon
 >>> from learny.tracing.records import Response, Outcome
 >>> rs = [Response('a', f'q{i}', o) for i, o in
@@ -404,3 +519,6 @@ student. Pass one sitting’s responses **in the order they were presented**.
 >>> [r.meta.get('not_reached', False) for r in mark_not_reached(rs)]
 [False, False, False, True, True]
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Response`](learny.tracing.records.html.md#learny.tracing.records.Response)]

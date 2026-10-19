@@ -16,6 +16,7 @@ learny.tracing
       prequential
       restrict_labels
       difficulty_from_rank
+      binomial_thresholds
       mark_not_reached
       expit
       logit
@@ -33,6 +34,7 @@ learny.tracing
       Skill
       Estimator
       RaschEstimator
+      PartialCreditEstimator
       ResponseLog
       LabelSeparation
       CalibrationReport

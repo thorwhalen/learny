@@ -31,6 +31,7 @@
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/epythet.css?v=1ba707ae" />
   
@@ -1051,6 +1052,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    predictions, exactly as in live use — and only then are the scored predictions</span>
 <span class="sd">    pooled into one table. Skips are replayed (they move the state) but not scored:</span>
 <span class="sd">    there is no right answer to compare them to.</span>
+
+<span class="sd">    A response with an ordered score is scored here like any other, as ``predict()``</span>
+<span class="sd">    against its right/wrong ``outcome``. For a score that ``outcome`` is the caller's own</span>
+<span class="sd">    reading of the attempt (correct only at full marks, say), not the event a score</span>
+<span class="sd">    model's ``predict()`` forecasts, so a well-calibrated score model can read as</span>
+<span class="sd">    miscalibrated. Calibrating score predictions is not built yet (#31).</span>
 
 <span class="sd">    &gt;&gt;&gt; from learny.tracing.estimators import RaschEstimator</span>
 <span class="sd">    &gt;&gt;&gt; items = {f'q{i}': Item(f'q{i}', labels=('x',), difficulty=0.5) for i in range(4)}</span>

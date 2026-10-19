@@ -31,6 +31,7 @@
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/epythet.css?v=1ba707ae" />
   
@@ -731,6 +732,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">``U(n) = a/(1 + b*n)`` is exactly ``1/(1/var + n*I)`` for constant information ``I``. So</span>
 <span class="sd">``gain='elo'`` is not a different estimator, it is this one with a constant step size.</span>
 
+<span class="sd">An ordered score — 1 to 5 stars, partial credit — is read by</span>
+<span class="sd">:class:`PartialCreditEstimator`, Masters' Partial Credit Model on the same predictor. It is</span>
+<span class="sd">this estimator with one method replaced (the likelihood of a response), so everything</span>
+<span class="sd">below holds for it too, and a right/wrong response is scored exactly as here.</span>
+
 <span class="sd">Three decisions worth knowing before reading the code:</span>
 
 <span class="sd">**Item difficulty does not update by default.** Textbook Elo moves ability and item</span>
@@ -771,8 +777,9 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Real</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Outcome</span><span class="p">,</span> <span class="n">Response</span>
@@ -780,6 +787,8 @@ window.runMermaid = runMermaid;</script>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"Estimator"</span><span class="p">,</span>
     <span class="s2">"RaschEstimator"</span><span class="p">,</span>
+    <span class="s2">"PartialCreditEstimator"</span><span class="p">,</span>
+    <span class="s2">"binomial_thresholds"</span><span class="p">,</span>
     <span class="s2">"Mastery"</span><span class="p">,</span>
     <span class="s2">"Skill"</span><span class="p">,</span>
     <span class="s2">"logit"</span><span class="p">,</span>
@@ -886,6 +895,15 @@ window.runMermaid = runMermaid;</script>
     <span class="n">cond_var</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># var - cov * beta: Var(label | global)</span>
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">_Evidence</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""What one response says about the item's linear predictor ``s``."""</span>
+
+    <span class="n">gradient</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># what the Bayes step moves s by, times (1 + information * v_s)</span>
+    <span class="n">information</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># the curvature that shrinks the posterior along s</span>
+    <span class="n">residual</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># observed minus expected, unit scale: moves a co-estimated difficulty</span>
+    <span class="n">elo</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># the fixed-gain (gain='elo') step, before elo_rate</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">_Joint</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""The posterior one response is scored against; see ``RaschEstimator._joint``."""</span>
 
@@ -974,9 +992,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">outcome</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Outcome</span><span class="o">.</span><span class="n">SKIPPED</span><span class="p">:</span>
             <span class="k">break</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
-        <span class="n">meta</span><span class="p">[</span><span class="s2">"not_reached"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">student</span><span class="p">,</span> <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">,</span> <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">outcome</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">at</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">meta</span><span class="p">,</span> <span class="s2">"not_reached"</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">out</span></div>
 
 
@@ -1320,18 +1336,27 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        &gt;&gt;&gt; round(sure.predict(sure.init(), Item('q', difficulty=0.75)), 3)</span>
 <span class="sd">        0.25</span>
 <span class="sd">        """</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">expit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_integrated_predictor</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">at</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span><span class="p">)</span> <span class="o">*</span> <span class="n">q</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_integrated_predictor</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">,</span> <span class="n">at</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The item's linear predictor ``s``, scaled for its posterior uncertainty.</span>
+
+<span class="sd">        The predictor's variance is h' Sigma h over the joint posterior, covariances</span>
+<span class="sd">        included, so it is the variance of the posterior the update actually carries.</span>
+<span class="sd">        MacKay's probit approximation to the logistic integral: ``expit`` of the result</span>
+<span class="sd">        is ``E[expit(s)]``, so uncertainty pulls a prediction toward a coin flip rather</span>
+<span class="sd">        than asserting the mean's confidence.</span>
+<span class="sd">        """</span>
         <span class="n">joint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_joint</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">at</span><span class="p">)</span>
         <span class="n">label_mu</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
             <span class="n">share</span> <span class="o">*</span> <span class="n">joint</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">skill</span><span class="o">.</span><span class="n">mu</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">share</span> <span class="ow">in</span> <span class="n">joint</span><span class="o">.</span><span class="n">shares</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">)</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">joint</span><span class="o">.</span><span class="n">glob</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="n">label_mu</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_difficulty</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
-        <span class="c1"># The predictor's variance is h' Sigma h over the joint posterior, covariances</span>
-        <span class="c1"># included, so it is the variance of the posterior the update actually carries.</span>
-        <span class="c1"># MacKay's probit approximation to the logistic integral: uncertainty pulls the</span>
-        <span class="c1"># prediction toward a coin flip rather than asserting the mean's confidence.</span>
-        <span class="n">q</span> <span class="o">=</span> <span class="n">expit</span><span class="p">(</span><span class="n">s</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">joint</span><span class="o">.</span><span class="n">v_s</span> <span class="o">/</span> <span class="mf">8.0</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span><span class="p">)</span> <span class="o">*</span> <span class="n">q</span></div>
-
+        <span class="k">return</span> <span class="n">s</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">joint</span><span class="o">.</span><span class="n">v_s</span> <span class="o">/</span> <span class="mf">8.0</span><span class="p">)</span>
 
     <span class="c1"># -- the update ----------------------------------------------------------------</span>
 
@@ -1349,6 +1374,28 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># An interior blank is a decision not to answer: a soft observation at the</span>
         <span class="c1"># guessing rate, never a wrong answer.</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">abstain_weight</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_likelihood</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">v_s</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Evidence</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""What one response says about the predictor, whose posterior is ``N(s, v_s)``.</span>
+
+<span class="sd">        The gradient and Fisher information of the response's log-likelihood with respect</span>
+<span class="sd">        to the item's linear predictor, which is all the joint update needs; the residual</span>
+<span class="sd">        (observed minus expected, on the unit scale) that moves a co-estimated item</span>
+<span class="sd">        difficulty; and Elo's fixed-gain step. Here they are evaluated at the posterior</span>
+<span class="sd">        mean (one Newton step), for a response :meth:`_target` did not discard. This is</span>
+<span class="sd">        the one place the dichotomous model lives, so a different response model</span>
+<span class="sd">        overrides it and inherits the rest.</span>
+<span class="sd">        """</span>
+        <span class="n">target</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">expit</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span><span class="p">)</span> <span class="o">*</span> <span class="n">q</span>
+        <span class="n">dp_ds</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span><span class="p">)</span> <span class="o">*</span> <span class="n">q</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span>
+        <span class="n">denom</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">p</span><span class="p">),</span> <span class="mf">1e-9</span><span class="p">)</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span> <span class="o">*</span> <span class="n">dp_ds</span> <span class="o">/</span> <span class="n">denom</span>        <span class="c1"># gradient of the log-likelihood</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">dp_ds</span> <span class="o">*</span> <span class="n">dp_ds</span> <span class="o">/</span> <span class="n">denom</span>                <span class="c1"># Fisher information</span>
+        <span class="k">return</span> <span class="n">_Evidence</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">target</span> <span class="o">-</span> <span class="n">p</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RaschEstimator.observe">
 <a class="viewcode-back" href="../../../_autosummary/learny.tracing.estimators.html#learny.tracing.RaschEstimator.observe">[docs]</a>
@@ -1369,12 +1416,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        stored as its regression on the global skill, which this update leaves exactly</span>
 <span class="sd">        as it was (see ``_Frame``).</span>
 <span class="sd">        """</span>
-        <span class="n">scored</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">scored</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="p">(</span><span class="n">response</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gain</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"bayes"</span><span class="p">,</span> <span class="s2">"elo"</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"gain must be 'bayes' or 'elo', got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gain</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
-        <span class="n">target</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="n">scored</span>
         <span class="n">item</span> <span class="o">=</span> <span class="n">item</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Item</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
         <span class="n">now</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">at</span>
 
@@ -1385,13 +1430,7 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="n">label_mu</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_difficulty</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
 
-        <span class="c1"># Plug-in at the posterior mean for the update itself.</span>
-        <span class="n">q</span> <span class="o">=</span> <span class="n">expit</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span><span class="p">)</span> <span class="o">*</span> <span class="n">q</span>
-        <span class="n">dp_ds</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">guess</span><span class="p">)</span> <span class="o">*</span> <span class="n">q</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span>
-        <span class="n">denom</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">p</span><span class="p">),</span> <span class="mf">1e-9</span><span class="p">)</span>
-        <span class="n">score</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span> <span class="o">*</span> <span class="n">dp_ds</span> <span class="o">/</span> <span class="n">denom</span>        <span class="c1"># gradient of the log-likelihood</span>
-        <span class="n">info</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">dp_ds</span> <span class="o">*</span> <span class="n">dp_ds</span> <span class="o">/</span> <span class="n">denom</span>                <span class="c1"># Fisher information</span>
+        <span class="n">score</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">elo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_likelihood</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">joint</span><span class="o">.</span><span class="n">v_s</span><span class="p">)</span>
 
         <span class="c1"># Entries are replaced, never edited in place, so unchanged ones are shared.</span>
         <span class="n">new</span> <span class="o">=</span> <span class="p">{</span>
@@ -1422,7 +1461,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">step</span> <span class="o">=</span> <span class="n">score</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">info</span> <span class="o">*</span> <span class="n">joint</span><span class="o">.</span><span class="n">v_s</span><span class="p">)</span>
 
         <span class="n">u0</span> <span class="o">=</span> <span class="n">joint</span><span class="o">.</span><span class="n">u0</span>
-        <span class="n">moved</span> <span class="o">=</span> <span class="n">u0</span> <span class="o">*</span> <span class="n">step</span> <span class="k">if</span> <span class="n">bayes</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">elo_rate</span> <span class="o">*</span> <span class="n">score</span>
+        <span class="n">moved</span> <span class="o">=</span> <span class="n">u0</span> <span class="o">*</span> <span class="n">step</span> <span class="k">if</span> <span class="n">bayes</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">elo_rate</span> <span class="o">*</span> <span class="n">elo</span>
         <span class="n">mu_g</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="n">moved</span>
         <span class="n">vg</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">var</span> <span class="o">-</span> <span class="n">shrink</span> <span class="o">*</span> <span class="n">u0</span> <span class="o">*</span> <span class="n">u0</span><span class="p">,</span> <span class="n">_MIN_VAR</span><span class="p">)</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="n">joint</span><span class="o">.</span><span class="n">frame</span>
@@ -1444,7 +1483,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">frame</span> <span class="o">=</span> <span class="n">fresh</span>
         <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">share</span> <span class="ow">in</span> <span class="n">joint</span><span class="o">.</span><span class="n">shares</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">lab</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">joint</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">label</span><span class="p">],</span> <span class="n">joint</span><span class="o">.</span><span class="n">u</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>
-            <span class="n">mu</span> <span class="o">=</span> <span class="n">lab</span><span class="o">.</span><span class="n">skill</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="p">(</span><span class="n">u</span> <span class="o">*</span> <span class="n">step</span> <span class="k">if</span> <span class="n">bayes</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">elo_rate</span> <span class="o">*</span> <span class="n">share</span> <span class="o">*</span> <span class="n">score</span><span class="p">)</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">lab</span><span class="o">.</span><span class="n">skill</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="p">(</span><span class="n">u</span> <span class="o">*</span> <span class="n">step</span> <span class="k">if</span> <span class="n">bayes</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">elo_rate</span> <span class="o">*</span> <span class="n">share</span> <span class="o">*</span> <span class="n">elo</span><span class="p">)</span>
             <span class="n">var</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">lab</span><span class="o">.</span><span class="n">skill</span><span class="o">.</span><span class="n">var</span> <span class="o">-</span> <span class="n">shrink</span> <span class="o">*</span> <span class="n">u</span> <span class="o">*</span> <span class="n">u</span><span class="p">,</span> <span class="n">_MIN_VAR</span><span class="p">)</span>
             <span class="n">cov</span> <span class="o">=</span> <span class="n">_clamp_cov</span><span class="p">(</span><span class="n">lab</span><span class="o">.</span><span class="n">cov</span> <span class="o">-</span> <span class="n">shrink</span> <span class="o">*</span> <span class="n">u0</span> <span class="o">*</span> <span class="n">u</span><span class="p">,</span> <span class="n">vg</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
             <span class="n">beta</span> <span class="o">=</span> <span class="n">cov</span> <span class="o">/</span> <span class="n">vg</span>
@@ -1465,7 +1504,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">items</span> <span class="o">=</span> <span class="n">new</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"items"</span><span class="p">,</span> <span class="p">{})</span>
             <span class="n">entry</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="p">{</span><span class="s2">"b"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_difficulty</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">item</span><span class="p">),</span> <span class="s2">"n"</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
             <span class="n">rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elo_rate</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"n"</span><span class="p">])</span>
-            <span class="n">entry</span><span class="p">[</span><span class="s2">"b"</span><span class="p">]</span> <span class="o">-=</span> <span class="n">rate</span> <span class="o">*</span> <span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span>
+            <span class="n">entry</span><span class="p">[</span><span class="s2">"b"</span><span class="p">]</span> <span class="o">-=</span> <span class="n">rate</span> <span class="o">*</span> <span class="n">residual</span>
             <span class="n">entry</span><span class="p">[</span><span class="s2">"n"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">return</span> <span class="n">new</span></div>
@@ -1514,6 +1553,238 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">skill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Skill</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""The student's global skill, independent of any label."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skill</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"global"</span><span class="p">),</span> <span class="n">prior_var</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">prior_var</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># -- ordered scores ----------------------------------------------------------------</span>
+
+<span class="c1">#: Step thresholds for an item scored ``0..max_score``: ``max_score`` logits, step ``k``</span>
+<span class="c1">#: being the predictor at which levels ``k - 1`` and ``k`` are equally likely, relative to</span>
+<span class="c1">#: the item's difficulty. The ``thresholds`` seam of :class:`PartialCreditEstimator`.</span>
+<span class="n">Thresholds</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Item</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="binomial_thresholds">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.estimators.html#learny.tracing.binomial_thresholds">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">binomial_thresholds</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">,</span> <span class="n">max_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Thresholds under which a score out of ``m`` is ``m`` steps taken at one rate.</span>
+
+<span class="sd">    ``tau_k = log(k / (m - k + 1))``. With these, the Partial Credit Model's distribution</span>
+<span class="sd">    of the score is binomial with step rate ``expit(skill - difficulty)``, so the expected</span>
+<span class="sd">    *fraction* of the maximum equals the right/wrong model's probability of a correct</span>
+<span class="sd">    answer, and an item's ``difficulty`` means the same thing however it is scored. That</span>
+<span class="sd">    is why it is the default: it is the one choice that keeps an externally calibrated</span>
+<span class="sd">    difficulty meaningful with no new parameters (with ``guess=0``: a score is never a</span>
+<span class="sd">    guess). It is not a claim that the steps really are independent, and it makes a score</span>
+<span class="sd">    out of ``m`` carry up to ``m`` times the evidence of one right/wrong answer; thresholds</span>
+<span class="sd">    spread wider apart carry less.</span>
+
+<span class="sd">    &gt;&gt;&gt; binomial_thresholds(Item('q'), 1)  # one step: the right/wrong model</span>
+<span class="sd">    [0.0]</span>
+<span class="sd">    &gt;&gt;&gt; [round(t, 3) for t in binomial_thresholds(Item('q'), 4)]</span>
+<span class="sd">    [-1.386, -0.405, 0.405, 1.386]</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">k</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_score</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_score</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_level_probabilities</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">taus</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""``P(X = k)`` for ``k = 0..len(taus)`` under the Partial Credit Model at ``s``."""</span>
+    <span class="n">eta</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="n">taus</span><span class="p">:</span>
+        <span class="n">eta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span> <span class="o">-</span> <span class="n">tau</span><span class="p">)</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span>  <span class="c1"># subtracted before exponentiating, so no level overflows</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">e</span> <span class="o">-</span> <span class="n">top</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">eta</span><span class="p">]</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">w</span> <span class="o">/</span> <span class="n">total</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_posterior_mode</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">v</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">gradient</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">information</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The mode of ``N(t; s, v) * likelihood(t)`` for a log-concave likelihood.</span>
+
+<span class="sd">    ``gradient`` and ``information`` are the log-likelihood's first derivative and minus</span>
+<span class="sd">    its second. The objective's derivative ``f`` falls monotonically, so the mode lies</span>
+<span class="sd">    between ``s`` and the first Newton step from it. Safeguarded Newton inside that</span>
+<span class="sd">    bracket: a Newton step is taken only when it lands strictly inside the bracket and</span>
+<span class="sd">    the previous step converged fast enough, otherwise the bracket is bisected, and the</span>
+<span class="sd">    bracket shrinks at every evaluation, so it cannot cycle. ``None`` when there is</span>
+<span class="sd">    nothing to iterate (``steps &lt;= 1``, or no posterior width).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">steps</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span> <span class="o">/</span> <span class="n">v</span> <span class="o">+</span> <span class="n">gradient</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">s</span> <span class="o">+</span> <span class="n">v</span> <span class="o">*</span> <span class="n">gradient</span><span class="p">(</span><span class="n">s</span><span class="p">)))</span>
+    <span class="n">t</span><span class="p">,</span> <span class="n">ft</span> <span class="o">=</span> <span class="n">s</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">dx_old</span> <span class="o">=</span> <span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ft</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span> <span class="o">&lt;=</span> <span class="n">tol</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">t</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">t</span>
+        <span class="n">slope</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">v</span> <span class="o">+</span> <span class="n">information</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>  <span class="c1"># -f'(t) &gt; 0</span>
+        <span class="n">newton</span> <span class="o">=</span> <span class="n">t</span> <span class="o">+</span> <span class="n">ft</span> <span class="o">/</span> <span class="n">slope</span>
+        <span class="n">dx_old</span><span class="p">,</span> <span class="n">dx</span> <span class="o">=</span> <span class="n">dx</span><span class="p">,</span> <span class="p">(</span><span class="n">newton</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">lo</span> <span class="o">&lt;</span> <span class="n">newton</span> <span class="o">&lt;</span> <span class="n">hi</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">ft</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dx_old</span> <span class="o">*</span> <span class="n">slope</span><span class="p">):</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)</span>
+            <span class="n">newton</span> <span class="o">=</span> <span class="n">lo</span> <span class="o">+</span> <span class="n">dx</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">newton</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">tol</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">t</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">newton</span>
+        <span class="n">t</span><span class="p">,</span> <span class="n">ft</span> <span class="o">=</span> <span class="n">newton</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">newton</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ft</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">lo</span> <span class="o">=</span> <span class="n">t</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">hi</span> <span class="o">=</span> <span class="n">t</span>
+    <span class="k">return</span> <span class="n">t</span>
+
+
+<div class="viewcode-block" id="PartialCreditEstimator">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.estimators.html#learny.tracing.PartialCreditEstimator">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PartialCreditEstimator</span><span class="p">(</span><span class="n">RaschEstimator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Masters' Partial Credit Model on the Rasch predictor: reads an ordered score.</span>
+
+<span class="sd">    A response with a ``score`` out of ``max_score`` is scored on its levels</span>
+<span class="sd">    ``0..max_score``, with ``s`` the same predictor as :class:`RaschEstimator`'s (global</span>
+<span class="sd">    skill plus label deviations minus item difficulty)::</span>
+
+<span class="sd">        P(X = k)  proportional to  exp(sum over j &lt;= k of (s - tau_j))</span>
+
+<span class="sd">    The thresholds ``tau_j`` come from the ``thresholds`` seam, by default</span>
+<span class="sd">    :func:`binomial_thresholds`. The log-likelihood's gradient in ``s`` is</span>
+<span class="sd">    ``k - E[X]`` and its Fisher information ``Var[X]``, which is all the joint update</span>
+<span class="sd">    needs, so the hierarchy, forgetting, the global/label covariance and replay are the</span>
+<span class="sd">    default estimator's, unchanged. For a score the update iterates to the posterior mode</span>
+<span class="sd">    along the predictor (``mode_steps``), since one Newton step overshoots on a surprising</span>
+<span class="sd">    score out of many levels. A response *without* a score is a right/wrong answer and is</span>
+<span class="sd">    scored exactly as :class:`RaschEstimator` scores it — guessing, skips and all.</span>
+
+<span class="sd">    **``guess`` applies only to responses without a score**: a score is never modelled as</span>
+<span class="sd">    a guess, so on a multiple-choice item that is also scored, ``expected_score`` is not</span>
+<span class="sd">    ``max_score * predict()`` unless ``guess=0``. For a score, ``outcome`` is not read,</span>
+<span class="sd">    and a score that contradicts it is not an error: the outcome is the caller's own</span>
+<span class="sd">    right/wrong reading of the attempt.</span>
+
+<span class="sd">    &gt;&gt;&gt; est = PartialCreditEstimator()</span>
+<span class="sd">    &gt;&gt;&gt; item = Item('song-7/tempo', labels=('tempo',), difficulty=0.5)</span>
+<span class="sd">    &gt;&gt;&gt; def skill_after(stars):</span>
+<span class="sd">    ...     r = Response('ada', item.id, 'correct', score=stars - 1, max_score=4)</span>
+<span class="sd">    ...     return est.observe(est.init(), r, item)['global']['mu']</span>
+<span class="sd">    &gt;&gt;&gt; skill_after(2) &lt; skill_after(3) &lt; skill_after(4) &lt; skill_after(5)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; skill_after(3)  # the middle of the scale on an average item is no news</span>
+<span class="sd">    0.0</span>
+<span class="sd">    &gt;&gt;&gt; est.expected_score(est.init(), item, 4)</span>
+<span class="sd">    2.0</span>
+
+<span class="sd">    ``predict`` keeps the :class:`Estimator` meaning, the probability of a correct</span>
+<span class="sd">    answer on a right/wrong reading of the item; :meth:`expected_score` and</span>
+<span class="sd">    :meth:`score_probabilities` answer for a score.</span>
+<span class="sd">    """</span>
+
+    <span class="c1">#: How an item scored ``0..max_score`` places its steps; see :data:`Thresholds`.</span>
+    <span class="n">thresholds</span><span class="p">:</span> <span class="n">Thresholds</span> <span class="o">=</span> <span class="n">binomial_thresholds</span>
+    <span class="c1">#: Newton iterations allowed to find the posterior mode along the predictor for a</span>
+    <span class="c1">#: score. One step (the right/wrong update's plug-in) is fine for a few stars but</span>
+    <span class="c1">#: overshoots on a surprising score out of many levels, whose gradient is bounded by</span>
+    <span class="c1">#: ``max_score`` rather than by 1; iterating to the mode (a Laplace step) does not.</span>
+    <span class="c1">#: ``1`` restores the plain one-step update.</span>
+    <span class="n">mode_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_steps</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_steps</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> \
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode_steps</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"mode_steps must be an int &gt;= 1, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_steps</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_taus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">,</span> <span class="n">max_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">taus</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thresholds</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">max_score</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">taus</span><span class="p">)</span> <span class="o">!=</span> <span class="n">max_score</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"thresholds(</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">max_score</span><span class="si">}</span><span class="s2">) returned </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">taus</span><span class="p">)</span><span class="si">}</span><span class="s2"> thresholds; "</span>
+                <span class="sa">f</span><span class="s2">"a score out of </span><span class="si">{</span><span class="n">max_score</span><span class="si">}</span><span class="s2"> needs exactly </span><span class="si">{</span><span class="n">max_score</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="n">bad</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">taus</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">Real</span><span class="p">)</span>
+               <span class="ow">or</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">bad</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"thresholds(</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">max_score</span><span class="si">}</span><span class="s2">) must be finite numbers (logits), "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="n">bad</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">taus</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_likelihood</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">v_s</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Evidence</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">score</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_likelihood</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v_s</span><span class="p">)</span>
+        <span class="n">k</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">max_score</span>
+        <span class="n">taus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_taus</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">moments</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+            <span class="n">probs</span> <span class="o">=</span> <span class="n">_level_probabilities</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">taus</span><span class="p">)</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">j</span> <span class="o">*</span> <span class="n">p</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probs</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">j</span> <span class="o">*</span> <span class="n">j</span> <span class="o">*</span> <span class="n">p</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probs</span><span class="p">))</span> <span class="o">-</span> <span class="n">mean</span> <span class="o">*</span> <span class="n">mean</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="n">mean</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="n">moments</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">residual</span> <span class="o">=</span> <span class="n">k</span> <span class="o">-</span> <span class="n">mean</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="n">_posterior_mode</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">v_s</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">k</span> <span class="o">-</span> <span class="n">moments</span><span class="p">(</span><span class="n">t</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                               <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">moments</span><span class="p">(</span><span class="n">t</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">steps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_steps</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># one step, or no posterior width to move in</span>
+            <span class="n">gradient</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">residual</span><span class="p">,</span> <span class="n">var</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="n">moments</span><span class="p">(</span><span class="n">mode</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># the gradient that makes the shared rank-1 update land on the mode, with the</span>
+            <span class="c1"># posterior's curvature taken there: a Laplace step along the predictor</span>
+            <span class="n">gradient</span> <span class="o">=</span> <span class="p">(</span><span class="n">mode</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">info</span> <span class="o">*</span> <span class="n">v_s</span><span class="p">)</span> <span class="o">/</span> <span class="n">v_s</span>
+        <span class="k">return</span> <span class="n">_Evidence</span><span class="p">(</span><span class="n">gradient</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">residual</span> <span class="o">/</span> <span class="n">m</span><span class="p">,</span> <span class="n">residual</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PartialCreditEstimator.score_probabilities">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.estimators.html#learny.tracing.PartialCreditEstimator.score_probabilities">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">score_probabilities</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">,</span>
+        <span class="n">max_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">at</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""``P(score = k)`` for ``k = 0..max_score``, over the posterior.</span>
+
+<span class="sd">        The posterior is integrated with the same probit approximation as</span>
+<span class="sd">        :meth:`~RaschEstimator.predict`, so with the default thresholds and ``guess=0``</span>
+<span class="sd">        the expected score is exactly ``max_score * predict()``; both are approximations</span>
+<span class="sd">        to the posterior integral. Guessing is not modelled for a score (see the class).</span>
+
+<span class="sd">        &gt;&gt;&gt; est = PartialCreditEstimator()</span>
+<span class="sd">        &gt;&gt;&gt; [round(p, 3) for p in est.score_probabilities(est.init(), Item('q'), 2)]</span>
+<span class="sd">        [0.25, 0.5, 0.25]</span>
+<span class="sd">        """</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrated_predictor</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">at</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_level_probabilities</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_taus</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">max_score</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="PartialCreditEstimator.expected_score">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.estimators.html#learny.tracing.PartialCreditEstimator.expected_score">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">expected_score</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">,</span>
+        <span class="n">max_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">at</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The expected score out of ``max_score``; see :meth:`score_probabilities`."""</span>
+        <span class="n">probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_probabilities</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">max_score</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="n">at</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">p</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probs</span><span class="p">))</span></div>
 </div>
 
 </pre></div>

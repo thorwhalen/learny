@@ -34,6 +34,7 @@
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/epythet.css?v=1ba707ae" />
   
@@ -414,6 +415,10 @@ from one formula instead of three bolted-on heuristics.</p>
 <p>Elo is the same update with the information term frozen: Elo’s uncertainty function
 <code class="docutils literal notranslate"><span class="pre">U(n)</span> <span class="pre">=</span> <span class="pre">a/(1</span> <span class="pre">+</span> <span class="pre">b*n)</span></code> is exactly <code class="docutils literal notranslate"><span class="pre">1/(1/var</span> <span class="pre">+</span> <span class="pre">n*I)</span></code> for constant information <code class="docutils literal notranslate"><span class="pre">I</span></code>. So
 <code class="docutils literal notranslate"><span class="pre">gain='elo'</span></code> is not a different estimator, it is this one with a constant step size.</p>
+<p>An ordered score — 1 to 5 stars, partial credit — is read by
+<a class="reference internal" href="#learny.tracing.estimators.PartialCreditEstimator" title="learny.tracing.estimators.PartialCreditEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a>, Masters’ Partial Credit Model on the same predictor. It is
+this estimator with one method replaced (the likelihood of a response), so everything
+below holds for it too, and a right/wrong response is scored exactly as here.</p>
 <p>Three decisions worth knowing before reading the code:</p>
 <p><strong>Item difficulty does not update by default.</strong> Textbook Elo moves ability and item
 difficulty in opposite directions from the same residual, which works when a population
@@ -448,16 +453,19 @@ scored as wrong.</p>
 <p class="rubric">Functions</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.estimators.logit" title="learny.tracing.estimators.logit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logit</span></code></a>(p, *[, eps])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.estimators.binomial_thresholds" title="learny.tracing.estimators.binomial_thresholds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">binomial_thresholds</span></code></a>(item, max_score)</p></td>
+<td><p>Thresholds under which a score out of <code class="docutils literal notranslate"><span class="pre">m</span></code> is <code class="docutils literal notranslate"><span class="pre">m</span></code> steps taken at one rate.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.estimators.logit" title="learny.tracing.estimators.logit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logit</span></code></a>(p, *[, eps])</p></td>
 <td><p>Inverse of <a class="reference internal" href="#learny.tracing.estimators.expit" title="learny.tracing.estimators.expit"><code class="xref py py-func docutils literal notranslate"><span class="pre">expit()</span></code></a>, clamped away from 0 and 1 so it stays finite.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.estimators.expit" title="learny.tracing.estimators.expit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expit</span></code></a>(x)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.estimators.expit" title="learny.tracing.estimators.expit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expit</span></code></a>(x)</p></td>
 <td><p>The logistic function, overflow-safe at the tails.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.estimators.difficulty_from_rank" title="learny.tracing.estimators.difficulty_from_rank"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difficulty_from_rank</span></code></a>(rank, n_ranks)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.estimators.difficulty_from_rank" title="learny.tracing.estimators.difficulty_from_rank"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difficulty_from_rank</span></code></a>(rank, n_ranks)</p></td>
 <td><p>Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.estimators.mark_not_reached" title="learny.tracing.estimators.mark_not_reached"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mark_not_reached</span></code></a>(responses)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.estimators.mark_not_reached" title="learny.tracing.estimators.mark_not_reached"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mark_not_reached</span></code></a>(responses)</p></td>
 <td><p>Flag the trailing run of blanks in one sitting as <em>not reached</em>.</p></td>
 </tr>
 </tbody>
@@ -472,10 +480,13 @@ scored as wrong.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.estimators.RaschEstimator" title="learny.tracing.estimators.RaschEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a>([prior_var, label_prior_var, ...])</p></td>
 <td><p>Online Rasch with a Gaussian posterior.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.estimators.Mastery" title="learny.tracing.estimators.Mastery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mastery</span></code></a>(label, skill[, prior_var, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.estimators.PartialCreditEstimator" title="learny.tracing.estimators.PartialCreditEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a>([prior_var, ...])</p></td>
+<td><p>Masters' Partial Credit Model on the Rasch predictor: reads an ordered score.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.estimators.Mastery" title="learny.tracing.estimators.Mastery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mastery</span></code></a>(label, skill[, prior_var, ...])</p></td>
 <td><p>What the model believes about one student and one label.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.estimators.Skill" title="learny.tracing.estimators.Skill"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Skill</span></code></a>(mu, var[, n, t])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.estimators.Skill" title="learny.tracing.estimators.Skill"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Skill</span></code></a>(mu, var[, n, t])</p></td>
 <td><p>A Gaussian belief about one skill, on the logit scale.</p></td>
 </tr>
 </tbody>
@@ -590,6 +601,102 @@ default) treats the deviations as independent.</p>
 <dt class="sig sig-object py" id="learny.tracing.estimators.Mastery.probability">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">probability</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.estimators.Mastery.probability" title="Link to this definition">#</a></dt>
 <dd><p>Probability of success on an item of average difficulty for this label.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.estimators.PartialCreditEstimator">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.estimators.</span></span><span class="sig-name descname"><span class="pre">PartialCreditEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prior_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_prior_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forget_per_week</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abstain_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conjunctivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bayes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elo_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_difficulty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;function</span> <span class="pre">binomial_thresholds&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#PartialCreditEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.PartialCreditEstimator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#learny.tracing.estimators.RaschEstimator" title="learny.tracing.estimators.RaschEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a></p>
+<p>Masters’ Partial Credit Model on the Rasch predictor: reads an ordered score.</p>
+<p>A response with a <code class="docutils literal notranslate"><span class="pre">score</span></code> out of <code class="docutils literal notranslate"><span class="pre">max_score</span></code> is scored on its levels
+<code class="docutils literal notranslate"><span class="pre">0..max_score</span></code>, with <code class="docutils literal notranslate"><span class="pre">s</span></code> the same predictor as <a class="reference internal" href="#learny.tracing.estimators.RaschEstimator" title="learny.tracing.estimators.RaschEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a>’s (global
+skill plus label deviations minus item difficulty):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">P</span><span class="p">(</span><span class="n">X</span> <span class="o">=</span> <span class="n">k</span><span class="p">)</span>  <span class="n">proportional</span> <span class="n">to</span>  <span class="n">exp</span><span class="p">(</span><span class="nb">sum</span> <span class="n">over</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">k</span> <span class="n">of</span> <span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="n">tau_j</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The thresholds <code class="docutils literal notranslate"><span class="pre">tau_j</span></code> come from the <code class="docutils literal notranslate"><span class="pre">thresholds</span></code> seam, by default
+<a class="reference internal" href="#learny.tracing.estimators.binomial_thresholds" title="learny.tracing.estimators.binomial_thresholds"><code class="xref py py-func docutils literal notranslate"><span class="pre">binomial_thresholds()</span></code></a>. The log-likelihood’s gradient in <code class="docutils literal notranslate"><span class="pre">s</span></code> is
+<code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">-</span> <span class="pre">E[X]</span></code> and its Fisher information <code class="docutils literal notranslate"><span class="pre">Var[X]</span></code>, which is all the joint update
+needs, so the hierarchy, forgetting, the global/label covariance and replay are the
+default estimator’s, unchanged. For a score the update iterates to the posterior mode
+along the predictor (<code class="docutils literal notranslate"><span class="pre">mode_steps</span></code>), since one Newton step overshoots on a surprising
+score out of many levels. A response <em>without</em> a score is a right/wrong answer and is
+scored exactly as <a class="reference internal" href="#learny.tracing.estimators.RaschEstimator" title="learny.tracing.estimators.RaschEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a> scores it — guessing, skips and all.</p>
+<p><strong>``guess`` applies only to responses without a score</strong>: a score is never modelled as
+a guess, so on a multiple-choice item that is also scored, <code class="docutils literal notranslate"><span class="pre">expected_score</span></code> is not
+<code class="docutils literal notranslate"><span class="pre">max_score</span> <span class="pre">*</span> <span class="pre">predict()</span></code> unless <code class="docutils literal notranslate"><span class="pre">guess=0</span></code>. For a score, <code class="docutils literal notranslate"><span class="pre">outcome</span></code> is not read,
+and a score that contradicts it is not an error: the outcome is the caller’s own
+right/wrong reading of the attempt.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">est</span> <span class="o">=</span> <span class="n">PartialCreditEstimator</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'song-7/tempo'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'tempo'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">skill_after</span><span class="p">(</span><span class="n">stars</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">r</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">,</span> <span class="n">score</span><span class="o">=</span><span class="n">stars</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">max_score</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">est</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">est</span><span class="o">.</span><span class="n">init</span><span class="p">(),</span> <span class="n">r</span><span class="p">,</span> <span class="n">item</span><span class="p">)[</span><span class="s1">'global'</span><span class="p">][</span><span class="s1">'mu'</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">skill_after</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">skill_after</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">skill_after</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">skill_after</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">skill_after</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># the middle of the scale on an average item is no news</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">est</span><span class="o">.</span><span class="n">expected_score</span><span class="p">(</span><span class="n">est</span><span class="o">.</span><span class="n">init</span><span class="p">(),</span> <span class="n">item</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">2.0</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">predict</span></code> keeps the <a class="reference internal" href="#learny.tracing.estimators.Estimator" title="learny.tracing.estimators.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a> meaning, the probability of a correct
+answer on a right/wrong reading of the item; <a class="reference internal" href="#learny.tracing.estimators.PartialCreditEstimator.expected_score" title="learny.tracing.estimators.PartialCreditEstimator.expected_score"><code class="xref py py-meth docutils literal notranslate"><span class="pre">expected_score()</span></code></a> and
+<a class="reference internal" href="#learny.tracing.estimators.PartialCreditEstimator.score_probabilities" title="learny.tracing.estimators.PartialCreditEstimator.score_probabilities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">score_probabilities()</span></code></a> answer for a score.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.estimators.PartialCreditEstimator.expected_score">
+<span class="sig-name descname"><span class="pre">expected_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_score</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#PartialCreditEstimator.expected_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.PartialCreditEstimator.expected_score" title="Link to this definition">#</a></dt>
+<dd><p>The expected score out of <code class="docutils literal notranslate"><span class="pre">max_score</span></code>; see <a class="reference internal" href="#learny.tracing.estimators.PartialCreditEstimator.score_probabilities" title="learny.tracing.estimators.PartialCreditEstimator.score_probabilities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">score_probabilities()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.tracing.estimators.PartialCreditEstimator.mode_steps">
+<span class="sig-name descname"><span class="pre">mode_steps</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">50</span></span><a class="headerlink" href="#learny.tracing.estimators.PartialCreditEstimator.mode_steps" title="Link to this definition">#</a></dt>
+<dd><p>Newton iterations allowed to find the posterior mode along the predictor for a
+score. One step (the right/wrong update’s plug-in) is fine for a few stars but
+overshoots on a surprising score out of many levels, whose gradient is bounded by
+<code class="docutils literal notranslate"><span class="pre">max_score</span></code> rather than by 1; iterating to the mode (a Laplace step) does not.
+<code class="docutils literal notranslate"><span class="pre">1</span></code> restores the plain one-step update.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.estimators.PartialCreditEstimator.score_probabilities">
+<span class="sig-name descname"><span class="pre">score_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_score</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#PartialCreditEstimator.score_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.PartialCreditEstimator.score_probabilities" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">P(score</span> <span class="pre">=</span> <span class="pre">k)</span></code> for <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">0..max_score</span></code>, over the posterior.</p>
+<p>The posterior is integrated with the same probit approximation as
+<a class="reference internal" href="#learny.tracing.estimators.RaschEstimator.predict" title="learny.tracing.estimators.RaschEstimator.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code></a>, so with the default thresholds and <code class="docutils literal notranslate"><span class="pre">guess=0</span></code>
+the expected score is exactly <code class="docutils literal notranslate"><span class="pre">max_score</span> <span class="pre">*</span> <span class="pre">predict()</span></code>; both are approximations
+to the posterior integral. Guessing is not modelled for a score (see the class).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">est</span> <span class="o">=</span> <span class="n">PartialCreditEstimator</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">est</span><span class="o">.</span><span class="n">score_probabilities</span><span class="p">(</span><span class="n">est</span><span class="o">.</span><span class="n">init</span><span class="p">(),</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">),</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="go">[0.25, 0.5, 0.25]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.estimators.PartialCreditEstimator.thresholds">
+<span class="sig-name descname"><span class="pre">thresholds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_score</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#learny.tracing.estimators.PartialCreditEstimator.thresholds" title="Link to this definition">#</a></dt>
+<dd><p>How an item scored <code class="docutils literal notranslate"><span class="pre">0..max_score</span></code> places its steps; see <code class="xref py py-data docutils literal notranslate"><span class="pre">Thresholds</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -724,11 +831,6 @@ as it was (see <code class="docutils literal notranslate"><span class="pre">_Fra
 <p>With no evidence the prediction sits near the item’s own base rate, but pulled
 toward a coin flip — because the model is being honest that it knows nothing about
 <em>this</em> student, not just repeating what it knows about the item:</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">est</span> <span class="o">=</span> <span class="n">RaschEstimator</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">base_rate</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mf">0.75</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cold</span> <span class="o">=</span> <span class="n">est</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">est</span><span class="o">.</span><span class="n">init</span><span class="p">(),</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">,</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.75</span><span class="p">))</span>
@@ -744,6 +846,11 @@ toward a coin flip — because the model is being honest that it knows nothing a
 <span class="go">0.25</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -802,6 +909,32 @@ docstring for why that is off by default.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.estimators.binomial_thresholds">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.estimators.</span></span><span class="sig-name descname"><span class="pre">binomial_thresholds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_score</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#binomial_thresholds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.binomial_thresholds" title="Link to this definition">#</a></dt>
+<dd><p>Thresholds under which a score out of <code class="docutils literal notranslate"><span class="pre">m</span></code> is <code class="docutils literal notranslate"><span class="pre">m</span></code> steps taken at one rate.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tau_k</span> <span class="pre">=</span> <span class="pre">log(k</span> <span class="pre">/</span> <span class="pre">(m</span> <span class="pre">-</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">1))</span></code>. With these, the Partial Credit Model’s distribution
+of the score is binomial with step rate <code class="docutils literal notranslate"><span class="pre">expit(skill</span> <span class="pre">-</span> <span class="pre">difficulty)</span></code>, so the expected
+<em>fraction</em> of the maximum equals the right/wrong model’s probability of a correct
+answer, and an item’s <code class="docutils literal notranslate"><span class="pre">difficulty</span></code> means the same thing however it is scored. That
+is why it is the default: it is the one choice that keeps an externally calibrated
+difficulty meaningful with no new parameters (with <code class="docutils literal notranslate"><span class="pre">guess=0</span></code>: a score is never a
+guess). It is not a claim that the steps really are independent, and it makes a score
+out of <code class="docutils literal notranslate"><span class="pre">m</span></code> carry up to <code class="docutils literal notranslate"><span class="pre">m</span></code> times the evidence of one right/wrong answer; thresholds
+spread wider apart carry less.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">binomial_thresholds</span><span class="p">(</span><span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># one step: the right/wrong model</span>
+<span class="go">[0.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">binomial_thresholds</span><span class="p">(</span><span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">),</span> <span class="mi">4</span><span class="p">)]</span>
+<span class="go">[-1.386, -0.405, 0.405, 1.386]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.estimators.difficulty_from_rank">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.estimators.</span></span><span class="sig-name descname"><span class="pre">difficulty_from_rank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rank</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_ranks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#difficulty_from_rank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.difficulty_from_rank" title="Link to this definition">#</a></dt>
 <dd><p>Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).</p>
@@ -809,28 +942,23 @@ docstring for why that is off by default.</p>
 spreads <code class="docutils literal notranslate"><span class="pre">n_ranks</span></code> bands evenly across the open unit interval. It is a <em>prior</em>, not a
 measurement: it says band 3 is harder than band 2, and how much is then corrected by
 data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">difficulty_from_rank</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
 <span class="go">[0.25, 0.5, 0.75]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">difficulty_from_rank</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
 <span class="go">0.5</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.estimators.expit">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.estimators.</span></span><span class="sig-name descname"><span class="pre">expit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#expit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.expit" title="Link to this definition">#</a></dt>
 <dd><p>The logistic function, overflow-safe at the tails.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">expit</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="go">0.5</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">expit</span><span class="p">(</span><span class="mf">2.0</span><span class="p">),</span> <span class="mi">4</span><span class="p">)</span>
@@ -839,17 +967,17 @@ data.</p>
 <span class="go">0.0</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.estimators.logit">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.estimators.</span></span><span class="sig-name descname"><span class="pre">logit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#logit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.logit" title="Link to this definition">#</a></dt>
 <dd><p>Inverse of <a class="reference internal" href="#learny.tracing.estimators.expit" title="learny.tracing.estimators.expit"><code class="xref py py-func docutils literal notranslate"><span class="pre">expit()</span></code></a>, clamped away from 0 and 1 so it stays finite.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">logit</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
 <span class="go">0.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">logit</span><span class="p">(</span><span class="mf">0.8808</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
@@ -858,6 +986,11 @@ data.</p>
 <span class="go">True</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -867,11 +1000,6 @@ data.</p>
 <p>A blank at the end of a paper usually means the clock ran out; a blank with answered
 questions after it is a decision to skip. Only the second is evidence about the
 student. Pass one sitting’s responses <strong>in the order they were presented</strong>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Response" title="learny.tracing.records.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a>]</span></p>
-</dd>
-</dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">Response</span><span class="p">,</span> <span class="n">Outcome</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span>
 <span class="gp">... </span>      <span class="nb">enumerate</span><span class="p">([</span><span class="s1">'correct'</span><span class="p">,</span> <span class="s1">'skipped'</span><span class="p">,</span> <span class="s1">'wrong'</span><span class="p">,</span> <span class="s1">'skipped'</span><span class="p">,</span> <span class="s1">'skipped'</span><span class="p">])]</span>
@@ -879,6 +1007,11 @@ student. Pass one sitting’s responses <strong>in the order they were presented
 <span class="go">[False, False, False, True, True]</span>
 </pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Response" title="learny.tracing.records.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a>]</span></p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -944,6 +1077,13 @@ student. Pass one sitting’s responses <strong>in the order they were presented
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.Mastery.probability"><code class="docutils literal notranslate"><span class="pre">Mastery.probability</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator.expected_score"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.expected_score()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator.mode_steps"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.mode_steps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator.score_probabilities"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.score_probabilities()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator.thresholds"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.thresholds()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.RaschEstimator"><code class="docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.RaschEstimator.abstain_weight"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.abstain_weight</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.RaschEstimator.conjunctivity"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.conjunctivity</span></code></a></li>
@@ -964,6 +1104,7 @@ student. Pass one sitting’s responses <strong>in the order they were presented
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.Skill.interval"><code class="docutils literal notranslate"><span class="pre">Skill.interval()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.binomial_thresholds"><code class="docutils literal notranslate"><span class="pre">binomial_thresholds()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.difficulty_from_rank"><code class="docutils literal notranslate"><span class="pre">difficulty_from_rank()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.expit"><code class="docutils literal notranslate"><span class="pre">expit()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.logit"><code class="docutils literal notranslate"><span class="pre">logit()</span></code></a></li>
