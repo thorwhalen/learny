@@ -75,6 +75,7 @@ __all__ = [
     "RaschEstimator",
     "PartialCreditEstimator",
     "binomial_thresholds",
+    "spread_thresholds",
     "Mastery",
     "Skill",
     "logit",
@@ -871,6 +872,30 @@ def binomial_thresholds(item: Item, max_score: int) -> list[float]:
     [-1.386, -0.405, 0.405, 1.386]
     """
     return [math.log(k / (max_score - k + 1)) for k in range(1, max_score + 1)]
+
+
+def spread_thresholds(spread: float) -> Thresholds:
+    """Binomial thresholds stretched by ``spread``: ``tau_k = spread * log(k / (m - k + 1))``.
+
+    ``spread=1`` is :func:`binomial_thresholds`. A wider spread makes the middle levels
+    more likely and the extremes rarer, so one score carries less evidence; narrower
+    makes a score sharper. It keeps the thresholds centred, so an item's ``difficulty``
+    still sits at the middle of its scale. :func:`~learny.tracing.diagnostics.fit_threshold_spread`
+    picks ``spread`` from a log.
+
+    >>> [round(t, 3) for t in spread_thresholds(2.0)(Item('q'), 2)]
+    [-1.386, 1.386]
+    >>> spread_thresholds(1.0)(Item('q'), 4) == binomial_thresholds(Item('q'), 4)
+    True
+    """
+    if not (isinstance(spread, (int, float)) and spread > 0 and math.isfinite(spread)):
+        raise ValueError(f"spread must be a positive number, got {spread!r}")
+
+    def thresholds(item: Item, max_score: int) -> list[float]:
+        return [spread * t for t in binomial_thresholds(item, max_score)]
+
+    thresholds.__qualname__ = f"spread_thresholds({spread!r})"
+    return thresholds
 
 
 def _level_probabilities(s: float, taus: Sequence[float]) -> list[float]:

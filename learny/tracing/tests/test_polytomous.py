@@ -393,3 +393,75 @@ class TestScoreCalibration:
 
         with pytest.raises(ValueError, match="forecast"):
             ScoreCalibrationReport.from_forecasts([(probs, 0)])
+
+
+class TestThresholdSpread:
+    """Choosing the partial-credit threshold spread from a log (#32)."""
+
+    @staticmethod
+    def _log(true_spread, *, students=20, per=120, m=4, seed=0):
+        import random
+
+        from learny.tracing.estimators import _level_probabilities, spread_thresholds
+
+        rng = random.Random(seed)
+        items = {f"q{j}": Item(f"q{j}", labels=(f"l{j % 3}",), difficulty=0.2 + 0.6 * rng.random())
+                 for j in range(15)}
+        log = {}
+        for s in range(students):
+            theta = rng.gauss(0, 1)
+            rs = []
+            for i in range(per):
+                it = items[f"q{rng.randrange(15)}"]
+                probs = _level_probabilities(
+                    theta - math.log(it.difficulty / (1 - it.difficulty)),
+                    spread_thresholds(true_spread)(it, m),
+                )
+                k = rng.choices(range(m + 1), weights=probs)[0]
+                rs.append(Response(f"s{s}", it.id, "correct" if k == m else "wrong",
+                                   at=i * 3600.0, score=k, max_score=m))
+            log[f"s{s}"] = rs
+        return items, log
+
+    def test_spread_one_is_the_binomial_default(self):
+        from learny.tracing import spread_thresholds
+
+        assert spread_thresholds(1.0)(Item("q"), 4) == binomial_thresholds(Item("q"), 4)
+        with pytest.raises(ValueError, match="positive"):
+            spread_thresholds(0.0)
+
+    def test_a_clearly_wider_spread_is_found(self):
+        from learny.tracing import fit_threshold_spread
+
+        items, log = self._log(3.0)
+        spread, comparison = fit_threshold_spread(log, items=items)
+        assert spread > 1.5
+        assert comparison.losses[repr(spread)] < comparison.losses["1.0"]
+
+    def test_the_default_is_kept_when_it_is_true(self):
+        from learny.tracing import fit_threshold_spread
+
+        items, log = self._log(1.0, per=30)
+        spread, _ = fit_threshold_spread(log, items=items)
+        assert spread == 1.0
+
+    def test_the_one_se_rule_keeps_the_first_candidate_within_reach(self):
+        from learny.tracing import compare_estimators, spread_thresholds
+
+        items, log = self._log(1.0, students=5, per=20)
+        twins = {"first": PartialCreditEstimator(), "second": PartialCreditEstimator()}
+        assert compare_estimators(log, items=items, candidates=twins).chosen == "first"
+        rivals = {"default": PartialCreditEstimator(),
+                  "narrow": PartialCreditEstimator(thresholds=spread_thresholds(0.9))}
+        argmin = compare_estimators(log, items=items, candidates=rivals, tolerance_se=0)
+        assert argmin.chosen == argmin.best
+
+    def test_a_comparison_needs_candidates_and_scored_responses(self):
+        from learny.tracing import compare_estimators
+
+        items, log = self._log(1.0, students=1, per=2)
+        with pytest.raises(ValueError, match="at least one candidate"):
+            compare_estimators(log, items=items, candidates={})
+        skips = {"a": [Response("a", "q0", "skipped")]}
+        with pytest.raises(ValueError, match="no scored responses"):
+            compare_estimators(skips, items=items, candidates={"d": PartialCreditEstimator()})
