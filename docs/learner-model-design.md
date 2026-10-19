@@ -210,6 +210,24 @@ The Bonferroni gate of #14 bounded the chance of any false flag by applying `(1 
   - Under `relative_to="global"` the gate is more cautious (0.03–0.11 false flags), because the part of a label's spread that it shares with the others is counted there, not cancelled.
 - **Approximations.** The recursion linearises at the posterior mean. It treats the labels' own sampling errors as independent of each other and of the global skill's. It leaves out the `β·μ_g` term, whose variance measures below 1% of the contrast's. The skew correction is first order, and below one rare event the gate gives up rather than guess: it is a tail adjustment, not an exact discrete tail. A null that needs more than two cumulants (a saddlepoint, or an exact Poisson-binomial tail over a label's responses) would need per-response weights, which this state does not keep. A label without `nv` (stored before this change and not seen since, or from an estimator that does not track it) contributes its posterior own residual in place of `null_var`; with none tracked the gate is exactly `"bonferroni"`.
 
+### 12b. The simulated null: `weakest(multiplicity="simulated")` (2026-10-19, #35)
+
+The calibrated gate corrects a moment approximation, so it gives up exactly where cold start lives: few answers per label on items a student nearly always gets right, where the null is a few discrete jumps (λ < 1), and nearly-always-wrong items, where the clamp keeps it strict. Measured against a design-level oracle (the critical value that gives 16% false flags by simulating the null, 1500 students per arm, one label per item, a real −2 weakness), `"calibrated"` left 0.14–0.28 of power on the table for items failed 5–10% of the time, and 0.08–0.13 for items failed 80–90% of the time.
+
+- **Shape: simulate the null on the student's own record, not fit a saddlepoint.** An exact or saddlepoint tail (#35's first proposal) needs each response's weight on each label's estimate, which the O(1) state does not keep. `"simulated"` replays the record instead: the same items, order, times and skips, with every answer redrawn as if no label deviated, `null_draws` times (200 by default). Its critical value is the `1 − Φ(z)` quantile of the most extreme `contrast / sd` over those draws, a parametric-bootstrap maxT test (Westfall and Young 1993). That counts discreteness, skew, forgetting and the dependence between labels exactly, for this record's design. The plug-in is the student's global skill.
+- **A new optional estimator method, `null_response(state, response, item, rng)`.** It redraws one response at the student's global skill with no label deviation; a skip is kept, and a partial-credit score is redrawn over its levels. `RaschEstimator` and `PartialCreditEstimator` implement it. An estimator without it gets a `TypeError` naming the method.
+- **Measured** (400 students per arm, F = false-flag rate, P = power):
+
+| items failed | labels / responses | calibrated F / P | simulated F / P | oracle P |
+|---|---|---|---|---|
+| 5% | 3/9 · 6/24 · 10/50 · 20/100 | .01/.03 · .02/.09 · .03/.11 · .03/.07 | .11/.28 · .15/.29 · .12/.25 · .18/.24 | .32 · .35 · .26 · .18 |
+| 10% | 3/9 · 6/24 · 10/50 · 20/100 | .05/.23 · .06/.22 · .06/.26 · .06/.18 | .12/.34 · .14/.36 · .15/.36 · .16/.32 | .43 · .38 · .36 · .28 |
+| 50% | 3/9 · 6/24 · 10/50 · 20/100 | .10/.19 · .13/.21 · .10/.21 · .06/.15 | .12/.20 · .15/.23 · .16/.27 · .18/.29 | .27 · .30 · .32 · .26 |
+| 90% | 3/9 · 6/24 · 10/50 · 20/100 | .05/.04 · .02/.02 · .01/.01 · .00/.01 | .08/.06 · .04/.02 · .07/.04 · .18/.13 | .07 · .10 · .13 · .10 |
+
+  False flags stay on target (0.04–0.18; the 0.18 cells are within 1.2 Monte Carlo sd of 0.16), and power comes up to near the oracle. With one or two answers per label it cannot do better than the data allow: one wrong answer among a few right ones has a null probability above the per-label level, so no gate could flag it.
+- **Cost, and why it is not the default.** Each call replays the record `null_draws` times: 0.4 s at 20 labels × 100 answers, growing with both. It is deterministic per student and record (the draws are seeded by both). The default stays `"calibrated"`, which is a constant-time read; which one should be the default is the owner's call (#24).
+
 ### 13. Which item features make an item hard: an offline LLTM, exported through `items=` (2026-10-19, #18)
 
 A bank can give every item hypothetical difficulty features (a song's glyph count, rhythmic irregularity, word frequency), and the owner wants play to say which of them matter. That is explanatory IRT: the Linear Logistic Test Model (Fischer 1973), `difficulty = intercept + weights · features`, with a residual per item (the random-item extension, De Boeck 2008).

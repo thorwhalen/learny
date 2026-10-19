@@ -146,3 +146,58 @@ class TestCalibratedGate:
         from learny.tracing import DEFAULT_MULTIPLICITY
 
         assert DEFAULT_MULTIPLICITY == "calibrated"
+
+
+class TestSimulatedGate:
+    """weakest(multiplicity="simulated"): the null replayed on the student's own record (#35)."""
+
+    def test_it_finds_weaknesses_the_moment_correction_cannot(self):
+        """Items the student nearly always gets right, three answers per label: the
+        calibrated gate is cautious there (power ~0.03), the simulated one is not."""
+        rng = random.Random(30)
+        hits = {"calibrated": 0, "simulated": 0}
+        false = 0
+        for _ in range(60):
+            weak = _student(rng, 3, 9, weakness=-2.0, difficulty=0.05)
+            plain = _student(rng, 3, 9, difficulty=0.05)
+            for mode in hits:
+                hits[mode] += "l0" in {m.label for m in weak.weakest("s", n=3, multiplicity=mode,
+                                                                     null_draws=100)}
+            false += bool(plain.weakest("s", n=3, multiplicity="simulated", null_draws=100))
+        assert hits["simulated"] >= 3 * hits["calibrated"] and hits["simulated"] >= 8
+        assert false / 60 <= 0.16 + 0.12  # target 1 - Phi(1), 2.5 MC sd at 60 students
+
+    def test_it_is_deterministic_for_a_record(self):
+        model = _student(random.Random(31), 4, 16, weakness=-2.0)
+        once = model.weakest("s", n=4, multiplicity="simulated", null_draws=50)
+        assert model.weakest("s", n=4, multiplicity="simulated", null_draws=50) == once
+
+    def test_an_estimator_that_cannot_redraw_is_refused(self):
+        class NoRedraw(RaschEstimator):
+            null_response = None
+
+        model = _student(random.Random(32), 3, 9, estimator=NoRedraw())
+        with pytest.raises(TypeError, match="null_response"):
+            model.weakest("s", multiplicity="simulated")
+
+    @pytest.mark.parametrize("bad", [0, -5, 2.5, True])
+    def test_null_draws_must_be_a_positive_integer(self, bad):
+        model = _student(random.Random(33), 3, 9)
+        with pytest.raises(ValueError, match="null_draws"):
+            model.weakest("s", multiplicity="simulated", null_draws=bad)
+
+    def test_a_redraw_keeps_skips_and_the_shape_of_scores(self):
+        from learny.tracing import PartialCreditEstimator
+
+        rng = random.Random(34)
+        est = PartialCreditEstimator()
+        state = est.init()
+        item = Item("q", labels=("a",), difficulty=0.5)
+        skip = Response("s", "q", "skipped", at=1.0)
+        assert est.null_response(state, skip, item, rng) is skip
+        scored = Response("s", "q", "wrong", at=2.0, score=1, max_score=4)
+        levels = {est.null_response(state, scored, item, rng).score for _ in range(200)}
+        assert levels <= set(range(5)) and len(levels) > 2
+        plain = Response("s", "q", "correct", at=3.0, meta={"x": 1})
+        again = RaschEstimator().null_response(state, plain, item, rng)
+        assert (again.at, again.meta, again.score) == (3.0, {"x": 1}, None)

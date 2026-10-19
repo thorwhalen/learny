@@ -846,6 +846,24 @@ class RaschEstimator:
         """The student's global skill, independent of any label."""
         return self._skill(state.get("global"), prior_var=self.prior_var)
 
+    def null_response(
+        self, state: Mapping[str, Any], response: Response, item: Item | None, rng: Any
+    ) -> Response:
+        """``response`` drawn again as if the student had no label deviation.
+
+        The answer is redrawn at the student's global skill (the posterior mean) against
+        the item's difficulty, with guessing; a skip is kept as it was. This is what
+        ``weakest(multiplicity="simulated")`` replays a student's own record with, to
+        find how far its labels wander by chance. ``rng`` is a ``random.Random``.
+        """
+        if not response.outcome.is_scored:
+            return response
+        item = item if item is not None else Item(response.item)
+        q = expit(self.skill(state).mu - self._difficulty(state, item))
+        p = self.guess + (1.0 - self.guess) * q
+        drawn = Outcome.CORRECT if rng.random() < p else Outcome.WRONG
+        return replace(response, outcome=drawn, score=None, max_score=None)
+
 
 # -- ordered scores ----------------------------------------------------------------
 
@@ -1133,6 +1151,18 @@ class PartialCreditEstimator(RaschEstimator):
         # d(mode)/dk = v / (1 + v * info), so the effective gradient moves one for one
         # with the score: its sampling variance is the score's, Var[X] at the plug-in.
         return _Evidence(gradient, info, residual / m, residual / m, var, third)
+
+    def null_response(
+        self, state: Mapping[str, Any], response: Response, item: Item | None, rng: Any
+    ) -> Response:
+        """A score redrawn over its levels at the global skill; see the base class."""
+        if response.score is None:
+            return super().null_response(state, response, item, rng)
+        item = item if item is not None else Item(response.item)
+        m = response.max_score
+        s = self.skill(state).mu - self._difficulty(state, item)
+        k = rng.choices(range(m + 1), weights=_level_probabilities(s, self._taus(item, m)))[0]
+        return replace(response, outcome=Outcome.CORRECT if k == m else Outcome.WRONG, score=k)
 
     def score_probabilities(
         self,
