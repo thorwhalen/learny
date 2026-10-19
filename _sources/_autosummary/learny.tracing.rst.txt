@@ -15,12 +15,15 @@ learny.tracing
       calibration
       score_calibration
       reads_scores
+      compare_estimators
+      fit_threshold_spread
       prequential
       fit_feature_difficulty
       item_features
       restrict_labels
       difficulty_from_rank
       binomial_thresholds
+      spread_thresholds
       mark_not_reached
       expit
       logit
@@ -44,6 +47,7 @@ learny.tracing
       CalibrationReport
       CalibrationBin
       ScoreCalibrationReport
+      Comparison
       FeatureDifficulty
       Estimate
    

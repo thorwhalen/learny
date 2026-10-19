@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-19T13:06:03Z",
+  "built_at": "2026-10-19T13:23:57Z",
   "package": {
     "name": "learny",
     "version": "0.0.1",
@@ -9,24 +9,24 @@
   },
   "git": {
     "available": true,
-    "commit": "ee3169c58074e9e0f71f4bc6ce66cf7341c77dde",
-    "short_commit": "ee3169c",
+    "commit": "4037663c4c9394bccd97a8600acd1e00319961e6",
+    "short_commit": "4037663",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/learny",
-    "commit_url": "https://github.com/thorwhalen/learny/commit/ee3169c58074e9e0f71f4bc6ce66cf7341c77dde",
+    "commit_url": "https://github.com/thorwhalen/learny/commit/4037663c4c9394bccd97a8600acd1e00319961e6",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/learny",
-    "sha": "ee3169c58074e9e0f71f4bc6ce66cf7341c77dde",
+    "sha": "4037663c4c9394bccd97a8600acd1e00319961e6",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "39256930335",
-    "run_url": "https://github.com/thorwhalen/learny/actions/runs/39256930335",
+    "run_id": "39259465317",
+    "run_url": "https://github.com/thorwhalen/learny/actions/runs/39259465317",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -56,7 +56,7 @@
   },
   "site": {
     "modules_documented": 8,
-    "objects_documented": 196
+    "objects_documented": 206
   },
   "pypi": {
     "checked": true,
@@ -64,7 +64,7 @@
     "relation": "unknown",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/learny && cd learny\ngit checkout ee3169c58074e9e0f71f4bc6ce66cf7341c77dde\npip install \"epythet==0.2.18\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/learny && cd learny\ngit checkout 4037663c4c9394bccd97a8600acd1e00319961e6\npip install \"epythet==0.2.18\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,

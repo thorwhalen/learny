@@ -67,6 +67,7 @@ scored as wrong.
 
 | [`binomial_thresholds`](#learny.tracing.estimators.binomial_thresholds)(item, max_score)   | Thresholds under which a score out of `m` is `m` steps taken at one rate.                                          |
 |-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [`spread_thresholds`](#learny.tracing.estimators.spread_thresholds)(spread)              | Binomial thresholds stretched by `spread`: `tau_k = spread * log(k / (m - k + 1))`.                                |
 | [`logit`](#learny.tracing.estimators.logit)(p, \*[, eps])                    | Inverse of [`expit()`](#learny.tracing.estimators.expit), clamped away from 0 and 1 so it stays finite. |
 | [`expit`](#learny.tracing.estimators.expit)(x)                               | The logistic function, overflow-safe at the tails.                                                                 |
 | [`difficulty_from_rank`](#learny.tracing.estimators.difficulty_from_rank)(rank, n_ranks)    | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
@@ -74,12 +75,13 @@ scored as wrong.
 
 ### Classes
 
-| [`Estimator`](#learny.tracing.estimators.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                     |
-|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`RaschEstimator`](#learny.tracing.estimators.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                       |
-| [`PartialCreditEstimator`](#learny.tracing.estimators.PartialCreditEstimator)([prior_var, ...])          | Masters' Partial Credit Model on the Rasch predictor: reads an ordered score. |
-| [`Mastery`](#learny.tracing.estimators.Mastery)(label, skill[, prior_var, ...])           | What the model believes about one student and one label.                      |
-| [`Skill`](#learny.tracing.estimators.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                        |
+| [`Estimator`](#learny.tracing.estimators.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                                                            |
+|----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| [`RaschEstimator`](#learny.tracing.estimators.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                                                              |
+| [`PartialCreditEstimator`](#learny.tracing.estimators.PartialCreditEstimator)([prior_var, ...])          | Masters' Partial Credit Model on the Rasch predictor: reads an ordered score.                                        |
+| [`SpreadThresholds`](#learny.tracing.estimators.SpreadThresholds)(spread)                          | Binomial thresholds stretched by `spread`; see [`spread_thresholds()`](#learny.tracing.estimators.spread_thresholds). |
+| [`Mastery`](#learny.tracing.estimators.Mastery)(label, skill[, prior_var, ...])           | What the model believes about one student and one label.                                                             |
+| [`Skill`](#learny.tracing.estimators.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                                                               |
 
 ### *class* learny.tracing.estimators.Estimator(\*args, \*\*kwargs)
 
@@ -450,6 +452,15 @@ A credible interval on the logit scale.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
 
+### *class* learny.tracing.estimators.SpreadThresholds(spread)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Binomial thresholds stretched by `spread`; see [`spread_thresholds()`](#learny.tracing.estimators.spread_thresholds).
+
+A frozen dataclass rather than a closure, so an estimator holding one pickles, and
+two with the same spread compare equal.
+
 ### learny.tracing.estimators.binomial_thresholds(item, max_score)
 
 Thresholds under which a score out of `m` is `m` steps taken at one rate.
@@ -543,3 +554,25 @@ student. Pass one sitting’s responses **in the order they were presented**.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`Response`](learny.tracing.records.html.md#learny.tracing.records.Response)]
+
+### learny.tracing.estimators.spread_thresholds(spread)
+
+Binomial thresholds stretched by `spread`: `tau_k = spread * log(k / (m - k + 1))`.
+
+`spread=1` is [`binomial_thresholds()`](#learny.tracing.estimators.binomial_thresholds). A wider spread makes the middle levels
+more likely and the extremes rarer, so one score carries less evidence; narrower
+makes a score sharper. It keeps the thresholds centred, so an item’s `difficulty`
+still sits at the middle of its scale. [`fit_threshold_spread()`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.fit_threshold_spread)
+picks `spread` from a log.
+
+```pycon
+>>> [round(t, 3) for t in spread_thresholds(2.0)(Item('q'), 2)]
+[-1.386, 1.386]
+>>> spread_thresholds(1.0)(Item('q'), 4) == binomial_thresholds(Item('q'), 4)
+True
+>>> spread_thresholds(2.0) == spread_thresholds(2.0)
+True
+```
+
+* **Return type:**
+  [`SpreadThresholds`](#learny.tracing.estimators.SpreadThresholds)

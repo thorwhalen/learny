@@ -19,23 +19,26 @@ True
 
 ### Functions
 
-| [`estimate_store`](#learny.tracing.estimate_store)(\*[, rootdir])                 | Per-student mastery estimates, keyed by student.                                                                   |
-|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| [`response_log`](#learny.tracing.response_log)(\*[, rootdir])                   | The default response log, under `~/.local/share/learny/responses/`.                                                |
-| [`data_dir`](#learny.tracing.data_dir)([kind, app_name])                    | The per-kind data directory, created on demand.                                                                    |
-| [`label_separation`](#learny.tracing.label_separation)(state, \*[, estimator, ...]) | Separation of one student's label deviations, from their estimator state.                                          |
-| [`calibration`](#learny.tracing.calibration)(log, \*, items, estimator[, ...]) | Prequential calibration of `estimator` over the students in `log`.                                                 |
-| [`score_calibration`](#learny.tracing.score_calibration)(log, \*, items, estimator)  | Prequential calibration of `estimator`'s score forecasts over `log`.                                               |
-| [`reads_scores`](#learny.tracing.reads_scores)(estimator)                       | Whether `estimator` forecasts ordered scores: it has `score_probabilities`.                                        |
-| [`prequential`](#learny.tracing.prequential)(responses, \*, items, estimator)  | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                      |
-| [`fit_feature_difficulty`](#learny.tracing.fit_feature_difficulty)(log, \*, items[, ...]) | Fit which item features predict difficulty, from a log of play.                                                    |
-| [`item_features`](#learny.tracing.item_features)(item)                           | The default feature source: `item.meta['features']`, or `None`.                                                    |
-| [`restrict_labels`](#learny.tracing.restrict_labels)(items, \*, keep[, ...])       | Project an item bank onto a subset of its labels — one facet, say.                                                 |
-| [`difficulty_from_rank`](#learny.tracing.difficulty_from_rank)(rank, n_ranks)           | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
-| [`binomial_thresholds`](#learny.tracing.binomial_thresholds)(item, max_score)          | Thresholds under which a score out of `m` is `m` steps taken at one rate.                                          |
-| [`mark_not_reached`](#learny.tracing.mark_not_reached)(responses)                   | Flag the trailing run of blanks in one sitting as *not reached*.                                                   |
-| [`expit`](#learny.tracing.expit)(x)                                      | The logistic function, overflow-safe at the tails.                                                                 |
-| [`logit`](#learny.tracing.logit)(p, \*[, eps])                           | Inverse of [`expit()`](#learny.tracing.expit), clamped away from 0 and 1 so it stays finite. |
+| [`estimate_store`](#learny.tracing.estimate_store)(\*[, rootdir])                  | Per-student mastery estimates, keyed by student.                                                                               |
+|-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| [`response_log`](#learny.tracing.response_log)(\*[, rootdir])                    | The default response log, under `~/.local/share/learny/responses/`.                                                            |
+| [`data_dir`](#learny.tracing.data_dir)([kind, app_name])                     | The per-kind data directory, created on demand.                                                                                |
+| [`label_separation`](#learny.tracing.label_separation)(state, \*[, estimator, ...])  | Separation of one student's label deviations, from their estimator state.                                                      |
+| [`calibration`](#learny.tracing.calibration)(log, \*, items, estimator[, ...])  | Prequential calibration of `estimator` over the students in `log`.                                                             |
+| [`score_calibration`](#learny.tracing.score_calibration)(log, \*, items, estimator)   | Prequential calibration of `estimator`'s score forecasts over `log`.                                                           |
+| [`reads_scores`](#learny.tracing.reads_scores)(estimator)                        | Whether `estimator` forecasts ordered scores: it has `score_probabilities`.                                                    |
+| [`compare_estimators`](#learny.tracing.compare_estimators)(log, \*, items, candidates) | Replay `log` prequentially under each candidate and pick one; see [`Comparison`](#learny.tracing.Comparison). |
+| [`fit_threshold_spread`](#learny.tracing.fit_threshold_spread)(log, \*, items[, ...])    | The threshold spread a log supports for [`PartialCreditEstimator`](#learny.tracing.PartialCreditEstimator).               |
+| [`prequential`](#learny.tracing.prequential)(responses, \*, items, estimator)   | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                                  |
+| [`fit_feature_difficulty`](#learny.tracing.fit_feature_difficulty)(log, \*, items[, ...])  | Fit which item features predict difficulty, from a log of play.                                                                |
+| [`item_features`](#learny.tracing.item_features)(item)                            | The default feature source: `item.meta['features']`, or `None`.                                                                |
+| [`restrict_labels`](#learny.tracing.restrict_labels)(items, \*, keep[, ...])        | Project an item bank onto a subset of its labels — one facet, say.                                                             |
+| [`difficulty_from_rank`](#learny.tracing.difficulty_from_rank)(rank, n_ranks)            | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                               |
+| [`binomial_thresholds`](#learny.tracing.binomial_thresholds)(item, max_score)           | Thresholds under which a score out of `m` is `m` steps taken at one rate.                                                      |
+| [`spread_thresholds`](#learny.tracing.spread_thresholds)(spread)                      | Binomial thresholds stretched by `spread`: `tau_k = spread * log(k / (m - k + 1))`.                                            |
+| [`mark_not_reached`](#learny.tracing.mark_not_reached)(responses)                    | Flag the trailing run of blanks in one sitting as *not reached*.                                                               |
+| [`expit`](#learny.tracing.expit)(x)                                       | The logistic function, overflow-safe at the tails.                                                                             |
+| [`logit`](#learny.tracing.logit)(p, \*[, eps])                            | Inverse of [`expit()`](#learny.tracing.expit), clamped away from 0 and 1 so it stays finite.             |
 
 ### Classes
 
@@ -55,6 +58,7 @@ True
 | [`CalibrationReport`](#learny.tracing.CalibrationReport)(n, log_loss, brier, ece, ...)   | Prequential scores for a set of predictions.                                                                          |
 | [`CalibrationBin`](#learny.tracing.CalibrationBin)(lo, hi, n, mean_predicted, ...)    | One row of a reliability table: predictions in `[lo, hi)` and what happened.                                          |
 | [`ScoreCalibrationReport`](#learny.tracing.ScoreCalibrationReport)(n, log_loss, ...)          | Prequential scores for forecasts of an ordered score.                                                                 |
+| [`Comparison`](#learny.tracing.Comparison)(n, n_students, losses, se, best, ...)  | Prequential log loss of several candidate estimators on the same log.                                                 |
 | [`FeatureDifficulty`](#learny.tracing.FeatureDifficulty)(names, center, scale, ...)      | A fitted explanatory difficulty model; see [`fit_feature_difficulty()`](#learny.tracing.fit_feature_difficulty). |
 | [`Estimate`](#learny.tracing.Estimate)(mean, sd)                                | A posterior mean and standard deviation, on the logit scale.                                                          |
 
@@ -96,6 +100,21 @@ Build a report from `(predicted, observed)` pairs, observed in `{0, 1}`.
 
 * **Return type:**
   [`CalibrationReport`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+
+### *class* learny.tracing.Comparison(n, n_students, losses, se, best, chosen)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Prequential log loss of several candidate estimators on the same log.
+
+`losses` is each candidate’s mean log loss per scored response (lower is better)
+and `best` the lowest. `se` is each candidate’s standard error of its loss \*minus
+the best’s\*, paired response by response and clustered by student (one student’s
+responses are not independent of each other). `chosen` is the first candidate, in
+the order given, whose loss is within `tolerance_se` of those standard errors of
+the best: the one-standard-error rule, which keeps the candidate listed first (the
+default, the simplest) unless the log says clearly otherwise. Short histories make
+prequential loss favour sharper forecasts than the truth (#32); this is the guard.
 
 ### *class* learny.tracing.Estimate(mean, sd)
 
@@ -1077,6 +1096,28 @@ True
 * **Return type:**
   [`CalibrationReport`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
 
+### learny.tracing.compare_estimators(log, , items, candidates, students=None, tolerance_se=1.0)
+
+Replay `log` prequentially under each candidate and pick one; see [`Comparison`](#learny.tracing.Comparison).
+
+`candidates` maps a name to an estimator, **most preferred first**. Every candidate
+is scored on the same responses, so the comparison is paired. `tolerance_se` is how
+many standard errors of slack the earlier candidates get: 1 is the usual rule, 0 is
+plain arg-min. This is the tool for refitting any estimator setting on a log
+(`prior_var`, `forget_per_week`, a threshold spread), one candidate per value.
+
+```pycon
+>>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
+>>> log = {s: [Response(s, 'q', 'correct')] * 5 for s in 'abc'}
+>>> c = compare_estimators(log, items=items, candidates={
+...     'default': RaschEstimator(), 'sure': RaschEstimator(prior_var=0.01)})
+>>> c.best, c.chosen
+('default', 'default')
+```
+
+* **Return type:**
+  [`Comparison`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.Comparison)
+
 ### learny.tracing.data_dir(kind='', , app_name='learny')
 
 The per-kind data directory, created on demand.
@@ -1207,6 +1248,34 @@ True
 
 * **Return type:**
   [`FeatureDifficulty`](learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty)
+
+### learny.tracing.fit_threshold_spread(log, , items, spreads=(1.0, 0.75, 1.3333333333333333, 0.5, 2.0, 0.3333333333333333, 3.0), estimator=None, students=None, tolerance_se=1.0)
+
+The threshold spread a log supports for [`PartialCreditEstimator`](#learny.tracing.PartialCreditEstimator).
+
+Each spread is a candidate `thresholds=spread_thresholds(spread)` on `estimator`
+(default: a plain `PartialCreditEstimator`), compared by prequential score log loss
+with the one-standard-error rule ([`compare_estimators()`](#learny.tracing.compare_estimators)), preferring spreads
+nearer the binomial default (1.0) on a log scale whatever order they are given in (a
+tie, such as 0.75 and 4/3, goes to the narrower). Returns the chosen spread and the
+comparison, whose candidates are named `f"{spread:.4g}"`; use it as
+`PartialCreditEstimator(thresholds=spread_thresholds(spread))`.
+
+With few students the rule keeps the default unless the log is clear: at a true
+spread of 2 it chose 2 in 11-15 of 30 fits with one to three students, against 17-20
+of 20 with twenty (decision 11). Prefer it to arg-min when a wrong spread costs more
+than a missed one.
+
+```pycon
+>>> items = {'q': Item('q', difficulty=0.5)}
+>>> log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2) for k in (1, 2, 1, 0)]}
+>>> spread, comparison = fit_threshold_spread(log, items=items)
+>>> spread   # four scores cannot overturn the default
+1.0
+```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Comparison`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.Comparison)]
 
 ### learny.tracing.item_features(item)
 
@@ -1403,6 +1472,28 @@ scored. The estimator must read scores ([`reads_scores()`](#learny.tracing.reads
 
 * **Return type:**
   [`ScoreCalibrationReport`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.ScoreCalibrationReport)
+
+### learny.tracing.spread_thresholds(spread)
+
+Binomial thresholds stretched by `spread`: `tau_k = spread * log(k / (m - k + 1))`.
+
+`spread=1` is [`binomial_thresholds()`](#learny.tracing.binomial_thresholds). A wider spread makes the middle levels
+more likely and the extremes rarer, so one score carries less evidence; narrower
+makes a score sharper. It keeps the thresholds centred, so an item’s `difficulty`
+still sits at the middle of its scale. [`fit_threshold_spread()`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.fit_threshold_spread)
+picks `spread` from a log.
+
+```pycon
+>>> [round(t, 3) for t in spread_thresholds(2.0)(Item('q'), 2)]
+[-1.386, 1.386]
+>>> spread_thresholds(1.0)(Item('q'), 4) == binomial_thresholds(Item('q'), 4)
+True
+>>> spread_thresholds(2.0) == spread_thresholds(2.0)
+True
+```
+
+* **Return type:**
+  [`SpreadThresholds`](learny.tracing.estimators.html.md#learny.tracing.estimators.SpreadThresholds)
 
 ### Modules
 

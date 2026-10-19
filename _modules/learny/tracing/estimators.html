@@ -789,6 +789,8 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"RaschEstimator"</span><span class="p">,</span>
     <span class="s2">"PartialCreditEstimator"</span><span class="p">,</span>
     <span class="s2">"binomial_thresholds"</span><span class="p">,</span>
+    <span class="s2">"spread_thresholds"</span><span class="p">,</span>
+    <span class="s2">"SpreadThresholds"</span><span class="p">,</span>
     <span class="s2">"Mastery"</span><span class="p">,</span>
     <span class="s2">"Skill"</span><span class="p">,</span>
     <span class="s2">"logit"</span><span class="p">,</span>
@@ -1644,6 +1646,52 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    [-1.386, -0.405, 0.405, 1.386]</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">k</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_score</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_score</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span></div>
+
+
+
+<div class="viewcode-block" id="SpreadThresholds">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.estimators.html#learny.tracing.SpreadThresholds">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SpreadThresholds</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Binomial thresholds stretched by ``spread``; see :func:`spread_thresholds`.</span>
+
+<span class="sd">    A frozen dataclass rather than a closure, so an estimator holding one pickles, and</span>
+<span class="sd">    two with the same spread compare equal.</span>
+<span class="sd">    """</span>
+
+    <span class="n">spread</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spread</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spread</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">spread</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spread</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"spread must be a positive number, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">spread</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">,</span> <span class="n">max_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">spread</span> <span class="o">*</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">binomial_thresholds</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">max_score</span><span class="p">)]</span></div>
+
+
+
+<div class="viewcode-block" id="spread_thresholds">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.estimators.html#learny.tracing.spread_thresholds">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spread_thresholds</span><span class="p">(</span><span class="n">spread</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpreadThresholds</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Binomial thresholds stretched by ``spread``: ``tau_k = spread * log(k / (m - k + 1))``.</span>
+
+<span class="sd">    ``spread=1`` is :func:`binomial_thresholds`. A wider spread makes the middle levels</span>
+<span class="sd">    more likely and the extremes rarer, so one score carries less evidence; narrower</span>
+<span class="sd">    makes a score sharper. It keeps the thresholds centred, so an item's ``difficulty``</span>
+<span class="sd">    still sits at the middle of its scale. :func:`~learny.tracing.diagnostics.fit_threshold_spread`</span>
+<span class="sd">    picks ``spread`` from a log.</span>
+
+<span class="sd">    &gt;&gt;&gt; [round(t, 3) for t in spread_thresholds(2.0)(Item('q'), 2)]</span>
+<span class="sd">    [-1.386, 1.386]</span>
+<span class="sd">    &gt;&gt;&gt; spread_thresholds(1.0)(Item('q'), 4) == binomial_thresholds(Item('q'), 4)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; spread_thresholds(2.0) == spread_thresholds(2.0)</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">SpreadThresholds</span><span class="p">(</span><span class="n">spread</span><span class="p">)</span></div>
 
 
 

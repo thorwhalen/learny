@@ -9,6 +9,7 @@ learny.tracing.estimators
    .. autosummary::
    
       binomial_thresholds
+      spread_thresholds
       logit
       expit
       difficulty_from_rank
@@ -21,6 +22,7 @@ learny.tracing.estimators
       Estimator
       RaschEstimator
       PartialCreditEstimator
+      SpreadThresholds
       Mastery
       Skill
    

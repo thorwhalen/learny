@@ -26,26 +26,30 @@ neither looks at more than one student at a time unless asked to.
 
 ### Module Attributes
 
-| [`DEFAULT_SEPARATION_THRESHOLD`](#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD)   | Separation at which an ordering of labels is worth believing.   |
-|---------------------------------------------------------------------------------|-----------------------------------------------------------------|
-| [`DEFAULT_N_BINS`](#learny.tracing.diagnostics.DEFAULT_N_BINS)                 | Equal-width probability bins for the reliability table.         |
+| [`DEFAULT_SEPARATION_THRESHOLD`](#learny.tracing.diagnostics.DEFAULT_SEPARATION_THRESHOLD)   | Separation at which an ordering of labels is worth believing.                                |
+|---------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| [`DEFAULT_N_BINS`](#learny.tracing.diagnostics.DEFAULT_N_BINS)                 | Equal-width probability bins for the reliability table.                                      |
+| [`DEFAULT_SPREADS`](#learny.tracing.diagnostics.DEFAULT_SPREADS)                | the binomial default and factors of 4/3, 2 and 3 either way of it, symmetric on a log scale. |
 
 ### Functions
 
-| [`label_separation`](#learny.tracing.diagnostics.label_separation)(state, \*[, estimator, ...])   | Separation of one student's label deviations, from their estimator state.     |
-|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
-| [`prequential`](#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)    | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
-| [`calibration`](#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...])   | Prequential calibration of `estimator` over the students in `log`.            |
-| [`score_calibration`](#learny.tracing.diagnostics.score_calibration)(log, \*, items, estimator)    | Prequential calibration of `estimator`'s score forecasts over `log`.          |
-| [`reads_scores`](#learny.tracing.diagnostics.reads_scores)(estimator)                         | Whether `estimator` forecasts ordered scores: it has `score_probabilities`.   |
+| [`label_separation`](#learny.tracing.diagnostics.label_separation)(state, \*[, estimator, ...])   | Separation of one student's label deviations, from their estimator state.                                                      |
+|--------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| [`prequential`](#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)    | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                                  |
+| [`calibration`](#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...])   | Prequential calibration of `estimator` over the students in `log`.                                                             |
+| [`score_calibration`](#learny.tracing.diagnostics.score_calibration)(log, \*, items, estimator)    | Prequential calibration of `estimator`'s score forecasts over `log`.                                                           |
+| [`reads_scores`](#learny.tracing.diagnostics.reads_scores)(estimator)                         | Whether `estimator` forecasts ordered scores: it has `score_probabilities`.                                                    |
+| [`compare_estimators`](#learny.tracing.diagnostics.compare_estimators)(log, \*, items, candidates)  | Replay `log` prequentially under each candidate and pick one; see [`Comparison`](#learny.tracing.diagnostics.Comparison). |
+| [`fit_threshold_spread`](#learny.tracing.diagnostics.fit_threshold_spread)(log, \*, items[, ...])     | The threshold spread a log supports for `PartialCreditEstimator`.                                                              |
 
 ### Classes
 
-| [`LabelSeparation`](#learny.tracing.diagnostics.LabelSeparation)(n_labels, observed_sd, rmse)    | How distinguishable one student's labels are from each other.                |
-|--------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
-| [`CalibrationBin`](#learny.tracing.diagnostics.CalibrationBin)(lo, hi, n, mean_predicted, ...)  | One row of a reliability table: predictions in `[lo, hi)` and what happened. |
-| [`CalibrationReport`](#learny.tracing.diagnostics.CalibrationReport)(n, log_loss, brier, ece, ...) | Prequential scores for a set of predictions.                                 |
-| [`ScoreCalibrationReport`](#learny.tracing.diagnostics.ScoreCalibrationReport)(n, log_loss, ...)        | Prequential scores for forecasts of an ordered score.                        |
+| [`LabelSeparation`](#learny.tracing.diagnostics.LabelSeparation)(n_labels, observed_sd, rmse)     | How distinguishable one student's labels are from each other.                |
+|---------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| [`CalibrationBin`](#learny.tracing.diagnostics.CalibrationBin)(lo, hi, n, mean_predicted, ...)   | One row of a reliability table: predictions in `[lo, hi)` and what happened. |
+| [`CalibrationReport`](#learny.tracing.diagnostics.CalibrationReport)(n, log_loss, brier, ece, ...)  | Prequential scores for a set of predictions.                                 |
+| [`ScoreCalibrationReport`](#learny.tracing.diagnostics.ScoreCalibrationReport)(n, log_loss, ...)         | Prequential scores for forecasts of an ordered score.                        |
+| [`Comparison`](#learny.tracing.diagnostics.Comparison)(n, n_students, losses, se, best, ...) | Prequential log loss of several candidate estimators on the same log.        |
 
 ### *class* learny.tracing.diagnostics.CalibrationBin(lo, hi, n, mean_predicted, observed_rate)
 
@@ -86,6 +90,21 @@ Build a report from `(predicted, observed)` pairs, observed in `{0, 1}`.
 * **Return type:**
   [`CalibrationReport`](#learny.tracing.diagnostics.CalibrationReport)
 
+### *class* learny.tracing.diagnostics.Comparison(n, n_students, losses, se, best, chosen)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Prequential log loss of several candidate estimators on the same log.
+
+`losses` is each candidate’s mean log loss per scored response (lower is better)
+and `best` the lowest. `se` is each candidate’s standard error of its loss \*minus
+the best’s\*, paired response by response and clustered by student (one student’s
+responses are not independent of each other). `chosen` is the first candidate, in
+the order given, whose loss is within `tolerance_se` of those standard errors of
+the best: the one-standard-error rule, which keeps the candidate listed first (the
+default, the simplest) unless the log says clearly otherwise. Short histories make
+prequential loss favour sharper forecasts than the truth (#32); this is the guard.
+
 ### learny.tracing.diagnostics.DEFAULT_N_BINS *= 10*
 
 Equal-width probability bins for the reliability table.
@@ -96,6 +115,14 @@ Separation at which an ordering of labels is worth believing. `G = 2` is reliabi
 0.8, about three distinguishable strata (Wright’s `(4G + 1) / 3`) — the usual Rasch
 bar for a ranking one acts on. Below `G = 1` (reliability 0.5) the spread of the
 estimates is mostly their own noise.
+
+### learny.tracing.diagnostics.DEFAULT_SPREADS *= (1.0, 0.75, 1.3333333333333333, 0.5, 2.0, 0.3333333333333333, 3.0)*
+
+the binomial default and
+factors of 4/3, 2 and 3 either way of it, symmetric on a log scale.
+
+* **Type:**
+  The spreads [`fit_threshold_spread()`](#learny.tracing.diagnostics.fit_threshold_spread) tries by default
 
 ### *class* learny.tracing.diagnostics.LabelSeparation(n_labels, observed_sd, rmse, threshold=2.0)
 
@@ -207,6 +234,56 @@ True
 
 * **Return type:**
   [`CalibrationReport`](#learny.tracing.diagnostics.CalibrationReport)
+
+### learny.tracing.diagnostics.compare_estimators(log, , items, candidates, students=None, tolerance_se=1.0)
+
+Replay `log` prequentially under each candidate and pick one; see [`Comparison`](#learny.tracing.diagnostics.Comparison).
+
+`candidates` maps a name to an estimator, **most preferred first**. Every candidate
+is scored on the same responses, so the comparison is paired. `tolerance_se` is how
+many standard errors of slack the earlier candidates get: 1 is the usual rule, 0 is
+plain arg-min. This is the tool for refitting any estimator setting on a log
+(`prior_var`, `forget_per_week`, a threshold spread), one candidate per value.
+
+```pycon
+>>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
+>>> log = {s: [Response(s, 'q', 'correct')] * 5 for s in 'abc'}
+>>> c = compare_estimators(log, items=items, candidates={
+...     'default': RaschEstimator(), 'sure': RaschEstimator(prior_var=0.01)})
+>>> c.best, c.chosen
+('default', 'default')
+```
+
+* **Return type:**
+  [`Comparison`](#learny.tracing.diagnostics.Comparison)
+
+### learny.tracing.diagnostics.fit_threshold_spread(log, , items, spreads=(1.0, 0.75, 1.3333333333333333, 0.5, 2.0, 0.3333333333333333, 3.0), estimator=None, students=None, tolerance_se=1.0)
+
+The threshold spread a log supports for `PartialCreditEstimator`.
+
+Each spread is a candidate `thresholds=spread_thresholds(spread)` on `estimator`
+(default: a plain `PartialCreditEstimator`), compared by prequential score log loss
+with the one-standard-error rule ([`compare_estimators()`](#learny.tracing.diagnostics.compare_estimators)), preferring spreads
+nearer the binomial default (1.0) on a log scale whatever order they are given in (a
+tie, such as 0.75 and 4/3, goes to the narrower). Returns the chosen spread and the
+comparison, whose candidates are named `f"{spread:.4g}"`; use it as
+`PartialCreditEstimator(thresholds=spread_thresholds(spread))`.
+
+With few students the rule keeps the default unless the log is clear: at a true
+spread of 2 it chose 2 in 11-15 of 30 fits with one to three students, against 17-20
+of 20 with twenty (decision 11). Prefer it to arg-min when a wrong spread costs more
+than a missed one.
+
+```pycon
+>>> items = {'q': Item('q', difficulty=0.5)}
+>>> log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2) for k in (1, 2, 1, 0)]}
+>>> spread, comparison = fit_threshold_spread(log, items=items)
+>>> spread   # four scores cannot overturn the default
+1.0
+```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Comparison`](#learny.tracing.diagnostics.Comparison)]
 
 ### learny.tracing.diagnostics.label_separation(state, , estimator=None, min_n=1, threshold=2.0)
 

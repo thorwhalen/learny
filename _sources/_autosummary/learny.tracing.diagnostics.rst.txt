@@ -10,6 +10,7 @@ learny.tracing.diagnostics
    
       DEFAULT_SEPARATION_THRESHOLD
       DEFAULT_N_BINS
+      DEFAULT_SPREADS
    
    .. rubric:: Functions
 
@@ -20,6 +21,8 @@ learny.tracing.diagnostics
       calibration
       score_calibration
       reads_scores
+      compare_estimators
+      fit_threshold_spread
    
    .. rubric:: Classes
 
@@ -29,4 +32,5 @@ learny.tracing.diagnostics
       CalibrationBin
       CalibrationReport
       ScoreCalibrationReport
+      Comparison
    

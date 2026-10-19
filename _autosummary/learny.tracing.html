@@ -434,6 +434,12 @@ lets the estimator be replaced later without a data migration, and it is why
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.reads_scores" title="learny.tracing.reads_scores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reads_scores</span></code></a>(estimator)</p></td>
 <td><p>Whether <code class="docutils literal notranslate"><span class="pre">estimator</span></code> forecasts ordered scores: it has <code class="docutils literal notranslate"><span class="pre">score_probabilities</span></code>.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.compare_estimators" title="learny.tracing.compare_estimators"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compare_estimators</span></code></a>(log, *, items, candidates)</p></td>
+<td><p>Replay <code class="docutils literal notranslate"><span class="pre">log</span></code> prequentially under each candidate and pick one; see <a class="reference internal" href="#learny.tracing.Comparison" title="learny.tracing.Comparison"><code class="xref py py-class docutils literal notranslate"><span class="pre">Comparison</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.fit_threshold_spread" title="learny.tracing.fit_threshold_spread"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_threshold_spread</span></code></a>(log, *, items[, ...])</p></td>
+<td><p>The threshold spread a log supports for <a class="reference internal" href="#learny.tracing.PartialCreditEstimator" title="learny.tracing.PartialCreditEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a>.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.prequential" title="learny.tracing.prequential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prequential</span></code></a>(responses, *, items, estimator)</p></td>
 <td><p>Yield <code class="docutils literal notranslate"><span class="pre">(response,</span> <span class="pre">p)</span></code> where <code class="docutils literal notranslate"><span class="pre">p</span></code> was predicted <em>before</em> the response was seen.</p></td>
 </tr>
@@ -452,13 +458,16 @@ lets the estimator be replaced later without a data migration, and it is why
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.binomial_thresholds" title="learny.tracing.binomial_thresholds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">binomial_thresholds</span></code></a>(item, max_score)</p></td>
 <td><p>Thresholds under which a score out of <code class="docutils literal notranslate"><span class="pre">m</span></code> is <code class="docutils literal notranslate"><span class="pre">m</span></code> steps taken at one rate.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.mark_not_reached" title="learny.tracing.mark_not_reached"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mark_not_reached</span></code></a>(responses)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.spread_thresholds" title="learny.tracing.spread_thresholds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spread_thresholds</span></code></a>(spread)</p></td>
+<td><p>Binomial thresholds stretched by <code class="docutils literal notranslate"><span class="pre">spread</span></code>: <code class="docutils literal notranslate"><span class="pre">tau_k</span> <span class="pre">=</span> <span class="pre">spread</span> <span class="pre">*</span> <span class="pre">log(k</span> <span class="pre">/</span> <span class="pre">(m</span> <span class="pre">-</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">1))</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.mark_not_reached" title="learny.tracing.mark_not_reached"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mark_not_reached</span></code></a>(responses)</p></td>
 <td><p>Flag the trailing run of blanks in one sitting as <em>not reached</em>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.expit" title="learny.tracing.expit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expit</span></code></a>(x)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.expit" title="learny.tracing.expit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expit</span></code></a>(x)</p></td>
 <td><p>The logistic function, overflow-safe at the tails.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.logit" title="learny.tracing.logit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logit</span></code></a>(p, *[, eps])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.logit" title="learny.tracing.logit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logit</span></code></a>(p, *[, eps])</p></td>
 <td><p>Inverse of <a class="reference internal" href="#learny.tracing.expit" title="learny.tracing.expit"><code class="xref py py-func docutils literal notranslate"><span class="pre">expit()</span></code></a>, clamped away from 0 and 1 so it stays finite.</p></td>
 </tr>
 </tbody>
@@ -512,10 +521,13 @@ lets the estimator be replaced later without a data migration, and it is why
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.ScoreCalibrationReport" title="learny.tracing.ScoreCalibrationReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScoreCalibrationReport</span></code></a>(n, log_loss, ...)</p></td>
 <td><p>Prequential scores for forecasts of an ordered score.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.FeatureDifficulty" title="learny.tracing.FeatureDifficulty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureDifficulty</span></code></a>(names, center, scale, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.Comparison" title="learny.tracing.Comparison"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Comparison</span></code></a>(n, n_students, losses, se, best, ...)</p></td>
+<td><p>Prequential log loss of several candidate estimators on the same log.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.FeatureDifficulty" title="learny.tracing.FeatureDifficulty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureDifficulty</span></code></a>(names, center, scale, ...)</p></td>
 <td><p>A fitted explanatory difficulty model; see <a class="reference internal" href="#learny.tracing.fit_feature_difficulty" title="learny.tracing.fit_feature_difficulty"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_feature_difficulty()</span></code></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.Estimate" title="learny.tracing.Estimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Estimate</span></code></a>(mean, sd)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.Estimate" title="learny.tracing.Estimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Estimate</span></code></a>(mean, sd)</p></td>
 <td><p>A posterior mean and standard deviation, on the logit scale.</p></td>
 </tr>
 </tbody>
@@ -570,6 +582,23 @@ so <code class="docutils literal notranslate"><span class="pre">log_loss</span> 
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.Comparison">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">Comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_students</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">losses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">se</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chosen</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#Comparison"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.Comparison" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Prequential log loss of several candidate estimators on the same log.</p>
+<p><code class="docutils literal notranslate"><span class="pre">losses</span></code> is each candidate’s mean log loss per scored response (lower is better)
+and <code class="docutils literal notranslate"><span class="pre">best</span></code> the lowest. <code class="docutils literal notranslate"><span class="pre">se</span></code> is each candidate’s standard error of its loss *minus
+the best’s*, paired response by response and clustered by student (one student’s
+responses are not independent of each other). <code class="docutils literal notranslate"><span class="pre">chosen</span></code> is the first candidate, in
+the order given, whose loss is within <code class="docutils literal notranslate"><span class="pre">tolerance_se</span></code> of those standard errors of
+the best: the one-standard-error rule, which keeps the candidate listed first (the
+default, the simplest) unless the log says clearly otherwise. Short histories make
+prequential loss favour sharper forecasts than the truth (#32); this is the guard.</p>
+<dl class="field-list simple">
+</dl>
 </dd></dl>
 
 <dl class="py class">
@@ -1726,6 +1755,30 @@ scored by <a class="reference internal" href="#learny.tracing.score_calibration"
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.compare_estimators">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">compare_estimators</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance_se</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#compare_estimators"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.compare_estimators" title="Link to this definition">#</a></dt>
+<dd><p>Replay <code class="docutils literal notranslate"><span class="pre">log</span></code> prequentially under each candidate and pick one; see <a class="reference internal" href="#learny.tracing.Comparison" title="learny.tracing.Comparison"><code class="xref py py-class docutils literal notranslate"><span class="pre">Comparison</span></code></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">candidates</span></code> maps a name to an estimator, <strong>most preferred first</strong>. Every candidate
+is scored on the same responses, so the comparison is paired. <code class="docutils literal notranslate"><span class="pre">tolerance_se</span></code> is how
+many standard errors of slack the earlier candidates get: 1 is the usual rule, 0 is
+plain arg-min. This is the tool for refitting any estimator setting on a log
+(<code class="docutils literal notranslate"><span class="pre">prior_var</span></code>, <code class="docutils literal notranslate"><span class="pre">forget_per_week</span></code>, a threshold spread), one candidate per value.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'q'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'x'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">:</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s1">'q'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">)]</span> <span class="o">*</span> <span class="mi">5</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="s1">'abc'</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">compare_estimators</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">candidates</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>    <span class="s1">'default'</span><span class="p">:</span> <span class="n">RaschEstimator</span><span class="p">(),</span> <span class="s1">'sure'</span><span class="p">:</span> <span class="n">RaschEstimator</span><span class="p">(</span><span class="n">prior_var</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">best</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">chosen</span>
+<span class="go">('default', 'default')</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.Comparison" title="learny.tracing.diagnostics.Comparison"><code class="xref py py-class docutils literal notranslate"><span class="pre">Comparison</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.data_dir">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">data_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'learny'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/stores.html#data_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.data_dir" title="Link to this definition">#</a></dt>
 <dd><p>The per-kind data directory, created on demand.</p>
@@ -1861,6 +1914,35 @@ right/wrong data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.difficulty.html#learny.tracing.difficulty.FeatureDifficulty" title="learny.tracing.difficulty.FeatureDifficulty"><code class="xref py py-class docutils literal notranslate"><span class="pre">FeatureDifficulty</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.fit_threshold_spread">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">fit_threshold_spread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spreads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1.0,</span> <span class="pre">0.75,</span> <span class="pre">1.3333333333333333,</span> <span class="pre">0.5,</span> <span class="pre">2.0,</span> <span class="pre">0.3333333333333333,</span> <span class="pre">3.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance_se</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#fit_threshold_spread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.fit_threshold_spread" title="Link to this definition">#</a></dt>
+<dd><p>The threshold spread a log supports for <a class="reference internal" href="#learny.tracing.PartialCreditEstimator" title="learny.tracing.PartialCreditEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a>.</p>
+<p>Each spread is a candidate <code class="docutils literal notranslate"><span class="pre">thresholds=spread_thresholds(spread)</span></code> on <code class="docutils literal notranslate"><span class="pre">estimator</span></code>
+(default: a plain <code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code>), compared by prequential score log loss
+with the one-standard-error rule (<a class="reference internal" href="#learny.tracing.compare_estimators" title="learny.tracing.compare_estimators"><code class="xref py py-func docutils literal notranslate"><span class="pre">compare_estimators()</span></code></a>), preferring spreads
+nearer the binomial default (1.0) on a log scale whatever order they are given in (a
+tie, such as 0.75 and 4/3, goes to the narrower). Returns the chosen spread and the
+comparison, whose candidates are named <code class="docutils literal notranslate"><span class="pre">f&quot;{spread:.4g}&quot;</span></code>; use it as
+<code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator(thresholds=spread_thresholds(spread))</span></code>.</p>
+<p>With few students the rule keeps the default unless the log is clear: at a true
+spread of 2 it chose 2 in 11-15 of 30 fits with one to three students, against 17-20
+of 20 with twenty (decision 11). Prefer it to arg-min when a wrong spread costs more
+than a missed one.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'q'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">,</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'q'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">,</span> <span class="n">score</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">max_score</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spread</span><span class="p">,</span> <span class="n">comparison</span> <span class="o">=</span> <span class="n">fit_threshold_spread</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spread</span>   <span class="c1"># four scores cannot overturn the default</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.Comparison" title="learny.tracing.diagnostics.Comparison"><code class="xref py py-class docutils literal notranslate"><span class="pre">Comparison</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2079,6 +2161,30 @@ scored. The estimator must read scores (<a class="reference internal" href="#lea
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.spread_thresholds">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">spread_thresholds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spread</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#spread_thresholds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.spread_thresholds" title="Link to this definition">#</a></dt>
+<dd><p>Binomial thresholds stretched by <code class="docutils literal notranslate"><span class="pre">spread</span></code>: <code class="docutils literal notranslate"><span class="pre">tau_k</span> <span class="pre">=</span> <span class="pre">spread</span> <span class="pre">*</span> <span class="pre">log(k</span> <span class="pre">/</span> <span class="pre">(m</span> <span class="pre">-</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">1))</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">spread=1</span></code> is <a class="reference internal" href="#learny.tracing.binomial_thresholds" title="learny.tracing.binomial_thresholds"><code class="xref py py-func docutils literal notranslate"><span class="pre">binomial_thresholds()</span></code></a>. A wider spread makes the middle levels
+more likely and the extremes rarer, so one score carries less evidence; narrower
+makes a score sharper. It keeps the thresholds centred, so an item’s <code class="docutils literal notranslate"><span class="pre">difficulty</span></code>
+still sits at the middle of its scale. <a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.fit_threshold_spread" title="learny.tracing.diagnostics.fit_threshold_spread"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_threshold_spread()</span></code></a>
+picks <code class="docutils literal notranslate"><span class="pre">spread</span></code> from a log.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">spread_thresholds</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)(</span><span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">),</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="go">[-1.386, 1.386]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spread_thresholds</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)(</span><span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">),</span> <span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="n">binomial_thresholds</span><span class="p">(</span><span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">),</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spread_thresholds</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span> <span class="o">==</span> <span class="n">spread_thresholds</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.SpreadThresholds" title="learny.tracing.estimators.SpreadThresholds"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpreadThresholds</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 <p class="rubric">Modules</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
@@ -2160,6 +2266,7 @@ scored. The estimator must read scores (<a class="reference internal" href="#lea
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.CalibrationReport.from_pairs"><code class="docutils literal notranslate"><span class="pre">CalibrationReport.from_pairs()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Comparison"><code class="docutils literal notranslate"><span class="pre">Comparison</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimate"><code class="docutils literal notranslate"><span class="pre">Estimate</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimate.mean"><code class="docutils literal notranslate"><span class="pre">Estimate.mean</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimate.sd"><code class="docutils literal notranslate"><span class="pre">Estimate.sd</span></code></a></li>
@@ -2265,11 +2372,13 @@ scored. The estimator must read scores (<a class="reference internal" href="#lea
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Weakest"><code class="docutils literal notranslate"><span class="pre">Weakest</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.binomial_thresholds"><code class="docutils literal notranslate"><span class="pre">binomial_thresholds()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.calibration"><code class="docutils literal notranslate"><span class="pre">calibration()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.compare_estimators"><code class="docutils literal notranslate"><span class="pre">compare_estimators()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.data_dir"><code class="docutils literal notranslate"><span class="pre">data_dir()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.difficulty_from_rank"><code class="docutils literal notranslate"><span class="pre">difficulty_from_rank()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimate_store"><code class="docutils literal notranslate"><span class="pre">estimate_store()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.expit"><code class="docutils literal notranslate"><span class="pre">expit()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.fit_feature_difficulty"><code class="docutils literal notranslate"><span class="pre">fit_feature_difficulty()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.fit_threshold_spread"><code class="docutils literal notranslate"><span class="pre">fit_threshold_spread()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.item_features"><code class="docutils literal notranslate"><span class="pre">item_features()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.label_separation"><code class="docutils literal notranslate"><span class="pre">label_separation()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.logit"><code class="docutils literal notranslate"><span class="pre">logit()</span></code></a></li>
@@ -2279,6 +2388,7 @@ scored. The estimator must read scores (<a class="reference internal" href="#lea
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.response_log"><code class="docutils literal notranslate"><span class="pre">response_log()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.restrict_labels"><code class="docutils literal notranslate"><span class="pre">restrict_labels()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.score_calibration"><code class="docutils literal notranslate"><span class="pre">score_calibration()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.spread_thresholds"><code class="docutils literal notranslate"><span class="pre">spread_thresholds()</span></code></a></li>
 </ul>
   </nav></div>
 
