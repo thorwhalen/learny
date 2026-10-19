@@ -25,6 +25,12 @@ from learny.tracing.diagnostics import (
     reads_scores,
     score_calibration,
 )
+from learny.tracing.difficulty import (
+    Estimate,
+    FeatureDifficulty,
+    fit_feature_difficulty,
+    item_features,
+)
 from learny.tracing.estimators import (
     Estimator,
     Mastery,
@@ -79,6 +85,11 @@ __all__ = [
     "score_calibration",
     "reads_scores",
     "prequential",
+    # what item features say about difficulty, across students (an exported artifact)
+    "fit_feature_difficulty",
+    "FeatureDifficulty",
+    "Estimate",
+    "item_features",
     # helpers
     "restrict_labels",
     "difficulty_from_rank",
