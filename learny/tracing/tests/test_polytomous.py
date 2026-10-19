@@ -134,6 +134,47 @@ class TestPartialCredit:
         brute = max(grid, key=objective)
         assert got == pytest.approx(brute, abs=1e-3)
 
+    def test_the_mode_is_found_across_the_range(self):
+        """Safeguarded Newton never stalls: checked against bisection, a slow but sure
+        root-finder, over random priors and scores (the #33 review found a two-cycle)."""
+        import random
+
+        from learny.tracing.estimators import _posterior_mode
+
+        rng = random.Random(0)
+        for _ in range(2000):
+            m = rng.randint(2, 1000)
+            k = rng.randint(0, m)
+            s, v = rng.uniform(-12, 12), 10 ** rng.uniform(-6, 1)
+
+            def g(t):  # binomial log-likelihood of k out of m: gradient and information
+                return k - m * (1.0 / (1.0 + math.exp(-t)) if t > -700 else 0.0)
+
+            def info(t):
+                p = 1.0 / (1.0 + math.exp(-t)) if t > -700 else 0.0
+                return m * p * (1.0 - p)
+
+            lo, hi = s - v * m - 1, s + v * m + 1
+            for _ in range(200):
+                mid = 0.5 * (lo + hi)
+                lo, hi = (mid, hi) if -(mid - s) / v + g(mid) > 0 else (lo, mid)
+            got = _posterior_mode(s, v, g, info, steps=50)
+            assert got == pytest.approx(0.5 * (lo + hi), abs=1e-6), (m, k, s, v)
+
+    @pytest.mark.parametrize("steps", [49, 50, 51])
+    def test_a_near_flat_tail_does_not_freeze_the_update(self, steps):
+        """0 of 1000 from N(10, 1): where information ~ 0 a Newton step used to bounce
+        between the bracket's ends and leave the skill where it started."""
+        est = PartialCreditEstimator(prior_var=1.0, mode_steps=steps)
+        state = {"global": {"mu": 10.0, "var": 1.0, "n": 0, "t": None}, "labels": {}}
+        r = Response("a", "q", "wrong", score=0, max_score=1000)
+        assert est.observe(state, r, Item("q"))["global"]["mu"] == pytest.approx(-4.24, abs=0.01)
+
+    @pytest.mark.parametrize("bad", [0, 2.5, True])
+    def test_mode_steps_is_checked_up_front(self, bad):
+        with pytest.raises(ValueError, match="mode_steps"):
+            PartialCreditEstimator(mode_steps=bad)
+
     def test_the_elo_step_is_on_the_unit_scale(self):
         """A full score moves Elo by at most ``elo_rate``, however many levels it has."""
         est = PartialCreditEstimator(gain="elo")

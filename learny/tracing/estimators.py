@@ -838,27 +838,38 @@ def _posterior_mode(
     """The mode of ``N(t; s, v) * likelihood(t)`` for a log-concave likelihood.
 
     ``gradient`` and ``information`` are the log-likelihood's first derivative and minus
-    its second. The objective's derivative falls monotonically, so the mode lies between
-    ``s`` and the first Newton step; Newton is run inside that bracket, falling back to
-    bisection whenever a step would leave it. ``None`` when there is nothing to iterate
-    (``steps <= 1``, or no posterior width).
+    its second. The objective's derivative ``f`` falls monotonically, so the mode lies
+    between ``s`` and the first Newton step from it. Safeguarded Newton inside that
+    bracket: a Newton step is taken only when it lands strictly inside the bracket and
+    the previous step converged fast enough, otherwise the bracket is bisected, and the
+    bracket shrinks at every evaluation, so it cannot cycle. ``None`` when there is
+    nothing to iterate (``steps <= 1``, or no posterior width).
     """
     if steps <= 1 or not v > 0:
         return None
+
+    def f(t: float) -> float:
+        return -(t - s) / v + gradient(t)
+
     lo, hi = sorted((s, s + v * gradient(s)))
-    t = s
+    t, ft = s, f(s)
+    dx = dx_old = hi - lo
     for _ in range(steps):
-        f = -(t - s) / v + gradient(t)
-        if f > 0:
+        if ft == 0.0 or hi - lo <= tol * (1.0 + abs(t)):
+            return t
+        slope = 1.0 / v + information(t)  # -f'(t) > 0
+        newton = t + ft / slope
+        dx_old, dx = dx, (newton - t)
+        if not lo < newton < hi or abs(2.0 * ft) > abs(dx_old * slope):
+            dx = 0.5 * (hi - lo)
+            newton = lo + dx
+        if abs(newton - t) <= tol * (1.0 + abs(t)):
+            return newton
+        t, ft = newton, f(newton)
+        if ft > 0:
             lo = t
         else:
             hi = t
-        nxt = t + f / (1.0 / v + information(t))
-        if not lo <= nxt <= hi:
-            nxt = 0.5 * (lo + hi)
-        if abs(nxt - t) <= tol * (1.0 + abs(t)):
-            return nxt
-        t = nxt
     return t
 
 
@@ -912,6 +923,11 @@ class PartialCreditEstimator(RaschEstimator):
     #: ``max_score`` rather than by 1; iterating to the mode (a Laplace step) does not.
     #: ``1`` restores the plain one-step update.
     mode_steps: int = 50
+
+    def __post_init__(self) -> None:
+        if isinstance(self.mode_steps, bool) or not isinstance(self.mode_steps, int) \
+                or self.mode_steps < 1:
+            raise ValueError(f"mode_steps must be an int >= 1, got {self.mode_steps!r}")
 
     def _taus(self, item: Item, max_score: int) -> list[float]:
         taus = list(self.thresholds(item, max_score))
