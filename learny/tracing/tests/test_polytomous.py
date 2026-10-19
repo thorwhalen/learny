@@ -436,7 +436,7 @@ class TestThresholdSpread:
         items, log = self._log(3.0)
         spread, comparison = fit_threshold_spread(log, items=items)
         assert spread > 1.5
-        assert comparison.losses[repr(spread)] < comparison.losses["1.0"]
+        assert comparison.losses[f"{spread:.4g}"] < comparison.losses["1"]
 
     def test_the_default_is_kept_when_it_is_true(self):
         from learny.tracing import fit_threshold_spread
@@ -455,6 +455,36 @@ class TestThresholdSpread:
                   "narrow": PartialCreditEstimator(thresholds=spread_thresholds(0.9))}
         argmin = compare_estimators(log, items=items, candidates=rivals, tolerance_se=0)
         assert argmin.chosen == argmin.best
+
+    def test_candidates_must_forecast_the_same_thing(self):
+        """A right/wrong loss and a score-level loss are on different events."""
+        from learny.tracing import compare_estimators
+
+        items, log = self._log(1.0, students=2, per=5)
+        with pytest.raises(ValueError, match="disagree on what they forecast"):
+            compare_estimators(log, items=items, candidates={
+                "rasch": RaschEstimator(), "pcm": PartialCreditEstimator()})
+
+    def test_a_log_of_generators_is_read_once(self):
+        from learny.tracing import fit_threshold_spread
+
+        items, log = self._log(1.0, students=3, per=10)
+        lists = fit_threshold_spread(log, items=items)[0]
+        gens = fit_threshold_spread({s: iter(rs) for s, rs in log.items()}, items=items)[0]
+        assert gens == lists
+
+    def test_spread_thresholds_pickle_and_compare_equal(self):
+        import pickle
+
+        from learny.tracing import spread_thresholds
+
+        est = PartialCreditEstimator(thresholds=spread_thresholds(2.0))
+        assert pickle.loads(pickle.dumps(est)) == est
+        with pytest.raises(ValueError, match="positive"):
+            from learny.tracing import fit_threshold_spread
+
+            items, log = self._log(1.0, students=1, per=2)
+            fit_threshold_spread(log, items=items, spreads=(1.0, -2.0))
 
     def test_a_comparison_needs_candidates_and_scored_responses(self):
         from learny.tracing import compare_estimators

@@ -626,16 +626,23 @@ def compare_estimators(
     """
     if not candidates:
         raise ValueError("compare_estimators needs at least one candidate")
+    if len({reads_scores(est) for est in candidates.values()}) > 1:
+        raise ValueError(
+            "the candidates disagree on what they forecast (some read scores, some only "
+            "right/wrong), so their log losses are on different events and not comparable; "
+            "compare score-reading estimators with each other, outcome-reading with each other"
+        )
     if not (isinstance(tolerance_se, (int, float)) and tolerance_se >= 0
             and math.isfinite(tolerance_se)):
         raise ValueError(f"tolerance_se must be a non-negative number, got {tolerance_se!r}")
     names = _names(log, students)
+    records = {name: list(log[name]) for name in names}  # read once: every candidate replays it
     per: dict[str, list[list[float]]] = {}  # candidate -> per student -> losses
     for label, est in candidates.items():
         per[label] = [
             [
                 loss
-                for response, item, state in _before_each(log[name], items=items, estimator=est)
+                for response, item, state in _before_each(records[name], items=items, estimator=est)
                 if (loss := _forecast_loss(est, state, response, item)) is not None
             ]
             for name in names
@@ -668,9 +675,9 @@ def compare_estimators(
     return Comparison(n=n, n_students=len(counted), losses=means, se=se, best=best, chosen=chosen)
 
 
-#: The spreads :func:`fit_threshold_spread` tries by default: up to a factor of 3
-#: either way of the binomial default, roughly even on a log scale.
-DEFAULT_SPREADS = (1.0, 0.75, 1.33, 0.5, 2.0, 0.33, 3.0)
+#: The spreads :func:`fit_threshold_spread` tries by default: the binomial default and
+#: factors of 4/3, 2 and 3 either way of it, symmetric on a log scale.
+DEFAULT_SPREADS = (1.0, 0.75, 4 / 3, 0.5, 2.0, 1 / 3, 3.0)
 
 
 def fit_threshold_spread(
@@ -687,9 +694,15 @@ def fit_threshold_spread(
     Each spread is a candidate ``thresholds=spread_thresholds(spread)`` on ``estimator``
     (default: a plain ``PartialCreditEstimator``), compared by prequential score log loss
     with the one-standard-error rule (:func:`compare_estimators`), preferring spreads
-    nearer the binomial default (1.0) whatever order they are given in. Returns the
-    chosen spread and the comparison; use it as
+    nearer the binomial default (1.0) on a log scale whatever order they are given in (a
+    tie, such as 0.75 and 4/3, goes to the narrower). Returns the chosen spread and the
+    comparison, whose candidates are named ``f"{spread:.4g}"``; use it as
     ``PartialCreditEstimator(thresholds=spread_thresholds(spread))``.
+
+    With few students the rule keeps the default unless the log is clear: at a true
+    spread of 2 it chose 2 in 11-15 of 30 fits with one to three students, against 17-20
+    of 20 with twenty (decision 11). Prefer it to arg-min when a wrong spread costs more
+    than a missed one.
 
     >>> items = {'q': Item('q', difficulty=0.5)}
     >>> log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2) for k in (1, 2, 1, 0)]}
@@ -698,9 +711,13 @@ def fit_threshold_spread(
     1.0
     """
     base = estimator if estimator is not None else PartialCreditEstimator()
-    ordered = sorted({float(c) for c in spreads}, key=lambda c: (abs(math.log(c)), c))
-    candidates = {repr(c): replace(base, thresholds=spread_thresholds(c)) for c in ordered}
+    grid = {spread_thresholds(c).spread for c in spreads}  # validates each spread
+    ordered = sorted(grid, key=lambda c: (round(abs(math.log(c)), 12), c))
+    by_name = {f"{c:.4g}": c for c in ordered}
+    candidates = {
+        name: replace(base, thresholds=spread_thresholds(c)) for name, c in by_name.items()
+    }
     result = compare_estimators(
         log, items=items, candidates=candidates, students=students, tolerance_se=tolerance_se
     )
-    return float(result.chosen), result
+    return by_name[result.chosen], result
