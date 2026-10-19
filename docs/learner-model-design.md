@@ -42,7 +42,8 @@ Four seams. Each is one keyword argument with a default that genuinely works, an
 Surface for v1:  Python API only.
                  CLI / HTTP / MCP / frontend: question answered, not built — see below.
 NOT seams:       the outcome vocabulary (three values, written directly), the log record
-                 format, the logit link. These are decided, not parameterised.
+                 format, the logit link. These are decided, not parameterised. (The record
+                 gained an optional score in decision 11; additive, old logs unchanged.)
 ```
 
 **Would another surface need the core to change?** No. `LearnerModel` takes and returns plain data, the stores are already `MutableMapping`, and nothing touches process state. A CLI is `python-dispatching`'s job over the same facade; HTTP and MCP are the same functions again. The frontend case is the interesting one and still costs the core nothing: a browser client would reimplement the estimator rather than call Python, which is exactly why the per-student state is a **small, explicit JSON document** — two numbers per skill — rather than a pickled object.
@@ -159,6 +160,17 @@ The mean-field update moved each skill as if it alone explained the residual (`s
 - **Approximations.** Forgetting adds independent drift per skill and leaves `cov` alone; the `conjunctivity` soft-min shares are linearised at the posterior means; `gain="elo"` keeps Elo's fixed gain `elo_rate * h` on the item's own skills (a label Elo does not name keeps its mean, through the frame's `shift`) and tracks the covariance as Bayes would.
 
 Measured on 60 synthetic students per row (300 responses, uniform skill −2.5, no real label deviation, 30 items each pairing one label with one of five others), students with any label flagged by the default gate, before → after: 0.9/0.1 shares 55 → 0, 0.6/0.4 26 → 0, hub label on every item 8 → 0 (the issue's own runs read 59, 27 and 6 before). Prequential log loss and ECE are unchanged to the third decimal across cold-start regimes (100 labels and 30–100 responses, 2 labels per item, 9 labels per item), and the power to find a genuine −2 logit single-label weakness is unchanged (20 labels, 300 responses: 0.28 vs 0.285).
+
+### 11. Ordered scores: an optional score on the response, a Partial Credit estimator behind the seam (2026-10-19, #17)
+
+A consumer scores attempts in stars (1–5, or three ordered levels such as 1/3/5), which a three-valued `Outcome` cannot hold. The log record and the estimator each gain one thing; nothing else changes.
+
+- **`Response(score=k, max_score=m)`, optional and paired.** `score` is an `int` in `0..m` on consecutive levels: 1–5 stars is `score = stars − 1, max_score = 4`; three ordered levels are `0, 1, 2` of `2`, because a level that can never be observed is not a level and would bias the thresholds. `outcome` stays required and is the dichotomous view of the same attempt, so the default estimator is untouched. A skipped response cannot carry a score. An unscored response serialises exactly as before (no `score` keys), so existing logs are byte-for-byte what they were and older readers ignore the new keys. This is the one change to the record format since v1, and it is additive.
+- **`PartialCreditEstimator` (Masters 1982), chosen over the Graded Response Model (Samejima).** It is `RaschEstimator` with one method replaced, `_likelihood(response, item, s)`, which returns the gradient and Fisher information of one response's log-likelihood in the item's linear predictor `s`. For the PCM these are `k − E[X]` and `Var[X]`, so the joint global/label update of decision 10, forgetting, the frame and replay are reused unchanged. GRM would need the same two quantities and fits the same seam; PCM won because it stays in the Rasch family (the score is a sufficient statistic) and because of the next point.
+- **Default thresholds are binomial, `tau_k = log(k / (m − k + 1))`.** Under them the score is binomial with step rate `expit(s)`, so the expected fraction of the maximum equals the right/wrong probability, and an externally calibrated `Item.difficulty` means the same thing however the item is scored, with no new parameters. A score out of `m` then carries up to `m` times the information of one right/wrong answer, which is strong for a noisy rating. `thresholds=` is the seam: a callable `(item, max_score) -> m logits`; steps spread wider apart carry less information. With `max_score=1` the model is exactly Rasch; a response with no score is scored by the Rasch path itself (guessing and skips included); `guess` applies to those only.
+- **`predict()` keeps the `Estimator` meaning**, the probability of a correct right/wrong answer; `expected_score()` and `score_probabilities()` answer for a score, integrated over the posterior with the same probit approximation (exact in the mean under binomial thresholds).
+- **One response carries one score.** An attempt with several sub-scores (reaction, tempo, rhythm) is several responses, one per sub-score, each against its own item id labelled by its facet. A vector score would need a multidimensional likelihood and a wider record for no gain the facet labels do not already give. The owner's confirmation of this shape is tracked in #30.
+- **Not yet:** calibration of score predictions (the prequential report still scores `predict()` against `outcome`), and learning thresholds from data: #31 and #32.
 
 ### Calibration reporting (was "the most important next step")
 

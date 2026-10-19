@@ -25,8 +25,10 @@ from learny.tracing.diagnostics import (
 from learny.tracing.estimators import (
     Estimator,
     Mastery,
+    PartialCreditEstimator,
     RaschEstimator,
     Skill,
+    binomial_thresholds,
     difficulty_from_rank,
     expit,
     logit,
@@ -59,6 +61,7 @@ __all__ = [
     # the seams
     "Estimator",
     "RaschEstimator",
+    "PartialCreditEstimator",
     "ResponseLog",
     "estimate_store",
     "response_log",
@@ -73,6 +76,7 @@ __all__ = [
     # helpers
     "restrict_labels",
     "difficulty_from_rank",
+    "binomial_thresholds",
     "mark_not_reached",
     "expit",
     "logit",

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import replace
 from statistics import NormalDist
 from typing import Any, Literal
 
@@ -207,30 +208,45 @@ class LearnerModel:
         outcome: Outcome | str | bool,
         *,
         at: float | None = None,
+        score: int | None = None,
+        max_score: int | None = None,
         **meta: Any,
     ) -> None:
         """Log one response and fold it into the student's estimate.
 
         The log is written first: if updating the cache fails, the evidence survives and
-        :meth:`replay` can rebuild from it.
+        :meth:`replay` can rebuild from it. ``score`` out of ``max_score`` records an
+        ordered score alongside the right/wrong ``outcome`` (see
+        :class:`~learny.tracing.records.Response`); the default estimator reads only the
+        outcome, :class:`~learny.tracing.estimators.PartialCreditEstimator` the score.
+
+        >>> from learny.tracing.estimators import PartialCreditEstimator
+        >>> items = {'song-7/tempo': Item('song-7/tempo', labels=('tempo',))}
+        >>> model = LearnerModel(
+        ...     items=items, estimator=PartialCreditEstimator(), log={}, estimates={}
+        ... )
+        >>> model.record('ada', 'song-7/tempo', 'correct', score=4, max_score=4)
+        >>> model.mastery('ada')['tempo'].mu > 0
+        True
         """
-        response = Response(student, item, Outcome(outcome), at=at, meta=meta)
-        self._append(response)
-        state = self._state(student)
-        self.estimates[student] = self.estimator.observe(
-            state, response, self.items.get(item)
+        self._fold(
+            Response(
+                student, item, Outcome(outcome), at=at, meta=meta,
+                score=score, max_score=max_score,
+            )
         )
 
     def record_many(self, responses: Iterable[Response]) -> None:
         """Record a batch — a whole paper, say — in the order given."""
         for response in responses:
-            self.record(
-                response.student,
-                response.item,
-                response.outcome,
-                at=response.at,
-                **dict(response.meta),
-            )
+            self._fold(replace(response, meta=dict(response.meta)))
+
+    def _fold(self, response: Response) -> None:
+        self._append(response)
+        state = self._state(response.student)
+        self.estimates[response.student] = self.estimator.observe(
+            state, response, self.items.get(response.item)
+        )
 
     # -- asking ------------------------------------------------------------------
 
