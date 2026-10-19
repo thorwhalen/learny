@@ -131,6 +131,7 @@ class TestCalibratedGate:
         [
             (20, 40, {"difficulty": 0.05}),  # mostly right, sparse: was 0.64 (#34 review)
             (6, 60, {"skip": 0.3}),  # random skips: was 0.22
+            (10, 10, {"difficulty": 0.03}),  # one response per label: was 0.30
         ],
     )
     def test_false_flags_stay_near_target_off_the_grid(self, n_labels, n_responses, kw):

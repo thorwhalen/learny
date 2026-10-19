@@ -71,6 +71,14 @@ DEFAULT_MULTIPLICITY = "calibrated"
 WeakestReason = Literal["no_evidence", "no_credible_weakness"]
 RelativeTo = Literal["labels", "global"]
 Multiplicity = Literal["calibrated", "bonferroni", "none"]
+
+#: Fewest rare outcomes a label's null must rest on before its moments describe its
+#: tail. A compound-Poisson fit to a label's null cumulants, ``nv`` and ``nk3``, puts
+#: ``lambda = nv**3 / nk3**2`` rare jumps behind it (one wrong answer among a few that a
+#: student nearly always gets right: ``lambda`` well below 1). With less than one, the
+#: null is a single discrete event, no moment expansion holds, and the label is measured
+#: by its posterior spread instead (#22, #35).
+_MIN_RARE_EVENTS = 1.0
 _RELATIVE_TO = ("labels", "global")
 _MULTIPLICITY = ("calibrated", "bonferroni", "none")
 
@@ -131,11 +139,14 @@ def _null_spreads(
     True
     """
     loads = [float(getattr(m, "loading", 0.0) or 0.0) for m in masteries]
-    nvs = [
-        max(m.deviation.var - a * a if m.null_var is None else m.null_var, 0.0)
-        for m, a in zip(masteries, loads)
-    ]
-    k3s = [float(getattr(m, "null_k3", None) or 0.0) for m in masteries]
+
+    def own(m: Mastery, a: float) -> tuple[float, float]:
+        nv, k3 = m.null_var, float(getattr(m, "null_k3", None) or 0.0)
+        if nv is None or (k3 and nv**3 < _MIN_RARE_EVENTS * k3 * k3):
+            return max(m.deviation.var - a * a, 0.0), 0.0  # the posterior own residual
+        return max(nv, 0.0), k3
+
+    nvs, k3s = map(list, zip(*(own(m, a) for m, a in zip(masteries, loads))))
 
     def spread(var: float, k3: float) -> tuple[float, float]:
         sd = math.sqrt(var)
