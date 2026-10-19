@@ -18,9 +18,12 @@ from learny.tracing.diagnostics import (
     CalibrationBin,
     CalibrationReport,
     LabelSeparation,
+    ScoreCalibrationReport,
     calibration,
     label_separation,
     prequential,
+    reads_scores,
+    score_calibration,
 )
 from learny.tracing.estimators import (
     Estimator,
@@ -72,6 +75,9 @@ __all__ = [
     "CalibrationReport",
     "CalibrationBin",
     "calibration",
+    "ScoreCalibrationReport",
+    "score_calibration",
+    "reads_scores",
     "prequential",
     # helpers
     "restrict_labels",

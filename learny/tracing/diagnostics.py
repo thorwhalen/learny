@@ -12,7 +12,8 @@ deviation stays near zero, the separation is near zero, and any ranking of the l
 noise. The report says so rather than leaving a caller to sort noise and call it a
 diagnosis.
 
-**Are its probabilities honest?** :func:`calibration` replays the log *prequentially*:
+**Are its probabilities honest?** :func:`calibration` (right/wrong) and
+:func:`score_calibration` (ordered scores) replay the log *prequentially*:
 each response is predicted from the state built from the responses before it, then
 folded in. Nothing is scored on data it was fitted to, so the report measures prediction,
 not fit. For a learner model calibration matters more than discrimination — a 70% that
@@ -39,6 +40,9 @@ __all__ = [
     "CalibrationBin",
     "CalibrationReport",
     "calibration",
+    "ScoreCalibrationReport",
+    "score_calibration",
+    "reads_scores",
     "DEFAULT_SEPARATION_THRESHOLD",
     "DEFAULT_N_BINS",
 ]
@@ -211,11 +215,44 @@ def prequential(
     >>> [round(p, 3) for _, p in prequential(rs, items=items, estimator=RaschEstimator())]
     [0.5, 0.6]
     """
+    for response, item, state in _before_each(responses, items=items, estimator=estimator):
+        yield response, estimator.predict(state, item)
+
+
+def _before_each(
+    responses: Iterable[Response], *, items: Mapping[str, Item], estimator: Estimator
+) -> Iterator[tuple[Response, Item, Mapping[str, Any]]]:
+    """``(response, item, state)`` with ``state`` built from the responses before it."""
     state = estimator.init()
     for response in responses:
         item = items.get(response.item) or Item(response.item)
-        yield response, estimator.predict(state, item)
+        yield response, item, state
         state = estimator.observe(state, response, item)
+
+
+def reads_scores(estimator: Any) -> bool:
+    """Whether ``estimator`` forecasts ordered scores: it has ``score_probabilities``.
+
+    It decides which report a scored response belongs in: an estimator without it
+    forecasts the right/wrong ``outcome``, so the response is scored by
+    :func:`calibration`; one with it is taken to forecast (and learn from) the score, so
+    the response is scored by :func:`score_calibration` instead. It is a check of
+    capability, not of what ``observe`` reads: an estimator that forecasts scores while
+    learning only from outcomes should not define ``score_probabilities``.
+
+    >>> from learny.tracing.estimators import PartialCreditEstimator, RaschEstimator
+    >>> reads_scores(RaschEstimator()), reads_scores(PartialCreditEstimator())
+    (False, True)
+    """
+    return callable(getattr(estimator, "score_probabilities", None))
+
+
+def _names(log: Mapping[str, Iterable[Response]], students: Iterable[str] | None) -> list[str]:
+    if students is not None:
+        return list(students)
+    if hasattr(log, "students"):  # a ResponseLog iterates responses, not students
+        return log.students()
+    return list(log)
 
 
 @dataclass(frozen=True)
@@ -319,11 +356,12 @@ def calibration(
     pooled into one table. Skips are replayed (they move the state) but not scored:
     there is no right answer to compare them to.
 
-    A response with an ordered score is scored here like any other, as ``predict()``
-    against its right/wrong ``outcome``. For a score that ``outcome`` is the caller's own
-    reading of the attempt (correct only at full marks, say), not the event a score
-    model's ``predict()`` forecasts, so a well-calibrated score model can read as
-    miscalibrated. Calibrating score predictions is not built yet (#31).
+    A response with an ordered score is scored here only when the estimator reads the
+    right/wrong ``outcome`` alone (``reads_scores(estimator)`` is false), because then
+    ``predict()`` forecasts that outcome. For an estimator that reads the score, the
+    ``outcome`` is only the caller's own reading of the attempt (correct at full marks,
+    say), not the event its ``predict()`` forecasts: those responses are replayed but
+    scored by :func:`score_calibration` instead (#31).
 
     >>> from learny.tracing.estimators import RaschEstimator
     >>> items = {f'q{i}': Item(f'q{i}', labels=('x',), difficulty=0.5) for i in range(4)}
@@ -334,15 +372,179 @@ def calibration(
     >>> report.log_loss < math.log(2)   # beats a coin flip once it has learned
     True
     """
-    if students is not None:
-        names = list(students)
-    elif hasattr(log, "students"):  # a ResponseLog iterates responses, not students
-        names = log.students()
-    else:
-        names = list(log)
+    by_score = reads_scores(estimator)
     pairs: list[tuple[float, float]] = []
-    for name in names:
+    for name in _names(log, students):
         for response, p in prequential(log[name], items=items, estimator=estimator):
-            if response.outcome.is_scored:
+            if response.outcome.is_scored and not (by_score and response.score is not None):
                 pairs.append((p, 1.0 if response.outcome is Outcome.CORRECT else 0.0))
     return CalibrationReport.from_pairs(pairs, n_bins=n_bins)
+
+
+# -- calibration of ordered scores -------------------------------------------------
+
+
+#: How far a forecast's probabilities may sum from 1 before it is refused.
+_SUM_TOL = 1e-6
+
+
+def _check_forecast(probs: Sequence[float], level: int) -> None:
+    """Refuse a forecast that is not a distribution over two or more levels, or a level
+    that is not one of them, rather than score it into a misleading number.
+
+    >>> _check_forecast([0.5, 0.5], 1)
+    >>> _check_forecast([5, 5, 5], 0)
+    Traceback (most recent call last):
+        ...
+    ValueError: a forecast must be probabilities summing to 1, got [5, 5, 5]
+    """
+    if len(probs) < 2:
+        raise ValueError(f"a score forecast needs at least two levels, got {list(probs)!r}")
+    if not all(math.isfinite(p) and p >= 0.0 for p in probs) or abs(sum(probs) - 1.0) > _SUM_TOL:
+        raise ValueError(f"a forecast must be probabilities summing to 1, got {list(probs)!r}")
+    if isinstance(level, bool) or not isinstance(level, int) or not 0 <= level < len(probs):
+        raise ValueError(f"level {level!r} is not one of the {len(probs)} levels forecast")
+
+
+def _rps(probs: Sequence[float], level: int) -> float:
+    """Ranked probability score of one forecast, scaled to ``[0, 1]``.
+
+    The squared gap between forecast and observed cumulative distributions, summed over
+    the ``m`` thresholds between the ``m + 1`` levels and divided by ``m``: a forecast one
+    level off costs less than one three levels off, which log loss cannot see.
+
+    >>> _rps([0.0, 1.0, 0.0], 1), _rps([1.0, 0.0, 0.0], 2)
+    (0.0, 1.0)
+    >>> _rps([0.0, 1.0, 0.0], 2)
+    0.5
+    """
+    m = len(probs) - 1
+    cum, total = 0.0, 0.0
+    for j in range(m):
+        cum += probs[j]
+        total += (cum - (1.0 if level <= j else 0.0)) ** 2
+    return total / m
+
+
+@dataclass(frozen=True)
+class ScoreCalibrationReport:
+    """Prequential scores for forecasts of an ordered score.
+
+    ``log_loss`` is minus the log probability given to the level observed; ``rps`` is the
+    ranked probability score (:func:`_rps`), which also charges for *how far* off a
+    forecast was. Both are proper (lower is better), and each has a ``base_`` twin: what
+    forecasting the observed frequency of each level, per ``max_score``, would score, so
+    beating it means the model knows more than the average. The reliability table bins
+    the *expected* fraction of the maximum against the fraction observed, and ``ece`` is
+    its count-weighted mean absolute gap. Responses with different ``max_score`` pool on
+    that fraction scale.
+    """
+
+    n: int
+    log_loss: float
+    base_log_loss: float
+    rps: float
+    base_rps: float
+    ece: float
+    bins: tuple[CalibrationBin, ...]
+
+    @classmethod
+    def from_forecasts(
+        cls,
+        forecasts: Sequence[tuple[Sequence[float], int]],
+        *,
+        n_bins: int = DEFAULT_N_BINS,
+    ) -> "ScoreCalibrationReport":
+        """Build a report from ``(probabilities over 0..m, level observed)`` pairs.
+
+        >>> sure = ScoreCalibrationReport.from_forecasts([([0.0, 0.0, 1.0], 2)] * 3)
+        >>> sure.n, round(sure.log_loss, 6), sure.rps, sure.ece
+        (3, 0.0, 0.0, 0.0)
+        >>> mixed = [([0.25, 0.5, 0.25], k) for k in (0, 1, 1, 2)]
+        >>> r = ScoreCalibrationReport.from_forecasts(mixed)
+        >>> round(r.log_loss, 3) == round(r.base_log_loss, 3), r.ece
+        (True, 0.0)
+        """
+        if n_bins < 1:
+            raise ValueError(f"n_bins must be at least 1, got {n_bins}")
+        n = len(forecasts)
+        if n == 0:
+            nan = math.nan
+            return cls(n=0, log_loss=nan, base_log_loss=nan, rps=nan, base_rps=nan,
+                       ece=nan, bins=())
+        for probs, level in forecasts:
+            _check_forecast(probs, level)
+
+        def nll(probs: Sequence[float], level: int) -> float:
+            return -math.log(min(max(probs[level], _EPS), 1.0))
+
+        counts: dict[int, list[int]] = {}
+        for probs, level in forecasts:
+            counts.setdefault(len(probs), [0] * len(probs))[level] += 1
+        base = {size: [c / sum(cs) for c in cs] for size, cs in counts.items()}
+
+        buckets: dict[int, list[tuple[float, float]]] = {}
+        for probs, level in forecasts:
+            m = len(probs) - 1
+            expected = sum(k * p for k, p in enumerate(probs)) / m
+            buckets.setdefault(min(int(expected * n_bins), n_bins - 1), []).append(
+                (expected, level / m)
+            )
+        bins = tuple(
+            CalibrationBin(
+                lo=i / n_bins,
+                hi=(i + 1) / n_bins,
+                n=len(b),
+                mean_predicted=sum(e for e, _ in b) / len(b),
+                observed_rate=sum(o for _, o in b) / len(b),
+            )
+            for i, b in sorted(buckets.items())
+        )
+        return cls(
+            n=n,
+            log_loss=sum(nll(p, k) for p, k in forecasts) / n,
+            base_log_loss=sum(nll(base[len(p)], k) for p, k in forecasts) / n,
+            rps=sum(_rps(p, k) for p, k in forecasts) / n,
+            base_rps=sum(_rps(base[len(p)], k) for p, k in forecasts) / n,
+            ece=sum(b.n * abs(b.gap) for b in bins) / n,
+            bins=bins,
+        )
+
+
+def score_calibration(
+    log: Mapping[str, Iterable[Response]],
+    *,
+    items: Mapping[str, Item],
+    estimator: Estimator,
+    students: Iterable[str] | None = None,
+    n_bins: int = DEFAULT_N_BINS,
+) -> ScoreCalibrationReport:
+    """Prequential calibration of ``estimator``'s score forecasts over ``log``.
+
+    The twin of :func:`calibration` for responses with an ordered ``score``: each is
+    forecast by ``estimator.score_probabilities`` from the state before it, every
+    response (scored, right/wrong or skipped) is replayed, and only the scored ones are
+    scored. The estimator must read scores (:func:`reads_scores`), such as
+    :class:`~learny.tracing.estimators.PartialCreditEstimator`.
+
+    >>> from learny.tracing.estimators import PartialCreditEstimator
+    >>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
+    >>> log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2)
+    ...              for k in (2, 1, 2, 2, 1, 2)]}
+    >>> r = score_calibration(log, items=items, estimator=PartialCreditEstimator())
+    >>> r.n, 0.0 <= r.rps <= 1.0
+    (6, True)
+    """
+    if not reads_scores(estimator):
+        raise TypeError(
+            f"{type(estimator).__name__} does not forecast scores (it has no "
+            "score_probabilities); use calibration() for its right/wrong forecasts, or "
+            "an estimator that reads scores, such as PartialCreditEstimator"
+        )
+    forecasts: list[tuple[list[float], int]] = []
+    for name in _names(log, students):
+        for response, item, state in _before_each(log[name], items=items, estimator=estimator):
+            if response.score is not None:
+                probs = estimator.score_probabilities(state, item, response.max_score)
+                forecasts.append((list(probs), response.score))
+    return ScoreCalibrationReport.from_forecasts(forecasts, n_bins=n_bins)

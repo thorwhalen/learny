@@ -171,7 +171,7 @@ A consumer scores attempts in stars (1–5, or three ordered levels such as 1/3/
 - **`predict()` keeps the `Estimator` meaning**, the probability of a correct right/wrong answer; `expected_score()` and `score_probabilities()` answer for a score, integrated over the posterior with the same probit approximation (under binomial thresholds and `guess=0`, `expected_score == max_score * predict()` exactly; both approximate the posterior integral).
 - **`LearnerModel.record(..., score=, max_score=)` are now named arguments**, so a caller that passed `score=` as a free meta key now has it validated as an ordered score (no caller in the repository did; logs with `meta["score"]` replay unchanged). Thresholds must be finite numbers, and `score`/`max_score` any integral type (a numpy integer is stored as `int`); an integral float such as `3.0` is refused rather than guessed at.
 - **One response carries one score.** An attempt with several sub-scores (reaction, tempo, rhythm) is several responses, one per sub-score, each against its own item id labelled by its facet. A vector score would need a multidimensional likelihood and a wider record for no gain the facet labels do not already give. The owner's confirmation of this shape is tracked in #30.
-- **Not yet:** calibration of score predictions (the prequential report still scores `predict()` against `outcome`, which `calibration()`'s docstring now says), and learning thresholds from data: #31 and #32.
+- **Score calibration (2026-10-19, #31).** `score_calibration()` (and `LearnerModel.score_calibration()`) replays the log prequentially, as `calibration()` does, and scores each scored response's forecast distribution against the level observed. It reports log loss, the ranked probability score (which also charges for how far off a forecast was), each against the observed level frequencies per `max_score`, and a reliability table of expected against observed fraction of the maximum. A scored response goes into whichever report matches what the estimator forecasts (`reads_scores(estimator)`): `RaschEstimator` reads only `outcome`, so its scored responses stay in `calibration()`; a score-reading estimator moves them to `score_calibration()`, because its `predict()` does not forecast the caller's dichotomised outcome. Still open: learning thresholds from data (#32).
 
 ### 12. weakest() is calibrated to the null, not to the posterior (2026-10-19, #22)
 
@@ -203,7 +203,7 @@ The Bonferroni gate of #14 bounded the chance of any false flag by applying `(1 
 
 ### Calibration reporting (was "the most important next step")
 
-Built: `LearnerModel.calibration()` / `diagnostics.calibration()` replays the log prequentially — each prediction is made from the state before its own response — and reports log loss against the know-only-the-base-rate baseline, Brier score, expected calibration error and a reliability table. Each student is replayed alone, exactly as in live use; only the scored pairs are pooled.
+Built: `LearnerModel.calibration()` / `diagnostics.calibration()` replays the log prequentially — each prediction is made from the state before its own response — and reports log loss against the know-only-the-base-rate baseline, Brier score, expected calibration error and a reliability table. Each student is replayed alone, exactly as in live use; only the scored pairs are pooled. Ordered scores have their own report, `score_calibration()` (decision 11).
 
 ## Data, and the line it does not cross
 

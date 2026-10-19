@@ -25,8 +25,10 @@ from learny.tracing.diagnostics import (
     DEFAULT_SEPARATION_THRESHOLD,
     CalibrationReport,
     LabelSeparation,
+    ScoreCalibrationReport,
     calibration,
     label_separation,
+    score_calibration,
 )
 from learny.tracing.estimators import RaschEstimator, Estimator, Mastery
 from learny.tracing.records import Item, Outcome, Response
@@ -506,11 +508,27 @@ class LearnerModel:
     ) -> CalibrationReport:
         """Prequential calibration over the log; see :func:`calibration`.
 
-        Reads the log only; the estimate cache is neither used nor changed.
+        Reads the log only; the estimate cache is neither used nor changed. With an
+        estimator that reads scores, scored responses are left to
+        :meth:`score_calibration`, so a log of scores alone gives an empty report here.
         """
         names = list(students) if students is not None else self._students()
         log = {name: self._responses(name) for name in names}
         return calibration(log, items=self.items, estimator=self.estimator, n_bins=n_bins)
+
+    def score_calibration(
+        self, students: Iterable[str] | None = None, *, n_bins: int = DEFAULT_N_BINS
+    ) -> ScoreCalibrationReport:
+        """Prequential calibration of the score forecasts; see :func:`score_calibration`.
+
+        Reads the log only. Needs an estimator that reads scores, such as
+        :class:`~learny.tracing.estimators.PartialCreditEstimator`.
+        """
+        names = list(students) if students is not None else self._students()
+        log = {name: self._responses(name) for name in names}
+        return score_calibration(
+            log, items=self.items, estimator=self.estimator, n_bins=n_bins
+        )
 
     # -- the contract that makes the estimator replaceable ------------------------
 
