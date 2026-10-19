@@ -508,7 +508,9 @@ class LearnerModel:
     ) -> CalibrationReport:
         """Prequential calibration over the log; see :func:`calibration`.
 
-        Reads the log only; the estimate cache is neither used nor changed.
+        Reads the log only; the estimate cache is neither used nor changed. With an
+        estimator that reads scores, scored responses are left to
+        :meth:`score_calibration`, so a log of scores alone gives an empty report here.
         """
         names = list(students) if students is not None else self._students()
         log = {name: self._responses(name) for name in names}

@@ -384,3 +384,12 @@ class TestScoreCalibration:
 
         with pytest.raises(ValueError, match="not one of the 3 levels"):
             ScoreCalibrationReport.from_forecasts([([0.2, 0.5, 0.3], 3)])
+
+    @pytest.mark.parametrize(
+        "probs", [[5.0, 5.0, 5.0], [0.5, math.nan, 0.5], [1.0], [-0.5, 1.5]]
+    )
+    def test_a_forecast_that_is_not_a_distribution_is_loud(self, probs):
+        from learny.tracing import ScoreCalibrationReport
+
+        with pytest.raises(ValueError, match="forecast"):
+            ScoreCalibrationReport.from_forecasts([(probs, 0)])

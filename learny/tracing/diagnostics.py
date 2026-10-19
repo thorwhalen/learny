@@ -231,12 +231,14 @@ def _before_each(
 
 
 def reads_scores(estimator: Any) -> bool:
-    """Whether ``estimator`` models ordered scores, by having ``score_probabilities``.
+    """Whether ``estimator`` forecasts ordered scores: it has ``score_probabilities``.
 
-    It decides which report a scored response belongs in: an estimator that reads only
-    the right/wrong ``outcome`` forecasts that outcome, so the response is scored by
-    :func:`calibration`; one that reads the score forecasts the score, so it is scored by
-    :func:`score_calibration` instead.
+    It decides which report a scored response belongs in: an estimator without it
+    forecasts the right/wrong ``outcome``, so the response is scored by
+    :func:`calibration`; one with it is taken to forecast (and learn from) the score, so
+    the response is scored by :func:`score_calibration` instead. It is a check of
+    capability, not of what ``observe`` reads: an estimator that forecasts scores while
+    learning only from outcomes should not define ``score_probabilities``.
 
     >>> from learny.tracing.estimators import PartialCreditEstimator, RaschEstimator
     >>> reads_scores(RaschEstimator()), reads_scores(PartialCreditEstimator())
@@ -382,6 +384,28 @@ def calibration(
 # -- calibration of ordered scores -------------------------------------------------
 
 
+#: How far a forecast's probabilities may sum from 1 before it is refused.
+_SUM_TOL = 1e-6
+
+
+def _check_forecast(probs: Sequence[float], level: int) -> None:
+    """Refuse a forecast that is not a distribution over two or more levels, or a level
+    that is not one of them, rather than score it into a misleading number.
+
+    >>> _check_forecast([0.5, 0.5], 1)
+    >>> _check_forecast([5, 5, 5], 0)
+    Traceback (most recent call last):
+        ...
+    ValueError: a forecast must be probabilities summing to 1, got [5, 5, 5]
+    """
+    if len(probs) < 2:
+        raise ValueError(f"a score forecast needs at least two levels, got {list(probs)!r}")
+    if not all(math.isfinite(p) and p >= 0.0 for p in probs) or abs(sum(probs) - 1.0) > _SUM_TOL:
+        raise ValueError(f"a forecast must be probabilities summing to 1, got {list(probs)!r}")
+    if isinstance(level, bool) or not isinstance(level, int) or not 0 <= level < len(probs):
+        raise ValueError(f"level {level!r} is not one of the {len(probs)} levels forecast")
+
+
 def _rps(probs: Sequence[float], level: int) -> float:
     """Ranked probability score of one forecast, scaled to ``[0, 1]``.
 
@@ -449,10 +473,7 @@ class ScoreCalibrationReport:
             return cls(n=0, log_loss=nan, base_log_loss=nan, rps=nan, base_rps=nan,
                        ece=nan, bins=())
         for probs, level in forecasts:
-            if not 0 <= level < len(probs) or len(probs) < 2:
-                raise ValueError(
-                    f"level {level!r} is not one of the {len(probs)} levels forecast"
-                )
+            _check_forecast(probs, level)
 
         def nll(probs: Sequence[float], level: int) -> float:
             return -math.log(min(max(probs[level], _EPS), 1.0))
