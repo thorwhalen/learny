@@ -13,6 +13,8 @@ learny.tracing
       data_dir
       label_separation
       calibration
+      score_calibration
+      reads_scores
       prequential
       restrict_labels
       difficulty_from_rank
@@ -39,6 +41,7 @@ learny.tracing
       LabelSeparation
       CalibrationReport
       CalibrationBin
+      ScoreCalibrationReport
    
 .. rubric:: Modules
 

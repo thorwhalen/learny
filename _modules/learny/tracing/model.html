@@ -739,8 +739,10 @@ window.runMermaid = runMermaid;</script>
     <span class="n">DEFAULT_SEPARATION_THRESHOLD</span><span class="p">,</span>
     <span class="n">CalibrationReport</span><span class="p">,</span>
     <span class="n">LabelSeparation</span><span class="p">,</span>
+    <span class="n">ScoreCalibrationReport</span><span class="p">,</span>
     <span class="n">calibration</span><span class="p">,</span>
     <span class="n">label_separation</span><span class="p">,</span>
+    <span class="n">score_calibration</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">RaschEstimator</span><span class="p">,</span> <span class="n">Estimator</span><span class="p">,</span> <span class="n">Mastery</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Outcome</span><span class="p">,</span> <span class="n">Response</span>
@@ -1245,11 +1247,30 @@ window.runMermaid = runMermaid;</script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CalibrationReport</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Prequential calibration over the log; see :func:`calibration`.</span>
 
-<span class="sd">        Reads the log only; the estimate cache is neither used nor changed.</span>
+<span class="sd">        Reads the log only; the estimate cache is neither used nor changed. With an</span>
+<span class="sd">        estimator that reads scores, scored responses are left to</span>
+<span class="sd">        :meth:`score_calibration`, so a log of scores alone gives an empty report here.</span>
 <span class="sd">        """</span>
         <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">students</span><span class="p">)</span> <span class="k">if</span> <span class="n">students</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_students</span><span class="p">()</span>
         <span class="n">log</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_responses</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">calibration</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="n">n_bins</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LearnerModel.score_calibration">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.model.html#learny.tracing.LearnerModel.score_calibration">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">score_calibration</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">students</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_N_BINS</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScoreCalibrationReport</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Prequential calibration of the score forecasts; see :func:`score_calibration`.</span>
+
+<span class="sd">        Reads the log only. Needs an estimator that reads scores, such as</span>
+<span class="sd">        :class:`~learny.tracing.estimators.PartialCreditEstimator`.</span>
+<span class="sd">        """</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">students</span><span class="p">)</span> <span class="k">if</span> <span class="n">students</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_students</span><span class="p">()</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_responses</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">score_calibration</span><span class="p">(</span>
+            <span class="n">log</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="n">n_bins</span>
+        <span class="p">)</span></div>
 
 
     <span class="c1"># -- the contract that makes the estimator replaceable ------------------------</span>

@@ -726,7 +726,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">noise. The report says so rather than leaving a caller to sort noise and call it a</span>
 <span class="sd">diagnosis.</span>
 
-<span class="sd">**Are its probabilities honest?** :func:`calibration` replays the log *prequentially*:</span>
+<span class="sd">**Are its probabilities honest?** :func:`calibration` (right/wrong) and</span>
+<span class="sd">:func:`score_calibration` (ordered scores) replay the log *prequentially*:</span>
 <span class="sd">each response is predicted from the state built from the responses before it, then</span>
 <span class="sd">folded in. Nothing is scored on data it was fitted to, so the report measures prediction,</span>
 <span class="sd">not fit. For a learner model calibration matters more than discrimination — a 70% that</span>
@@ -753,6 +754,9 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"CalibrationBin"</span><span class="p">,</span>
     <span class="s2">"CalibrationReport"</span><span class="p">,</span>
     <span class="s2">"calibration"</span><span class="p">,</span>
+    <span class="s2">"ScoreCalibrationReport"</span><span class="p">,</span>
+    <span class="s2">"score_calibration"</span><span class="p">,</span>
+    <span class="s2">"reads_scores"</span><span class="p">,</span>
     <span class="s2">"DEFAULT_SEPARATION_THRESHOLD"</span><span class="p">,</span>
     <span class="s2">"DEFAULT_N_BINS"</span><span class="p">,</span>
 <span class="p">]</span>
@@ -933,12 +937,48 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    &gt;&gt;&gt; [round(p, 3) for _, p in prequential(rs, items=items, estimator=RaschEstimator())]</span>
 <span class="sd">    [0.5, 0.6]</span>
 <span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">response</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">_before_each</span><span class="p">(</span><span class="n">responses</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">response</span><span class="p">,</span> <span class="n">estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_before_each</span><span class="p">(</span>
+    <span class="n">responses</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Response</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Item</span><span class="p">],</span> <span class="n">estimator</span><span class="p">:</span> <span class="n">Estimator</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Response</span><span class="p">,</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+<span class="w">    </span><span class="sd">"""``(response, item, state)`` with ``state`` built from the responses before it."""</span>
     <span class="n">state</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="n">responses</span><span class="p">:</span>
         <span class="n">item</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">item</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Item</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
-        <span class="k">yield</span> <span class="n">response</span><span class="p">,</span> <span class="n">estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
-        <span class="n">state</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span></div>
+        <span class="k">yield</span> <span class="n">response</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">state</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
 
+
+<div class="viewcode-block" id="reads_scores">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.diagnostics.html#learny.tracing.reads_scores">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">reads_scores</span><span class="p">(</span><span class="n">estimator</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether ``estimator`` forecasts ordered scores: it has ``score_probabilities``.</span>
+
+<span class="sd">    It decides which report a scored response belongs in: an estimator without it</span>
+<span class="sd">    forecasts the right/wrong ``outcome``, so the response is scored by</span>
+<span class="sd">    :func:`calibration`; one with it is taken to forecast (and learn from) the score, so</span>
+<span class="sd">    the response is scored by :func:`score_calibration` instead. It is a check of</span>
+<span class="sd">    capability, not of what ``observe`` reads: an estimator that forecasts scores while</span>
+<span class="sd">    learning only from outcomes should not define ``score_probabilities``.</span>
+
+<span class="sd">    &gt;&gt;&gt; from learny.tracing.estimators import PartialCreditEstimator, RaschEstimator</span>
+<span class="sd">    &gt;&gt;&gt; reads_scores(RaschEstimator()), reads_scores(PartialCreditEstimator())</span>
+<span class="sd">    (False, True)</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="s2">"score_probabilities"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_names</span><span class="p">(</span><span class="n">log</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Response</span><span class="p">]],</span> <span class="n">students</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">students</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">students</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="s2">"students"</span><span class="p">):</span>  <span class="c1"># a ResponseLog iterates responses, not students</span>
+        <span class="k">return</span> <span class="n">log</span><span class="o">.</span><span class="n">students</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="CalibrationBin">
@@ -1053,11 +1093,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    pooled into one table. Skips are replayed (they move the state) but not scored:</span>
 <span class="sd">    there is no right answer to compare them to.</span>
 
-<span class="sd">    A response with an ordered score is scored here like any other, as ``predict()``</span>
-<span class="sd">    against its right/wrong ``outcome``. For a score that ``outcome`` is the caller's own</span>
-<span class="sd">    reading of the attempt (correct only at full marks, say), not the event a score</span>
-<span class="sd">    model's ``predict()`` forecasts, so a well-calibrated score model can read as</span>
-<span class="sd">    miscalibrated. Calibrating score predictions is not built yet (#31).</span>
+<span class="sd">    A response with an ordered score is scored here only when the estimator reads the</span>
+<span class="sd">    right/wrong ``outcome`` alone (``reads_scores(estimator)`` is false), because then</span>
+<span class="sd">    ``predict()`` forecasts that outcome. For an estimator that reads the score, the</span>
+<span class="sd">    ``outcome`` is only the caller's own reading of the attempt (correct at full marks,</span>
+<span class="sd">    say), not the event its ``predict()`` forecasts: those responses are replayed but</span>
+<span class="sd">    scored by :func:`score_calibration` instead (#31).</span>
 
 <span class="sd">    &gt;&gt;&gt; from learny.tracing.estimators import RaschEstimator</span>
 <span class="sd">    &gt;&gt;&gt; items = {f'q{i}': Item(f'q{i}', labels=('x',), difficulty=0.5) for i in range(4)}</span>
@@ -1068,18 +1109,191 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    &gt;&gt;&gt; report.log_loss &lt; math.log(2)   # beats a coin flip once it has learned</span>
 <span class="sd">    True</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">students</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">students</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="s2">"students"</span><span class="p">):</span>  <span class="c1"># a ResponseLog iterates responses, not students</span>
-        <span class="n">names</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">students</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+    <span class="n">by_score</span> <span class="o">=</span> <span class="n">reads_scores</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
     <span class="n">pairs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_names</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">students</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">response</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">prequential</span><span class="p">(</span><span class="n">log</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">is_scored</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">is_scored</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">by_score</span> <span class="ow">and</span> <span class="n">response</span><span class="o">.</span><span class="n">score</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
                 <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">outcome</span> <span class="ow">is</span> <span class="n">Outcome</span><span class="o">.</span><span class="n">CORRECT</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">CalibrationReport</span><span class="o">.</span><span class="n">from_pairs</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="n">n_bins</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># -- calibration of ordered scores -------------------------------------------------</span>
+
+
+<span class="c1">#: How far a forecast's probabilities may sum from 1 before it is refused.</span>
+<span class="n">_SUM_TOL</span> <span class="o">=</span> <span class="mf">1e-6</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_forecast</span><span class="p">(</span><span class="n">probs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Refuse a forecast that is not a distribution over two or more levels, or a level</span>
+<span class="sd">    that is not one of them, rather than score it into a misleading number.</span>
+
+<span class="sd">    &gt;&gt;&gt; _check_forecast([0.5, 0.5], 1)</span>
+<span class="sd">    &gt;&gt;&gt; _check_forecast([5, 5, 5], 0)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">    ValueError: a forecast must be probabilities summing to 1, got [5, 5, 5]</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"a score forecast needs at least two levels, got </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="ow">and</span> <span class="n">p</span> <span class="o">&gt;=</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">probs</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">_SUM_TOL</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"a forecast must be probabilities summing to 1, got </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">level</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2"> is not one of the </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span><span class="si">}</span><span class="s2"> levels forecast"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rps</span><span class="p">(</span><span class="n">probs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Ranked probability score of one forecast, scaled to ``[0, 1]``.</span>
+
+<span class="sd">    The squared gap between forecast and observed cumulative distributions, summed over</span>
+<span class="sd">    the ``m`` thresholds between the ``m + 1`` levels and divided by ``m``: a forecast one</span>
+<span class="sd">    level off costs less than one three levels off, which log loss cannot see.</span>
+
+<span class="sd">    &gt;&gt;&gt; _rps([0.0, 1.0, 0.0], 1), _rps([1.0, 0.0, 0.0], 2)</span>
+<span class="sd">    (0.0, 1.0)</span>
+<span class="sd">    &gt;&gt;&gt; _rps([0.0, 1.0, 0.0], 2)</span>
+<span class="sd">    0.5</span>
+<span class="sd">    """</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">cum</span><span class="p">,</span> <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+        <span class="n">cum</span> <span class="o">+=</span> <span class="n">probs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="p">(</span><span class="n">cum</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.0</span> <span class="k">if</span> <span class="n">level</span> <span class="o">&lt;=</span> <span class="n">j</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">total</span> <span class="o">/</span> <span class="n">m</span>
+
+
+<div class="viewcode-block" id="ScoreCalibrationReport">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.diagnostics.html#learny.tracing.ScoreCalibrationReport">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScoreCalibrationReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Prequential scores for forecasts of an ordered score.</span>
+
+<span class="sd">    ``log_loss`` is minus the log probability given to the level observed; ``rps`` is the</span>
+<span class="sd">    ranked probability score (:func:`_rps`), which also charges for *how far* off a</span>
+<span class="sd">    forecast was. Both are proper (lower is better), and each has a ``base_`` twin: what</span>
+<span class="sd">    forecasting the observed frequency of each level, per ``max_score``, would score, so</span>
+<span class="sd">    beating it means the model knows more than the average. The reliability table bins</span>
+<span class="sd">    the *expected* fraction of the maximum against the fraction observed, and ``ece`` is</span>
+<span class="sd">    its count-weighted mean absolute gap. Responses with different ``max_score`` pool on</span>
+<span class="sd">    that fraction scale.</span>
+<span class="sd">    """</span>
+
+    <span class="n">n</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">log_loss</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">base_log_loss</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">rps</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">base_rps</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">ece</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">bins</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">CalibrationBin</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ScoreCalibrationReport.from_forecasts">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.diagnostics.html#learny.tracing.ScoreCalibrationReport.from_forecasts">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_forecasts</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">forecasts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">int</span><span class="p">]],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">n_bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_N_BINS</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ScoreCalibrationReport"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Build a report from ``(probabilities over 0..m, level observed)`` pairs.</span>
+
+<span class="sd">        &gt;&gt;&gt; sure = ScoreCalibrationReport.from_forecasts([([0.0, 0.0, 1.0], 2)] * 3)</span>
+<span class="sd">        &gt;&gt;&gt; sure.n, round(sure.log_loss, 6), sure.rps, sure.ece</span>
+<span class="sd">        (3, 0.0, 0.0, 0.0)</span>
+<span class="sd">        &gt;&gt;&gt; mixed = [([0.25, 0.5, 0.25], k) for k in (0, 1, 1, 2)]</span>
+<span class="sd">        &gt;&gt;&gt; r = ScoreCalibrationReport.from_forecasts(mixed)</span>
+<span class="sd">        &gt;&gt;&gt; round(r.log_loss, 3) == round(r.base_log_loss, 3), r.ece</span>
+<span class="sd">        (True, 0.0)</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">n_bins</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"n_bins must be at least 1, got </span><span class="si">{</span><span class="n">n_bins</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">forecasts</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">nan</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">nan</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">log_loss</span><span class="o">=</span><span class="n">nan</span><span class="p">,</span> <span class="n">base_log_loss</span><span class="o">=</span><span class="n">nan</span><span class="p">,</span> <span class="n">rps</span><span class="o">=</span><span class="n">nan</span><span class="p">,</span> <span class="n">base_rps</span><span class="o">=</span><span class="n">nan</span><span class="p">,</span>
+                       <span class="n">ece</span><span class="o">=</span><span class="n">nan</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">probs</span><span class="p">,</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">forecasts</span><span class="p">:</span>
+            <span class="n">_check_forecast</span><span class="p">(</span><span class="n">probs</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">nll</span><span class="p">(</span><span class="n">probs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">probs</span><span class="p">[</span><span class="n">level</span><span class="p">],</span> <span class="n">_EPS</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">))</span>
+
+        <span class="n">counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">probs</span><span class="p">,</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">forecasts</span><span class="p">:</span>
+            <span class="n">counts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">))[</span><span class="n">level</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="p">{</span><span class="n">size</span><span class="p">:</span> <span class="p">[</span><span class="n">c</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cs</span><span class="p">]</span> <span class="k">for</span> <span class="n">size</span><span class="p">,</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="n">buckets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">probs</span><span class="p">,</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">forecasts</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">expected</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">p</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probs</span><span class="p">))</span> <span class="o">/</span> <span class="n">m</span>
+            <span class="n">buckets</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">expected</span> <span class="o">*</span> <span class="n">n_bins</span><span class="p">),</span> <span class="n">n_bins</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="n">level</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">CalibrationBin</span><span class="p">(</span>
+                <span class="n">lo</span><span class="o">=</span><span class="n">i</span> <span class="o">/</span> <span class="n">n_bins</span><span class="p">,</span>
+                <span class="n">hi</span><span class="o">=</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_bins</span><span class="p">,</span>
+                <span class="n">n</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">),</span>
+                <span class="n">mean_predicted</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">),</span>
+                <span class="n">observed_rate</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">o</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">buckets</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">log_loss</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">nll</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">forecasts</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+            <span class="n">base_log_loss</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">nll</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)],</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">forecasts</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+            <span class="n">rps</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">_rps</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">forecasts</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+            <span class="n">base_rps</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">_rps</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)],</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">forecasts</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+            <span class="n">ece</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">n</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">gap</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bins</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">,</span>
+            <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="score_calibration">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.diagnostics.html#learny.tracing.score_calibration">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">score_calibration</span><span class="p">(</span>
+    <span class="n">log</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Response</span><span class="p">]],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">items</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Item</span><span class="p">],</span>
+    <span class="n">estimator</span><span class="p">:</span> <span class="n">Estimator</span><span class="p">,</span>
+    <span class="n">students</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_N_BINS</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScoreCalibrationReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Prequential calibration of ``estimator``'s score forecasts over ``log``.</span>
+
+<span class="sd">    The twin of :func:`calibration` for responses with an ordered ``score``: each is</span>
+<span class="sd">    forecast by ``estimator.score_probabilities`` from the state before it, every</span>
+<span class="sd">    response (scored, right/wrong or skipped) is replayed, and only the scored ones are</span>
+<span class="sd">    scored. The estimator must read scores (:func:`reads_scores`), such as</span>
+<span class="sd">    :class:`~learny.tracing.estimators.PartialCreditEstimator`.</span>
+
+<span class="sd">    &gt;&gt;&gt; from learny.tracing.estimators import PartialCreditEstimator</span>
+<span class="sd">    &gt;&gt;&gt; items = {'q': Item('q', labels=('x',), difficulty=0.5)}</span>
+<span class="sd">    &gt;&gt;&gt; log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2)</span>
+<span class="sd">    ...              for k in (2, 1, 2, 2, 1, 2)]}</span>
+<span class="sd">    &gt;&gt;&gt; r = score_calibration(log, items=items, estimator=PartialCreditEstimator())</span>
+<span class="sd">    &gt;&gt;&gt; r.n, 0.0 &lt;= r.rps &lt;= 1.0</span>
+<span class="sd">    (6, True)</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">reads_scores</span><span class="p">(</span><span class="n">estimator</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> does not forecast scores (it has no "</span>
+            <span class="s2">"score_probabilities); use calibration() for its right/wrong forecasts, or "</span>
+            <span class="s2">"an estimator that reads scores, such as PartialCreditEstimator"</span>
+        <span class="p">)</span>
+    <span class="n">forecasts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_names</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">students</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">response</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">_before_each</span><span class="p">(</span><span class="n">log</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">estimator</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">score</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">probs</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">score_probabilities</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">max_score</span><span class="p">)</span>
+                <span class="n">forecasts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">list</span><span class="p">(</span><span class="n">probs</span><span class="p">),</span> <span class="n">response</span><span class="o">.</span><span class="n">score</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ScoreCalibrationReport</span><span class="o">.</span><span class="n">from_forecasts</span><span class="p">(</span><span class="n">forecasts</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="n">n_bins</span><span class="p">)</span></div>
 
 </pre></div>
 

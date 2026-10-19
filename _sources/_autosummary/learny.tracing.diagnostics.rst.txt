@@ -18,6 +18,8 @@ learny.tracing.diagnostics
       label_separation
       prequential
       calibration
+      score_calibration
+      reads_scores
    
    .. rubric:: Classes
 
@@ -26,4 +28,5 @@ learny.tracing.diagnostics
       LabelSeparation
       CalibrationBin
       CalibrationReport
+      ScoreCalibrationReport
    

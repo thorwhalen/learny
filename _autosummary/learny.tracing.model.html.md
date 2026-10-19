@@ -92,7 +92,9 @@ True
 
 Prequential calibration over the log; see [`calibration()`](#learny.tracing.model.LearnerModel.calibration).
 
-Reads the log only; the estimate cache is neither used nor changed.
+Reads the log only; the estimate cache is neither used nor changed. With an
+estimator that reads scores, scored responses are left to
+[`score_calibration()`](#learny.tracing.model.LearnerModel.score_calibration), so a log of scores alone gives an empty report here.
 
 * **Return type:**
   [`CalibrationReport`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
@@ -152,6 +154,16 @@ state that live recording produced.
 
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+#### score_calibration(students=None, , n_bins=10)
+
+Prequential calibration of the score forecasts; see [`score_calibration()`](#learny.tracing.model.LearnerModel.score_calibration).
+
+Reads the log only. Needs an estimator that reads scores, such as
+[`PartialCreditEstimator`](learny.tracing.estimators.html.md#learny.tracing.estimators.PartialCreditEstimator).
+
+* **Return type:**
+  [`ScoreCalibrationReport`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.ScoreCalibrationReport)
 
 #### separation(student, , threshold=2.0)
 

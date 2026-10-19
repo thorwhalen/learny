@@ -1,4 +1,4 @@
-> built 2026-10-19 11:33 UTC from 1051975 (main) · learny 0.0.1. Details: build_info.json
+> built 2026-10-19 11:46 UTC from 2fc462f (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -82,6 +82,7 @@ model.separation('ada').distinguishable     # can her labels be told apart at al
 model.weakest('ada').reason                  # why it is empty, when it is
 model.weakest('ada', credible_below=None)    # plain ranking, no credibility gate
 model.calibration()                          # prequential: are the probabilities honest?
+model.score_calibration()                    # the same for star / partial-credit scores
 ```
 
 `weakest()` flags a label only when it is credibly below the student’s *other* labels, with the bound corrected for how many labels are tested at once and calibrated to how far a label’s estimate wanders by chance. So a student with no real weakness is told to practise something about one time in six at most, however many labels the bank has, and a student who is weak everywhere is not told every label is a weakness. **This is a change of default:** earlier versions compared each label with the student’s global skill using a per-label bound, which flagged at least one label for most students with no weakness at all. That gate is still one call away: `model.weakest('ada', relative_to='global', multiplicity='none')`. Evidence on a single label is never a relative weakness under the default; pass `relative_to='global'` when unlabelled items are what the label should be compared with. The calibration matters most at cold start: with 3 labels and 18 responses a real 2-logit weakness is found 40% of the time (the uncalibrated Bonferroni bound, `multiplicity='bonferroni'`, found it 1% of the time; the per-label `multiplicity='none'`, 27%).
@@ -165,7 +166,8 @@ deviation stays near zero, the separation is near zero, and any ranking of the l
 noise. The report says so rather than leaving a caller to sort noise and call it a
 diagnosis.
 
-**Are its probabilities honest?** [`calibration()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration) replays the log *prequentially*:
+**Are its probabilities honest?** [`calibration()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration) (right/wrong) and
+[`score_calibration()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.score_calibration) (ordered scores) replay the log *prequentially*:
 each response is predicted from the state built from the responses before it, then
 folded in. Nothing is scored on data it was fitted to, so the report measures prediction,
 not fit. For a learner model calibration matters more than discrimination — a 70% that
@@ -186,6 +188,8 @@ neither looks at more than one student at a time unless asked to.
 |--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
 | [`prequential`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.prequential)(responses, \*, items, estimator)    | Yield `(response, p)` where `p` was predicted *before* the response was seen. |
 | [`calibration`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration)(log, \*, items, estimator[, ...])   | Prequential calibration of `estimator` over the students in `log`.            |
+| [`score_calibration`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.score_calibration)(log, \*, items, estimator)    | Prequential calibration of `estimator`'s score forecasts over `log`.          |
+| [`reads_scores`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.reads_scores)(estimator)                         | Whether `estimator` forecasts ordered scores: it has `score_probabilities`.   |
 
 ### Classes
 
@@ -193,6 +197,7 @@ neither looks at more than one student at a time unless asked to.
 |--------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
 | [`CalibrationBin`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationBin)(lo, hi, n, mean_predicted, ...)  | One row of a reliability table: predictions in `[lo, hi)` and what happened. |
 | [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)(n, log_loss, brier, ece, ...) | Prequential scores for a set of predictions.                                 |
+| [`ScoreCalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.ScoreCalibrationReport)(n, log_loss, ...)        | Prequential scores for forecasts of an ordered score.                        |
 
 ### *class* learny.tracing.diagnostics.CalibrationBin(lo, hi, n, mean_predicted, observed_rate)
 
@@ -293,6 +298,38 @@ roughly how many levels the labels fall into.
 
 Spread of the deviations with their measurement error removed.
 
+### *class* learny.tracing.diagnostics.ScoreCalibrationReport(n, log_loss, base_log_loss, rps, base_rps, ece, bins)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Prequential scores for forecasts of an ordered score.
+
+`log_loss` is minus the log probability given to the level observed; `rps` is the
+ranked probability score (`_rps()`), which also charges for *how far* off a
+forecast was. Both are proper (lower is better), and each has a `base_` twin: what
+forecasting the observed frequency of each level, per `max_score`, would score, so
+beating it means the model knows more than the average. The reliability table bins
+the *expected* fraction of the maximum against the fraction observed, and `ece` is
+its count-weighted mean absolute gap. Responses with different `max_score` pool on
+that fraction scale.
+
+#### *classmethod* from_forecasts(forecasts, , n_bins=10)
+
+Build a report from `(probabilities over 0..m, level observed)` pairs.
+
+```pycon
+>>> sure = ScoreCalibrationReport.from_forecasts([([0.0, 0.0, 1.0], 2)] * 3)
+>>> sure.n, round(sure.log_loss, 6), sure.rps, sure.ece
+(3, 0.0, 0.0, 0.0)
+>>> mixed = [([0.25, 0.5, 0.25], k) for k in (0, 1, 1, 2)]
+>>> r = ScoreCalibrationReport.from_forecasts(mixed)
+>>> round(r.log_loss, 3) == round(r.base_log_loss, 3), r.ece
+(True, 0.0)
+```
+
+* **Return type:**
+  [`ScoreCalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.ScoreCalibrationReport)
+
 ### learny.tracing.diagnostics.calibration(log, , items, estimator, students=None, n_bins=10)
 
 Prequential calibration of `estimator` over the students in `log`.
@@ -302,11 +339,12 @@ predictions, exactly as in live use — and only then are the scored predictions
 pooled into one table. Skips are replayed (they move the state) but not scored:
 there is no right answer to compare them to.
 
-A response with an ordered score is scored here like any other, as `predict()`
-against its right/wrong `outcome`. For a score that `outcome` is the caller’s own
-reading of the attempt (correct only at full marks, say), not the event a score
-model’s `predict()` forecasts, so a well-calibrated score model can read as
-miscalibrated. Calibrating score predictions is not built yet (#31).
+A response with an ordered score is scored here only when the estimator reads the
+right/wrong `outcome` alone (`reads_scores(estimator)` is false), because then
+`predict()` forecasts that outcome. For an estimator that reads the score, the
+`outcome` is only the caller’s own reading of the attempt (correct at full marks,
+say), not the event its `predict()` forecasts: those responses are replayed but
+scored by [`score_calibration()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.score_calibration) instead (#31).
 
 ```pycon
 >>> from learny.tracing.estimators import RaschEstimator
@@ -388,6 +426,49 @@ skips included; filter on `response.outcome.is_scored` to score.
 
 * **Return type:**
   [`Iterator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+
+### learny.tracing.diagnostics.reads_scores(estimator)
+
+Whether `estimator` forecasts ordered scores: it has `score_probabilities`.
+
+It decides which report a scored response belongs in: an estimator without it
+forecasts the right/wrong `outcome`, so the response is scored by
+[`calibration()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration); one with it is taken to forecast (and learn from) the score, so
+the response is scored by [`score_calibration()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.score_calibration) instead. It is a check of
+capability, not of what `observe` reads: an estimator that forecasts scores while
+learning only from outcomes should not define `score_probabilities`.
+
+```pycon
+>>> from learny.tracing.estimators import PartialCreditEstimator, RaschEstimator
+>>> reads_scores(RaschEstimator()), reads_scores(PartialCreditEstimator())
+(False, True)
+```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+### learny.tracing.diagnostics.score_calibration(log, , items, estimator, students=None, n_bins=10)
+
+Prequential calibration of `estimator`’s score forecasts over `log`.
+
+The twin of [`calibration()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.calibration) for responses with an ordered `score`: each is
+forecast by `estimator.score_probabilities` from the state before it, every
+response (scored, right/wrong or skipped) is replayed, and only the scored ones are
+scored. The estimator must read scores ([`reads_scores()`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.reads_scores)), such as
+[`PartialCreditEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.PartialCreditEstimator).
+
+```pycon
+>>> from learny.tracing.estimators import PartialCreditEstimator
+>>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
+>>> log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2)
+...              for k in (2, 1, 2, 2, 1, 2)]}
+>>> r = score_calibration(log, items=items, estimator=PartialCreditEstimator())
+>>> r.n, 0.0 <= r.rps <= 1.0
+(6, True)
+```
+
+* **Return type:**
+  [`ScoreCalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.ScoreCalibrationReport)
 
 
 # _autosummary/learny.tracing.estimators.html.md
@@ -968,6 +1049,8 @@ True
 | [`data_dir`](_autosummary/learny.tracing.html.md#learny.tracing.data_dir)([kind, app_name])                    | The per-kind data directory, created on demand.                                                                    |
 | [`label_separation`](_autosummary/learny.tracing.html.md#learny.tracing.label_separation)(state, \*[, estimator, ...]) | Separation of one student's label deviations, from their estimator state.                                          |
 | [`calibration`](_autosummary/learny.tracing.html.md#learny.tracing.calibration)(log, \*, items, estimator[, ...]) | Prequential calibration of `estimator` over the students in `log`.                                                 |
+| [`score_calibration`](_autosummary/learny.tracing.html.md#learny.tracing.score_calibration)(log, \*, items, estimator)  | Prequential calibration of `estimator`'s score forecasts over `log`.                                               |
+| [`reads_scores`](_autosummary/learny.tracing.html.md#learny.tracing.reads_scores)(estimator)                       | Whether `estimator` forecasts ordered scores: it has `score_probabilities`.                                        |
 | [`prequential`](_autosummary/learny.tracing.html.md#learny.tracing.prequential)(responses, \*, items, estimator)  | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                      |
 | [`restrict_labels`](_autosummary/learny.tracing.html.md#learny.tracing.restrict_labels)(items, \*, keep[, ...])       | Project an item bank onto a subset of its labels — one facet, say.                                                 |
 | [`difficulty_from_rank`](_autosummary/learny.tracing.html.md#learny.tracing.difficulty_from_rank)(rank, n_ranks)           | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
@@ -993,6 +1076,7 @@ True
 | [`LabelSeparation`](_autosummary/learny.tracing.html.md#learny.tracing.LabelSeparation)(n_labels, observed_sd, rmse)      | How distinguishable one student's labels are from each other.                                                        |
 | [`CalibrationReport`](_autosummary/learny.tracing.html.md#learny.tracing.CalibrationReport)(n, log_loss, brier, ece, ...)   | Prequential scores for a set of predictions.                                                                         |
 | [`CalibrationBin`](_autosummary/learny.tracing.html.md#learny.tracing.CalibrationBin)(lo, hi, n, mean_predicted, ...)    | One row of a reliability table: predictions in `[lo, hi)` and what happened.                                         |
+| [`ScoreCalibrationReport`](_autosummary/learny.tracing.html.md#learny.tracing.ScoreCalibrationReport)(n, log_loss, ...)          | Prequential scores for forecasts of an ordered score.                                                                |
 
 ### *class* learny.tracing.CalibrationBin(lo, hi, n, mean_predicted, observed_rate)
 
@@ -1184,7 +1268,9 @@ True
 
 Prequential calibration over the log; see [`calibration()`](_autosummary/learny.tracing.html.md#learny.tracing.calibration).
 
-Reads the log only; the estimate cache is neither used nor changed.
+Reads the log only; the estimate cache is neither used nor changed. With an
+estimator that reads scores, scored responses are left to
+[`score_calibration()`](_autosummary/learny.tracing.html.md#learny.tracing.score_calibration), so a log of scores alone gives an empty report here.
 
 * **Return type:**
   [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
@@ -1244,6 +1330,16 @@ state that live recording produced.
 
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+#### score_calibration(students=None, , n_bins=10)
+
+Prequential calibration of the score forecasts; see [`score_calibration()`](_autosummary/learny.tracing.html.md#learny.tracing.score_calibration).
+
+Reads the log only. Needs an estimator that reads scores, such as
+[`PartialCreditEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.PartialCreditEstimator).
+
+* **Return type:**
+  [`ScoreCalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.ScoreCalibrationReport)
 
 #### separation(student, , threshold=2.0)
 
@@ -1790,6 +1886,38 @@ Every student with at least one logged response.
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
+### *class* learny.tracing.ScoreCalibrationReport(n, log_loss, base_log_loss, rps, base_rps, ece, bins)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Prequential scores for forecasts of an ordered score.
+
+`log_loss` is minus the log probability given to the level observed; `rps` is the
+ranked probability score (`_rps()`), which also charges for *how far* off a
+forecast was. Both are proper (lower is better), and each has a `base_` twin: what
+forecasting the observed frequency of each level, per `max_score`, would score, so
+beating it means the model knows more than the average. The reliability table bins
+the *expected* fraction of the maximum against the fraction observed, and `ece` is
+its count-weighted mean absolute gap. Responses with different `max_score` pool on
+that fraction scale.
+
+#### *classmethod* from_forecasts(forecasts, , n_bins=10)
+
+Build a report from `(probabilities over 0..m, level observed)` pairs.
+
+```pycon
+>>> sure = ScoreCalibrationReport.from_forecasts([([0.0, 0.0, 1.0], 2)] * 3)
+>>> sure.n, round(sure.log_loss, 6), sure.rps, sure.ece
+(3, 0.0, 0.0, 0.0)
+>>> mixed = [([0.25, 0.5, 0.25], k) for k in (0, 1, 1, 2)]
+>>> r = ScoreCalibrationReport.from_forecasts(mixed)
+>>> round(r.log_loss, 3) == round(r.base_log_loss, 3), r.ece
+(True, 0.0)
+```
+
+* **Return type:**
+  [`ScoreCalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.ScoreCalibrationReport)
+
 ### *class* learny.tracing.Skill(mu, var, n=0, t=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
@@ -1863,11 +1991,12 @@ predictions, exactly as in live use — and only then are the scored predictions
 pooled into one table. Skips are replayed (they move the state) but not scored:
 there is no right answer to compare them to.
 
-A response with an ordered score is scored here like any other, as `predict()`
-against its right/wrong `outcome`. For a score that `outcome` is the caller’s own
-reading of the attempt (correct only at full marks, say), not the event a score
-model’s `predict()` forecasts, so a well-calibrated score model can read as
-miscalibrated. Calibrating score predictions is not built yet (#31).
+A response with an ordered score is scored here only when the estimator reads the
+right/wrong `outcome` alone (`reads_scores(estimator)` is false), because then
+`predict()` forecasts that outcome. For an estimator that reads the score, the
+`outcome` is only the caller’s own reading of the attempt (correct at full marks,
+say), not the event its `predict()` forecasts: those responses are replayed but
+scored by [`score_calibration()`](_autosummary/learny.tracing.html.md#learny.tracing.score_calibration) instead (#31).
 
 ```pycon
 >>> from learny.tracing.estimators import RaschEstimator
@@ -2051,6 +2180,26 @@ skips included; filter on `response.outcome.is_scored` to score.
 * **Return type:**
   [`Iterator`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterator)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
 
+### learny.tracing.reads_scores(estimator)
+
+Whether `estimator` forecasts ordered scores: it has `score_probabilities`.
+
+It decides which report a scored response belongs in: an estimator without it
+forecasts the right/wrong `outcome`, so the response is scored by
+[`calibration()`](_autosummary/learny.tracing.html.md#learny.tracing.calibration); one with it is taken to forecast (and learn from) the score, so
+the response is scored by [`score_calibration()`](_autosummary/learny.tracing.html.md#learny.tracing.score_calibration) instead. It is a check of
+capability, not of what `observe` reads: an estimator that forecasts scores while
+learning only from outcomes should not define `score_probabilities`.
+
+```pycon
+>>> from learny.tracing.estimators import PartialCreditEstimator, RaschEstimator
+>>> reads_scores(RaschEstimator()), reads_scores(PartialCreditEstimator())
+(False, True)
+```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
 ### learny.tracing.response_log(, rootdir=None)
 
 The default response log, under `~/.local/share/learny/responses/`.
@@ -2087,6 +2236,29 @@ student’s global skill, so it is kept unless `drop_unlabelled=True`.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Item`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Item)]
+
+### learny.tracing.score_calibration(log, , items, estimator, students=None, n_bins=10)
+
+Prequential calibration of `estimator`’s score forecasts over `log`.
+
+The twin of [`calibration()`](_autosummary/learny.tracing.html.md#learny.tracing.calibration) for responses with an ordered `score`: each is
+forecast by `estimator.score_probabilities` from the state before it, every
+response (scored, right/wrong or skipped) is replayed, and only the scored ones are
+scored. The estimator must read scores ([`reads_scores()`](_autosummary/learny.tracing.html.md#learny.tracing.reads_scores)), such as
+[`PartialCreditEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.PartialCreditEstimator).
+
+```pycon
+>>> from learny.tracing.estimators import PartialCreditEstimator
+>>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
+>>> log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2)
+...              for k in (2, 1, 2, 2, 1, 2)]}
+>>> r = score_calibration(log, items=items, estimator=PartialCreditEstimator())
+>>> r.n, 0.0 <= r.rps <= 1.0
+(6, True)
+```
+
+* **Return type:**
+  [`ScoreCalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.ScoreCalibrationReport)
 
 ### Modules
 
@@ -2194,7 +2366,9 @@ True
 
 Prequential calibration over the log; see [`calibration()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.calibration).
 
-Reads the log only; the estimate cache is neither used nor changed.
+Reads the log only; the estimate cache is neither used nor changed. With an
+estimator that reads scores, scored responses are left to
+[`score_calibration()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.score_calibration), so a log of scores alone gives an empty report here.
 
 * **Return type:**
   [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
@@ -2254,6 +2428,16 @@ state that live recording produced.
 
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+#### score_calibration(students=None, , n_bins=10)
+
+Prequential calibration of the score forecasts; see [`score_calibration()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.score_calibration).
+
+Reads the log only. Needs an estimator that reads scores, such as
+[`PartialCreditEstimator`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.PartialCreditEstimator).
+
+* **Return type:**
+  [`ScoreCalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.ScoreCalibrationReport)
 
 #### separation(student, , threshold=2.0)
 
@@ -2687,7 +2871,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-10-19 11:33 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/10519751481e696f39f3a840efc915fc257a5c10"><code>1051975</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 11:46 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/2fc462f1fb419c14ae9593b062a2fcb76645071e"><code>2fc462f</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -2696,7 +2880,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/10519751481e696f39f3a840efc915fc257a5c10"><code>10519751481e696f39f3a840efc915fc257a5c10</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/2fc462f1fb419c14ae9593b062a2fcb76645071e"><code>2fc462f1fb419c14ae9593b062a2fcb76645071e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -2707,9 +2891,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39245314956">39245314956</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39246860936">39246860936</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>10519751481e696f39f3a840efc915fc257a5c10</code> (in the history of the built commit) |
+| Event commit | <code>2fc462f1fb419c14ae9593b062a2fcb76645071e</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2740,7 +2924,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout 10519751481e696f39f3a840efc915fc257a5c10
+git checkout 2fc462f1fb419c14ae9593b062a2fcb76645071e
 pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

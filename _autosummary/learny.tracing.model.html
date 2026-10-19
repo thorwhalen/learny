@@ -519,7 +519,9 @@ exercises than a student who has answered nothing:</p>
 <dt class="sig sig-object py" id="learny.tracing.model.LearnerModel.calibration">
 <span class="sig-name descname"><span class="pre">calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.calibration" title="Link to this definition">#</a></dt>
 <dd><p>Prequential calibration over the log; see <a class="reference internal" href="#learny.tracing.model.LearnerModel.calibration" title="learny.tracing.model.LearnerModel.calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">calibration()</span></code></a>.</p>
-<p>Reads the log only; the estimate cache is neither used nor changed.</p>
+<p>Reads the log only; the estimate cache is neither used nor changed. With an
+estimator that reads scores, scored responses are left to
+<a class="reference internal" href="#learny.tracing.model.LearnerModel.score_calibration" title="learny.tracing.model.LearnerModel.score_calibration"><code class="xref py py-meth docutils literal notranslate"><span class="pre">score_calibration()</span></code></a>, so a log of scores alone gives an empty report here.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.CalibrationReport" title="learny.tracing.diagnostics.CalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a></span></p>
@@ -596,6 +598,19 @@ state that live recording produced.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.model.LearnerModel.score_calibration">
+<span class="sig-name descname"><span class="pre">score_calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.score_calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.score_calibration" title="Link to this definition">#</a></dt>
+<dd><p>Prequential calibration of the score forecasts; see <a class="reference internal" href="#learny.tracing.model.LearnerModel.score_calibration" title="learny.tracing.model.LearnerModel.score_calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">score_calibration()</span></code></a>.</p>
+<p>Reads the log only. Needs an estimator that reads scores, such as
+<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.PartialCreditEstimator" title="learny.tracing.estimators.PartialCreditEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.ScoreCalibrationReport" title="learny.tracing.diagnostics.ScoreCalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreCalibrationReport</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -779,6 +794,7 @@ mutates the result owns keeping <code class="docutils literal notranslate"><span
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.record"><code class="docutils literal notranslate"><span class="pre">LearnerModel.record()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.record_many"><code class="docutils literal notranslate"><span class="pre">LearnerModel.record_many()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.replay"><code class="docutils literal notranslate"><span class="pre">LearnerModel.replay()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.score_calibration"><code class="docutils literal notranslate"><span class="pre">LearnerModel.score_calibration()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.separation"><code class="docutils literal notranslate"><span class="pre">LearnerModel.separation()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.model.LearnerModel.weakest"><code class="docutils literal notranslate"><span class="pre">LearnerModel.weakest()</span></code></a></li>
 </ul>

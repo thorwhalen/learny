@@ -427,6 +427,12 @@ lets the estimator be replaced later without a data migration, and it is why
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.calibration" title="learny.tracing.calibration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibration</span></code></a>(log, *, items, estimator[, ...])</p></td>
 <td><p>Prequential calibration of <code class="docutils literal notranslate"><span class="pre">estimator</span></code> over the students in <code class="docutils literal notranslate"><span class="pre">log</span></code>.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.score_calibration" title="learny.tracing.score_calibration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_calibration</span></code></a>(log, *, items, estimator)</p></td>
+<td><p>Prequential calibration of <code class="docutils literal notranslate"><span class="pre">estimator</span></code>'s score forecasts over <code class="docutils literal notranslate"><span class="pre">log</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.reads_scores" title="learny.tracing.reads_scores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reads_scores</span></code></a>(estimator)</p></td>
+<td><p>Whether <code class="docutils literal notranslate"><span class="pre">estimator</span></code> forecasts ordered scores: it has <code class="docutils literal notranslate"><span class="pre">score_probabilities</span></code>.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.prequential" title="learny.tracing.prequential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prequential</span></code></a>(responses, *, items, estimator)</p></td>
 <td><p>Yield <code class="docutils literal notranslate"><span class="pre">(response,</span> <span class="pre">p)</span></code> where <code class="docutils literal notranslate"><span class="pre">p</span></code> was predicted <em>before</em> the response was seen.</p></td>
 </tr>
@@ -495,6 +501,9 @@ lets the estimator be replaced later without a data migration, and it is why
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.CalibrationBin" title="learny.tracing.CalibrationBin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CalibrationBin</span></code></a>(lo, hi, n, mean_predicted, ...)</p></td>
 <td><p>One row of a reliability table: predictions in <code class="docutils literal notranslate"><span class="pre">[lo,</span> <span class="pre">hi)</span></code> and what happened.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.ScoreCalibrationReport" title="learny.tracing.ScoreCalibrationReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScoreCalibrationReport</span></code></a>(n, log_loss, ...)</p></td>
+<td><p>Prequential scores for forecasts of an ordered score.</p></td>
 </tr>
 </tbody>
 </table>
@@ -732,7 +741,9 @@ exercises than a student who has answered nothing:</p>
 <dt class="sig sig-object py" id="learny.tracing.LearnerModel.calibration">
 <span class="sig-name descname"><span class="pre">calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LearnerModel.calibration" title="Link to this definition">#</a></dt>
 <dd><p>Prequential calibration over the log; see <a class="reference internal" href="#learny.tracing.calibration" title="learny.tracing.calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">calibration()</span></code></a>.</p>
-<p>Reads the log only; the estimate cache is neither used nor changed.</p>
+<p>Reads the log only; the estimate cache is neither used nor changed. With an
+estimator that reads scores, scored responses are left to
+<a class="reference internal" href="#learny.tracing.score_calibration" title="learny.tracing.score_calibration"><code class="xref py py-meth docutils literal notranslate"><span class="pre">score_calibration()</span></code></a>, so a log of scores alone gives an empty report here.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.CalibrationReport" title="learny.tracing.diagnostics.CalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a></span></p>
@@ -809,6 +820,19 @@ state that live recording produced.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.LearnerModel.score_calibration">
+<span class="sig-name descname"><span class="pre">score_calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.score_calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LearnerModel.score_calibration" title="Link to this definition">#</a></dt>
+<dd><p>Prequential calibration of the score forecasts; see <a class="reference internal" href="#learny.tracing.score_calibration" title="learny.tracing.score_calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">score_calibration()</span></code></a>.</p>
+<p>Reads the log only. Needs an estimator that reads scores, such as
+<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.PartialCreditEstimator" title="learny.tracing.estimators.PartialCreditEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.ScoreCalibrationReport" title="learny.tracing.diagnostics.ScoreCalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreCalibrationReport</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1437,6 +1461,43 @@ be replayed is what makes changing it a re-run rather than a migration.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.ScoreCalibrationReport">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">ScoreCalibrationReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_log_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_rps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ece</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#ScoreCalibrationReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.ScoreCalibrationReport" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Prequential scores for forecasts of an ordered score.</p>
+<p><code class="docutils literal notranslate"><span class="pre">log_loss</span></code> is minus the log probability given to the level observed; <code class="docutils literal notranslate"><span class="pre">rps</span></code> is the
+ranked probability score (<code class="xref py py-func docutils literal notranslate"><span class="pre">_rps()</span></code>), which also charges for <em>how far</em> off a
+forecast was. Both are proper (lower is better), and each has a <code class="docutils literal notranslate"><span class="pre">base_</span></code> twin: what
+forecasting the observed frequency of each level, per <code class="docutils literal notranslate"><span class="pre">max_score</span></code>, would score, so
+beating it means the model knows more than the average. The reliability table bins
+the <em>expected</em> fraction of the maximum against the fraction observed, and <code class="docutils literal notranslate"><span class="pre">ece</span></code> is
+its count-weighted mean absolute gap. Responses with different <code class="docutils literal notranslate"><span class="pre">max_score</span></code> pool on
+that fraction scale.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.ScoreCalibrationReport.from_forecasts">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_forecasts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">forecasts</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#ScoreCalibrationReport.from_forecasts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.ScoreCalibrationReport.from_forecasts" title="Link to this definition">#</a></dt>
+<dd><p>Build a report from <code class="docutils literal notranslate"><span class="pre">(probabilities</span> <span class="pre">over</span> <span class="pre">0..m,</span> <span class="pre">level</span> <span class="pre">observed)</span></code> pairs.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sure</span> <span class="o">=</span> <span class="n">ScoreCalibrationReport</span><span class="o">.</span><span class="n">from_forecasts</span><span class="p">([([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="mi">2</span><span class="p">)]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sure</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">sure</span><span class="o">.</span><span class="n">log_loss</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">sure</span><span class="o">.</span><span class="n">rps</span><span class="p">,</span> <span class="n">sure</span><span class="o">.</span><span class="n">ece</span>
+<span class="go">(3, 0.0, 0.0, 0.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mixed</span> <span class="o">=</span> <span class="p">[([</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">ScoreCalibrationReport</span><span class="o">.</span><span class="n">from_forecasts</span><span class="p">(</span><span class="n">mixed</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">log_loss</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="nb">round</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">base_log_loss</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">r</span><span class="o">.</span><span class="n">ece</span>
+<span class="go">(True, 0.0)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.ScoreCalibrationReport" title="learny.tracing.diagnostics.ScoreCalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreCalibrationReport</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="learny.tracing.Skill">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">Skill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#Skill"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.Skill" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
@@ -1517,11 +1578,12 @@ spread wider apart carry less.</p>
 predictions, exactly as in live use — and only then are the scored predictions
 pooled into one table. Skips are replayed (they move the state) but not scored:
 there is no right answer to compare them to.</p>
-<p>A response with an ordered score is scored here like any other, as <code class="docutils literal notranslate"><span class="pre">predict()</span></code>
-against its right/wrong <code class="docutils literal notranslate"><span class="pre">outcome</span></code>. For a score that <code class="docutils literal notranslate"><span class="pre">outcome</span></code> is the caller’s own
-reading of the attempt (correct only at full marks, say), not the event a score
-model’s <code class="docutils literal notranslate"><span class="pre">predict()</span></code> forecasts, so a well-calibrated score model can read as
-miscalibrated. Calibrating score predictions is not built yet (#31).</p>
+<p>A response with an ordered score is scored here only when the estimator reads the
+right/wrong <code class="docutils literal notranslate"><span class="pre">outcome</span></code> alone (<code class="docutils literal notranslate"><span class="pre">reads_scores(estimator)</span></code> is false), because then
+<code class="docutils literal notranslate"><span class="pre">predict()</span></code> forecasts that outcome. For an estimator that reads the score, the
+<code class="docutils literal notranslate"><span class="pre">outcome</span></code> is only the caller’s own reading of the attempt (correct at full marks,
+say), not the event its <code class="docutils literal notranslate"><span class="pre">predict()</span></code> forecasts: those responses are replayed but
+scored by <a class="reference internal" href="#learny.tracing.score_calibration" title="learny.tracing.score_calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">score_calibration()</span></code></a> instead (#31).</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">RaschEstimator</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'x'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]}</span>
@@ -1724,6 +1786,28 @@ skips included; filter on <code class="docutils literal notranslate"><span class
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.reads_scores">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">reads_scores</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#reads_scores"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.reads_scores" title="Link to this definition">#</a></dt>
+<dd><p>Whether <code class="docutils literal notranslate"><span class="pre">estimator</span></code> forecasts ordered scores: it has <code class="docutils literal notranslate"><span class="pre">score_probabilities</span></code>.</p>
+<p>It decides which report a scored response belongs in: an estimator without it
+forecasts the right/wrong <code class="docutils literal notranslate"><span class="pre">outcome</span></code>, so the response is scored by
+<a class="reference internal" href="#learny.tracing.calibration" title="learny.tracing.calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">calibration()</span></code></a>; one with it is taken to forecast (and learn from) the score, so
+the response is scored by <a class="reference internal" href="#learny.tracing.score_calibration" title="learny.tracing.score_calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">score_calibration()</span></code></a> instead. It is a check of
+capability, not of what <code class="docutils literal notranslate"><span class="pre">observe</span></code> reads: an estimator that forecasts scores while
+learning only from outcomes should not define <code class="docutils literal notranslate"><span class="pre">score_probabilities</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">PartialCreditEstimator</span><span class="p">,</span> <span class="n">RaschEstimator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reads_scores</span><span class="p">(</span><span class="n">RaschEstimator</span><span class="p">()),</span> <span class="n">reads_scores</span><span class="p">(</span><span class="n">PartialCreditEstimator</span><span class="p">())</span>
+<span class="go">(False, True)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.response_log">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">response_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">rootdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/stores.html#response_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.response_log" title="Link to this definition">#</a></dt>
 <dd><p>The default response log, under <code class="docutils literal notranslate"><span class="pre">~/.local/share/learny/responses/</span></code>.</p>
@@ -1761,6 +1845,31 @@ student’s global skill, so it is kept unless <code class="docutils literal not
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Item" title="learny.tracing.records.Item"><code class="xref py py-class docutils literal notranslate"><span class="pre">Item</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.score_calibration">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">score_calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#score_calibration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.score_calibration" title="Link to this definition">#</a></dt>
+<dd><p>Prequential calibration of <code class="docutils literal notranslate"><span class="pre">estimator</span></code>’s score forecasts over <code class="docutils literal notranslate"><span class="pre">log</span></code>.</p>
+<p>The twin of <a class="reference internal" href="#learny.tracing.calibration" title="learny.tracing.calibration"><code class="xref py py-func docutils literal notranslate"><span class="pre">calibration()</span></code></a> for responses with an ordered <code class="docutils literal notranslate"><span class="pre">score</span></code>: each is
+forecast by <code class="docutils literal notranslate"><span class="pre">estimator.score_probabilities</span></code> from the state before it, every
+response (scored, right/wrong or skipped) is replayed, and only the scored ones are
+scored. The estimator must read scores (<a class="reference internal" href="#learny.tracing.reads_scores" title="learny.tracing.reads_scores"><code class="xref py py-func docutils literal notranslate"><span class="pre">reads_scores()</span></code></a>), such as
+<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.PartialCreditEstimator" title="learny.tracing.estimators.PartialCreditEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">PartialCreditEstimator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'q'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'x'</span><span class="p">,),</span> <span class="n">difficulty</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'a'</span><span class="p">:</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="s1">'q'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">,</span> <span class="n">score</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">max_score</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">... </span>             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">score_calibration</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">estimator</span><span class="o">=</span><span class="n">PartialCreditEstimator</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="o">.</span><span class="n">rps</span> <span class="o">&lt;=</span> <span class="mf">1.0</span>
+<span class="go">(6, True)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.ScoreCalibrationReport" title="learny.tracing.diagnostics.ScoreCalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoreCalibrationReport</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1869,6 +1978,7 @@ student’s global skill, so it is kept unless <code class="docutils literal not
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.record"><code class="docutils literal notranslate"><span class="pre">LearnerModel.record()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.record_many"><code class="docutils literal notranslate"><span class="pre">LearnerModel.record_many()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.replay"><code class="docutils literal notranslate"><span class="pre">LearnerModel.replay()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.score_calibration"><code class="docutils literal notranslate"><span class="pre">LearnerModel.score_calibration()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.separation"><code class="docutils literal notranslate"><span class="pre">LearnerModel.separation()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.LearnerModel.weakest"><code class="docutils literal notranslate"><span class="pre">LearnerModel.weakest()</span></code></a></li>
 </ul>
@@ -1923,6 +2033,10 @@ student’s global skill, so it is kept unless <code class="docutils literal not
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.ResponseLog.students"><code class="docutils literal notranslate"><span class="pre">ResponseLog.students()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.ScoreCalibrationReport"><code class="docutils literal notranslate"><span class="pre">ScoreCalibrationReport</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.ScoreCalibrationReport.from_forecasts"><code class="docutils literal notranslate"><span class="pre">ScoreCalibrationReport.from_forecasts()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Skill"><code class="docutils literal notranslate"><span class="pre">Skill</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Skill.interval"><code class="docutils literal notranslate"><span class="pre">Skill.interval()</span></code></a></li>
 </ul>
@@ -1938,8 +2052,10 @@ student’s global skill, so it is kept unless <code class="docutils literal not
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.logit"><code class="docutils literal notranslate"><span class="pre">logit()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.mark_not_reached"><code class="docutils literal notranslate"><span class="pre">mark_not_reached()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.prequential"><code class="docutils literal notranslate"><span class="pre">prequential()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.reads_scores"><code class="docutils literal notranslate"><span class="pre">reads_scores()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.response_log"><code class="docutils literal notranslate"><span class="pre">response_log()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.restrict_labels"><code class="docutils literal notranslate"><span class="pre">restrict_labels()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.score_calibration"><code class="docutils literal notranslate"><span class="pre">score_calibration()</span></code></a></li>
 </ul>
   </nav></div>
 

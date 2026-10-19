@@ -78,6 +78,7 @@ model.separation('ada').distinguishable     # can her labels be told apart at al
 model.weakest('ada').reason                  # why it is empty, when it is
 model.weakest('ada', credible_below=None)    # plain ranking, no credibility gate
 model.calibration()                          # prequential: are the probabilities honest?
+model.score_calibration()                    # the same for star / partial-credit scores
 ```
 
 `weakest()` flags a label only when it is credibly below the student’s *other* labels, with the bound corrected for how many labels are tested at once and calibrated to how far a label’s estimate wanders by chance. So a student with no real weakness is told to practise something about one time in six at most, however many labels the bank has, and a student who is weak everywhere is not told every label is a weakness. **This is a change of default:** earlier versions compared each label with the student’s global skill using a per-label bound, which flagged at least one label for most students with no weakness at all. That gate is still one call away: `model.weakest('ada', relative_to='global', multiplicity='none')`. Evidence on a single label is never a relative weakness under the default; pass `relative_to='global'` when unlabelled items are what the label should be compared with. The calibration matters most at cold start: with 3 labels and 18 responses a real 2-logit weakness is found 40% of the time (the uncalibrated Bonferroni bound, `multiplicity='bonferroni'`, found it 1% of the time; the per-label `multiplicity='none'`, 27%).
