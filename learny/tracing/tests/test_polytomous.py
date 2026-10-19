@@ -298,3 +298,89 @@ class TestThroughTheFacade:
                          score=stars - 1, max_score=4)
         m = model.mastery("a")
         assert m["reaction"].mu > m["tempo"].mu > m["rhythm"].mu
+
+
+class TestScoreCalibration:
+    """Score forecasts are scored against scores (#31), right/wrong against outcomes."""
+
+    @staticmethod
+    def _log(students=40, n=30, m=4, seed=0):
+        """Binomial scores, the default thresholds' own model, so a sound estimator."""
+        import random
+
+        rng = random.Random(seed)
+        items = {f"q{j}": Item(f"q{j}", labels=(f"l{j % 3}",), difficulty=0.2 + 0.2 * (j % 4))
+                 for j in range(12)}
+        log = {}
+        for s in range(students):
+            theta = rng.gauss(0, 1)
+            rs = []
+            for i in range(n):
+                item = items[f"q{i % 12}"]
+                p = 1 / (1 + math.exp(-(theta - math.log(item.difficulty / (1 - item.difficulty)))))
+                k = sum(rng.random() < p for _ in range(m))
+                rs.append(Response(f"s{s}", item.id, "correct" if k == m else "wrong",
+                                   at=i * 3600.0, score=k, max_score=m))
+            log[f"s{s}"] = rs
+        return items, log
+
+    def test_a_sound_model_beats_the_base_rates_and_is_calibrated(self):
+        from learny.tracing import score_calibration
+
+        items, log = self._log()
+        r = score_calibration(log, items=items, estimator=PartialCreditEstimator())
+        assert r.n == 40 * 30
+        assert r.log_loss < r.base_log_loss and r.rps < r.base_rps
+        assert r.ece < 0.05
+
+    def test_wrong_thresholds_score_worse(self):
+        from learny.tracing import score_calibration
+
+        def spread(item, m):
+            return [3.0 * t for t in binomial_thresholds(item, m)]
+
+        items, log = self._log()
+        good = score_calibration(log, items=items, estimator=PartialCreditEstimator())
+        bad = score_calibration(
+            log, items=items, estimator=PartialCreditEstimator(thresholds=spread)
+        )
+        assert bad.log_loss > good.log_loss and bad.rps > good.rps
+
+    def test_a_scored_response_goes_to_the_report_its_estimator_forecasts(self):
+        """The bug #31 fixes: a score model's predict() was scored against the caller's
+        dichotomised outcome, which is not the event it forecasts."""
+        from learny.tracing import calibration
+
+        items, log = self._log(students=3, n=10)
+        log["s0"].append(Response("s0", "q0", "correct"))  # one right/wrong response
+        assert calibration(log, items=items, estimator=PartialCreditEstimator()).n == 1
+        assert calibration(log, items=items, estimator=RaschEstimator()).n == 31
+
+    def test_an_estimator_that_reads_only_outcomes_is_refused(self):
+        from learny.tracing import score_calibration
+
+        items, log = self._log(students=1, n=2)
+        with pytest.raises(TypeError, match="does not forecast scores"):
+            score_calibration(log, items=items, estimator=RaschEstimator())
+
+    def test_through_the_facade(self):
+        from learny.tracing import score_calibration
+
+        items, log = self._log(students=3, n=10)
+        model = LearnerModel(items=items, estimator=PartialCreditEstimator(),
+                             log=log, estimates={})
+        assert model.score_calibration() == score_calibration(
+            log, items=items, estimator=model.estimator
+        )
+
+    def test_nothing_scored_is_nan_not_an_error(self):
+        from learny.tracing import ScoreCalibrationReport
+
+        r = ScoreCalibrationReport.from_forecasts([])
+        assert r.n == 0 and math.isnan(r.log_loss) and r.bins == ()
+
+    def test_a_level_outside_the_forecast_is_loud(self):
+        from learny.tracing import ScoreCalibrationReport
+
+        with pytest.raises(ValueError, match="not one of the 3 levels"):
+            ScoreCalibrationReport.from_forecasts([([0.2, 0.5, 0.3], 3)])
