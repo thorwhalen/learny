@@ -7,6 +7,7 @@ this repository, which is public.
 import json
 import math
 import random
+from dataclasses import replace
 
 import pytest
 
@@ -208,7 +209,7 @@ class TestScaleAndConvergence:
             log[f"s{s}"] = [Response(f"s{s}", q, rng.random() < expit(theta - b[q]))
                             for q in (rng.choice(sorted(bank)) for _ in range(40))]
         anchored = fit_feature_difficulty(log, items=bank)
-        floating = fit_feature_difficulty(log, items=bank, anchor=False)
+        floating = fit_feature_difficulty(log, items=bank, anchor="none")
         unpublished = [q for q in bank if bank[q].difficulty is None]
 
         def offset(model):
@@ -219,6 +220,61 @@ class TestScaleAndConvergence:
         assert abs(offset(anchored)) < 0.3
         assert offset(floating) < -1.0
         assert anchored.ability_mean > 1.5
+
+    @staticmethod
+    def _half_published(spread=1.0, *, all_published=False, seed=24):
+        """A bank half (or all) published on a scale ``spread`` times the play's."""
+        rng = random.Random(seed)
+        bank, b = {}, {}
+        for i in range(40):
+            x = {"length": rng.gauss(0, 1)}
+            b[f"q{i}"] = 0.3 + 0.8 * x["length"] + rng.gauss(0, 0.3)
+            pub = expit(spread * b[f"q{i}"]) if (all_published or i % 2) else None
+            bank[f"q{i}"] = Item(f"q{i}", difficulty=pub, meta={"features": x})
+        log = {}
+        for s in range(30):
+            theta = rng.gauss(0, 1)
+            log[f"s{s}"] = [Response(f"s{s}", q, rng.random() < expit(theta - b[q]))
+                            for q in (rng.choice(sorted(bank)) for _ in range(40))]
+        return bank, log
+
+    def test_location_anchoring_leaves_the_weights_to_play(self):
+        """A published scale half as wide as play's must not bend the weights."""
+        bank, log = self._half_published(spread=0.5)
+        located = fit(log, items=bank)
+        unanchored = fit(log, items=bank, anchor="none")
+        exact = fit(log, items=bank, anchor="exact")
+        assert located.weights()["length"].mean == pytest.approx(
+            unanchored.weights()["length"].mean
+        )
+        assert located.weights()["length"].sd == pytest.approx(
+            unanchored.weights()["length"].sd
+        )
+        assert exact.weights()["length"].mean < located.weights()["length"].mean
+
+    def test_a_fully_published_bank_still_learns_from_play(self):
+        bank, log = self._half_published(all_published=True)
+        flipped = {s: [Response(r.student, r.item, not r.correct) for r in rs]
+                   for s, rs in log.items()}
+        assert fit(log, items=bank).weights() != fit(flipped, items=bank).weights()
+
+    def test_an_anchor_at_zero_or_one_is_skipped_with_a_warning(self):
+        bank, log = self._half_published()
+        bank = {**bank, "q1": replace(bank["q1"], difficulty=1.0)}
+        with pytest.warns(RuntimeWarning, match="exactly 0 or 1"):
+            model = fit(log, items=bank)
+        assert model.anchors == 19
+
+    def test_a_log_with_no_wrong_answers_warns(self):
+        bank, _, log = _world(seed=25, students=3, per_student=10)
+        perfect = {s: [Response(r.student, r.item, True) for r in rs] for s, rs in log.items()}
+        with pytest.warns(RuntimeWarning, match="not identified"):
+            fit(perfect, items=bank)
+
+    def test_an_unknown_anchor_mode_is_loud(self):
+        bank, _, log = _world(seed=26, students=2, per_student=5)
+        with pytest.raises(ValueError, match="anchor must be one of"):
+            fit(log, items=bank, anchor=True)
 
     def test_hitting_an_iteration_cap_warns_and_is_recorded(self):
         bank, _, log = _world(seed=21)

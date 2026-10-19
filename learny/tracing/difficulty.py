@@ -29,12 +29,15 @@ import warnings
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from numbers import Real
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 from learny.tracing.estimators import expit, logit
 from learny.tracing.records import Item, Response
 
 __all__ = ["Estimate", "FeatureDifficulty", "fit_feature_difficulty", "item_features"]
+
+Anchor = Literal["location", "exact", "none"]
+_ANCHORS = ("location", "exact", "none")
 
 #: The tag :meth:`FeatureDifficulty.to_dict` writes, so a stored artifact says what it is.
 _SCHEMA = "learny.feature_difficulty/2"
@@ -247,13 +250,61 @@ def _cholesky_inverse(a: list[list[float]]) -> list[list[float]]:
     ]
 
 
+def _shift_to_anchors(coef, covariance, residuals, published, h_of, keys):
+    """Move the intercept so the anchors' fitted difficulties average their given ones.
+
+    With ``A`` the anchors, ``hbar`` their mean feature row and ``ebar`` their mean
+    residual, the new intercept is ``mean(given) - sum_f hbar_f w_f - ebar``: a linear
+    map of the fitted coefficients and residuals, so the covariance follows exactly,
+    except that residual-residual covariances between anchors (not kept) are taken as 0.
+    Returns the new ``(coef, covariance, residuals, shift)``.
+    """
+    n_coef = len(coef)
+    idx = list(published)
+    n = len(idx)
+    hbar = [sum(h_of[i][c] for i in idx) / n for c in range(n_coef)]
+    own = [residuals[keys[i]] for i in idx]  # (mean, var, *cov with coef)
+    ebar = sum(r[0] for r in own) / n
+    cov_c_ebar = [sum(r[2 + c] for r in own) / n for c in range(n_coef)]
+    var_ebar = sum(r[1] for r in own) / n**2
+    fitted_mean = sum(hbar[c] * coef[c] for c in range(n_coef)) + ebar
+    shift = sum(published.values()) / n - fitted_mean
+    # new = M coef - u0 * ebar + const, with M = identity except row 0 = (0, -hbar_1..)
+    m_rows = [[0.0] + [-hbar[c] for c in range(1, n_coef)]] + [
+        [1.0 if c == r else 0.0 for c in range(n_coef)] for r in range(1, n_coef)
+    ]
+
+    def m_times(v):
+        return [sum(m_rows[r][c] * v[c] for c in range(n_coef)) for r in range(n_coef)]
+
+    m_cov = [m_times([covariance[c][k] for c in range(n_coef)]) for k in range(n_coef)]
+    m_cov = [[m_cov[k][r] for k in range(n_coef)] for r in range(n_coef)]  # M Sigma
+    new_cov = [[sum(m_cov[r][c] * m_rows[k][c] for c in range(n_coef)) for k in range(n_coef)]
+               for r in range(n_coef)]  # M Sigma M'
+    m_ce = m_times(cov_c_ebar)  # M Cov(coef, ebar)
+    for r in range(n_coef):
+        new_cov[r][0] -= m_ce[r]
+        new_cov[0][r] -= m_ce[r]
+    new_cov[0][0] += var_ebar
+    anchored = {keys[i] for i in idx}
+    new_residuals = {}
+    for key, (mean, var, *c_e) in residuals.items():
+        cov_ebar_e = var / n if key in anchored else 0.0
+        m_ce_j = m_times(c_e)
+        m_ce_j[0] -= cov_ebar_e
+        new_residuals[key] = (mean, var, *m_ce_j)
+    new_coef = list(coef)
+    new_coef[0] = coef[0] + shift
+    return new_coef, new_cov, new_residuals, shift
+
+
 def fit_feature_difficulty(
     log: Mapping[str, Iterable[Response]],
     *,
     items: Mapping[str, Item],
     features: Mapping[str, Mapping[str, float]] | None = None,
     students: Iterable[str] | None = None,
-    anchor: bool = True,
+    anchor: Anchor = "location",
     ability_prior_var: float | None = None,
     residual_var: float | None = None,
     weight_prior_var: float = 1.0,
@@ -273,12 +324,18 @@ def fit_feature_difficulty(
     spacings are not modelled here); skips are not evidence about difficulty and are
     left out. Guessing is not modelled.
 
-    **The scale.** With ``anchor=True`` (the default) every answered item that already
-    has a ``difficulty`` is an anchor: its difficulty is held at the given value, which
-    puts the students' abilities, and so every fitted difficulty, on the bank's scale,
-    and its known difficulty informs the weights directly. Without anchors the scale is
-    the fitted students': their mean ability is 0, so a filled item sits wherever this
-    group of students finds it, not where a published band would put it.
+    **The scale.** Every answered item that already has a ``difficulty`` can anchor
+    the fit to the bank's scale. ``anchor="location"`` (the default) fits on play alone
+    and then shifts the intercept (and the students' mean ability) so that the anchors'
+    fitted difficulties average their given ones: filled items land where the bank's
+    would, while the weights stay exactly what play says, whatever the bank's spread
+    (a published band from :func:`~learny.tracing.estimators.difficulty_from_rank` is
+    an ordering, not a scale). ``anchor="exact"`` holds each anchor at its given value
+    instead, which also lets the given values inform the weights; it trusts them, spread
+    included, and a bank anchored throughout is then a regression of the given values
+    on the features, with play only placing the students. ``anchor="none"`` keeps the
+    fitted students' scale (mean ability 0). A given difficulty of exactly 0 or 1 has no
+    finite logit and is skipped as an anchor, with a warning.
 
     **What it assumes about the log.** Each student has one ability over the log
     (learning within the window is not modelled, so fit on a window short enough for
@@ -386,12 +443,27 @@ def fit_feature_difficulty(
         center.append(mu)
         scale.append(sd)
     h_of = [[1.0] + [(row[f] - center[f]) / scale[f] for f in range(n_feat)] for row in raw]
-    known = {
-        i: logit(items[key].difficulty)
-        for key, i in item_index.items()
-        if anchor and items[key].difficulty is not None
-    }
-    free = [i for i in range(n_items) if i not in known]
+    if anchor not in _ANCHORS:
+        raise ValueError(f"anchor must be one of {_ANCHORS}, got {anchor!r}")
+    given = {i: items[key].difficulty for key, i in item_index.items()
+             if anchor != "none" and items[key].difficulty is not None}
+    extreme = sorted(key for key, i in item_index.items() if given.get(i) in (0.0, 1.0))
+    if extreme:
+        warnings.warn(
+            f"{len(extreme)} item(s) with a given difficulty of exactly 0 or 1, e.g. "
+            f"{extreme[:5]!r}, have no finite logit and were not used as anchors",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+    published = {i: logit(d) for i, d in given.items() if 0.0 < d < 1.0}
+    known = published if anchor == "exact" else {}
+    if all(k == m for _, _, k, m in rows) or all(k == 0 for _, _, k, _ in rows):
+        warnings.warn(
+            "every answer in the log is right (or every one wrong): difficulty is not "
+            "identified by play, so the fit is the priors'",
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
     # -- MAP by Newton, the free items' residuals eliminated by Schur complement ------
     n_stud, n_coef = len(student_index), 1 + n_feat
@@ -402,12 +474,12 @@ def fit_feature_difficulty(
         by_item.setdefault(i, []).append((p, k, m))
     theta = [0.0] * g_dim
     resid = [0.0] * n_items
-    converged = True
+    newton_converged = em_converged = True
 
     def newton(tau2: float, a_mean: float, a_var: float):
         """Newton to the mode; returns the global covariance and, per free item, its
         residual's ``(variance, Schur column, d)`` for the block inverse."""
-        nonlocal theta, resid, converged
+        nonlocal theta, resid, newton_converged
         prior = [1.0 / a_var] * n_stud + coef_prior
         center_of = [a_mean] * n_stud + [0.0] * n_coef
         for _ in range(max_iter):
@@ -463,9 +535,10 @@ def fit_feature_difficulty(
             for i, d in step_e.items():
                 resid[i] += d
             if max(abs(d) for d in [*step, *step_e.values()]) < tol:
+                newton_converged = True
                 break
         else:
-            converged = False
+            newton_converged = False
         return cov, cols, d_e
 
     def moments(cov, cols, d_e):
@@ -508,7 +581,8 @@ def fit_feature_difficulty(
                    for new, prev in zip((tau2, a_var, a_mean), old)):
                 break
         else:
-            converged = False
+            em_converged = False
+    converged = newton_converged and em_converged  # judged on the final fit only
     if not converged:
         warnings.warn(
             "fit_feature_difficulty hit an iteration cap before converging; the weights "
@@ -527,17 +601,24 @@ def fit_feature_difficulty(
         var = 1.0 / d + sum(va * s_b[a] for a, va in col.items()) / d**2
         cov_coef = [-s_b[a] / d for a in coef_idx]  # Cov(coef, residual_i)
         residuals[key] = (resid[i], var, *cov_coef)
+    coef = list(theta[n_stud:])
+    covariance = [[cov[a][b] for b in coef_idx] for a in coef_idx]
+    if anchor == "location" and published:
+        coef, covariance, residuals, shift = _shift_to_anchors(
+            coef, covariance, residuals, published, h_of, keys
+        )
+        a_mean += shift
     return FeatureDifficulty(
         names=names,
         center=tuple(center),
         scale=tuple(scale),
-        coef=tuple(theta[n_stud:]),
-        covariance=tuple(tuple(cov[a][b] for b in coef_idx) for a in coef_idx),
+        coef=tuple(coef),
+        covariance=tuple(tuple(row) for row in covariance),
         residual_var=tau2,
         ability_mean=a_mean,
         ability_var=a_var,
         residuals=residuals,
-        anchors=len(known),
+        anchors=len(published),
         n_students=n_stud,
         n_responses=len(rows),
         converged=converged,
