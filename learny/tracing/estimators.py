@@ -172,6 +172,13 @@ def _clamp_cov(c: float, var_a: float, var_b: float) -> float:
     return max(-bound, min(bound, c))
 
 
+def _null(entry: Mapping[str, Any]) -> dict[str, float]:
+    """A label entry's null fields (``Mastery.null_var`` and ``null_k3``), to carry them
+    over when the entry is re-expressed: plain cumulants, not frame-relative, since
+    neither forgetting nor a change of frame moves the label's mean."""
+    return {k: float(entry[k]) for k in ("nv", "nk3") if k in entry}
+
+
 class _Label(NamedTuple):
     """One label's marginal posterior and its regression on the global skill."""
 
@@ -179,6 +186,8 @@ class _Label(NamedTuple):
     cov: float  # Cov(global, label)
     beta: float  # cov / var_global
     cond_var: float  # var - cov * beta: Var(label | global)
+    null_var: float | None = None  # the deviation mean's spread with no real deviation
+    null_k3: float | None = None  # and its third cumulant
 
 
 class _Evidence(NamedTuple):
@@ -188,6 +197,8 @@ class _Evidence(NamedTuple):
     information: float  # the curvature that shrinks the posterior along s
     residual: float  # observed minus expected, unit scale: moves a co-estimated difficulty
     elo: float  # the fixed-gain (gain='elo') step, before elo_rate
+    noise: float  # Var(gradient) under the model, for a skip a bound (see _likelihood)
+    noise3: float  # its third cumulant: a rare outcome is a large, one-sided jump
 
 
 class _Joint(NamedTuple):
@@ -327,6 +338,22 @@ class Mastery:
     #: sd — so that two labels' deviations covary by ``loading_a * loading_b``. 0 (the
     #: default) treats the deviations as independent.
     loading: float = field(default=0.0, kw_only=True, compare=False)
+    #: How far this label's own evidence moves ``deviation.mu`` by chance, as a sampling
+    #: variance, had the student no real deviation on it: the spread a test of "is this
+    #: label really weaker than the others?" is calibrated to. Smaller than
+    #: ``deviation.var`` because a posterior mean is shrunk, and tracked rather than
+    #: derived from it because forgetting re-opens the posterior variance without moving
+    #: the mean (the identity ``v - v**2 / tau**2`` breaks; #11). The part of the label's
+    #: movement that rides on the global skill is common to every label and is left out,
+    #: so that a leave-one-out contrast's spread is the sum of its labels' ``null_var``.
+    #: ``None``: not tracked (the posterior variance is the conservative stand-in); the
+    #: default estimator tracks it under ``gain='bayes'``.
+    null_var: float | None = field(default=None, kw_only=True, compare=False)
+    #: The third cumulant of the same sampling distribution. A student who mostly gets a
+    #: label right makes a rare wrong answer a large one-sided jump, so the null is
+    #: skewed and its lower tail is heavier than a normal one with ``null_var``; a test
+    #: of many labels at once lives in that tail. ``None``: not tracked (no correction).
+    null_k3: float | None = field(default=None, kw_only=True, compare=False)
 
     @property
     def mu(self) -> float:
@@ -379,7 +406,8 @@ class Estimator(Protocol):
         skill) if you can: :meth:`LearnerModel.weakest
         <learny.tracing.model.LearnerModel.weakest>` gates on it by default and raises
         ``TypeError`` for an estimator that leaves it ``None`` (callers can still pass
-        ``credible_below=None``).
+        ``credible_below=None``). :attr:`Mastery.null_var` calibrates that gate; left
+        ``None``, the gate falls back to the more cautious posterior bound.
         """
 
 
@@ -531,9 +559,11 @@ class RaschEstimator:
             if entry is None:
                 beta, cond_var, offset = 0.0, self.label_prior_var, 0.0
                 n, t = 0, None
+                null_var = null_k3 = 0.0  # the prior mean is exact: no sampling spread
             else:
                 beta, cond_var, offset = _regression(entry, stored_frame, stored)
                 n, t = int(entry.get("n", 0)), entry.get("t")
+                null_var, null_k3 = _null(entry).get("nv"), _null(entry).get("nk3")
                 # the global skill's ageing, which leaves Cov(global, label) as it was
                 cond_var += beta * beta * stored.var * (1.0 - r)
                 offset += beta * (1.0 - r) * stored.mu
@@ -545,7 +575,7 @@ class RaschEstimator:
             # the label's own ageing: independent drift, so all of it is conditional
             aged = self._aged(marginal, now, self.label_prior_var)
             cond_var = max(cond_var + aged.var - marginal.var, _MIN_VAR)
-            labels[label] = _Label(aged, cov, beta, cond_var)
+            labels[label] = _Label(aged, cov, beta, cond_var, null_var, null_k3)
         shares = self._shares(item, {k: v.skill for k, v in labels.items()})
         u0 = glob.var + sum(share * labels[k].cov for k, share in shares.items())
         u = {
@@ -634,7 +664,16 @@ class RaschEstimator:
         denom = max(p * (1.0 - p), 1e-9)
         score = weight * (target - p) * dp_ds / denom        # gradient of the log-likelihood
         info = weight * dp_ds * dp_ds / denom                # Fisher information
-        return _Evidence(score, info, target - p, score)
+        if response.outcome.is_scored:  # the gradient is a * (y - p), y ~ Bernoulli(p)
+            a = weight * dp_ds / denom
+            noise, noise3 = a * a * p * (1 - p), a**3 * p * (1 - p) * (1 - 2 * p)
+        else:
+            # A skip's target is fixed, but whether a student skips is random, at a rate
+            # q the model does not know, and any response could have been one: over N
+            # responses that adds N q (1 - q) jump**2, which is (1 - q) jump**2 per skip
+            # that happened. Its bound, jump**2 (and jump**3), is charged per skip (#22).
+            noise, noise3 = score * score, score**3
+        return _Evidence(score, info, target - p, score, noise, noise3)
 
     def observe(
         self, state: Mapping[str, Any], response: Response, item: Item | None
@@ -667,7 +706,9 @@ class RaschEstimator:
         )
         s = glob.mu + label_mu - self._difficulty(state, item)
 
-        score, info, residual, elo = self._likelihood(response, item, s, joint.v_s)
+        score, info, residual, elo, noise, noise3 = self._likelihood(
+            response, item, s, joint.v_s
+        )
 
         # Entries are replaced, never edited in place, so unchanged ones are shared.
         new = {
@@ -688,6 +729,7 @@ class RaschEstimator:
                 new["labels"][label] = {
                     **stored_frame.store(*_regression(entry, stored_frame, stored)),
                     "n": int(entry.get("n", 0)), "t": entry.get("t"),
+                    **_null(entry),
                 }
 
         # Bayes: the posterior gain Sigma h / (1 + info * h' Sigma h). Elo: the fixed gain
@@ -716,6 +758,7 @@ class RaschEstimator:
                     new["labels"][label] = {
                         **fresh.store(*_regression(entry, frame, glob)),
                         "n": entry["n"], "t": entry["t"],
+                        **_null(entry),
                     }
             frame = fresh
         for label, share in joint.shares.items():
@@ -729,6 +772,18 @@ class RaschEstimator:
                 "n": lab.skill.n + 1,
                 "t": now if now is not None else lab.skill.t,
             }
+            if bayes:
+                # A label stored before this was tracked starts, conservatively, at its
+                # posterior variance. The gain is the stored offset's, which moves by
+                # u - beta' * u0 = share * Var(label | global) + (beta - beta') * u0: the
+                # rest of the label's move rides on the global skill, is common to every
+                # label, and cancels in a contrast between them (Mastery.null_var).
+                before = lab.skill.var if lab.null_var is None else lab.null_var
+                before3 = 0.0 if lab.null_k3 is None else lab.null_k3
+                gain = (u - beta * u0) / (1.0 + info * joint.v_s)
+                decay = 1.0 - gain * info * share
+                new["labels"][label]["nv"] = decay * decay * before + gain * gain * noise
+                new["labels"][label]["nk3"] = decay**3 * before3 + gain**3 * noise3
         new["global"] = {
             "mu": mu_g,
             "var": vg,
@@ -761,7 +816,8 @@ class RaschEstimator:
                 n=int(entry.get("n", 0)),
                 t=entry.get("t"),
             )
-            yield label, _Label(skill, cov, beta, cond_var)
+            null = _null(entry)
+            yield label, _Label(skill, cov, beta, cond_var, null.get("nv"), null.get("nk3"))
 
     def mastery(self, state: Mapping[str, Any]) -> dict[str, Mastery]:
         """Per-label mastery: the student's global skill adjusted by each label."""
@@ -778,6 +834,8 @@ class RaschEstimator:
                 prior_var=self.prior_var + self.label_prior_var,
                 deviation=dev,
                 loading=lab.cov / glob.sd if glob.var > 0 else 0.0,
+                null_var=lab.null_var,
+                null_k3=lab.null_k3,
             )
         return out
 
@@ -959,6 +1017,7 @@ class PartialCreditEstimator(RaschEstimator):
             return mean, max(sum(j * j * p for j, p in enumerate(probs)) - mean * mean, 0.0)
 
         mean, var = moments(s)
+        third = sum((j - mean) ** 3 * p for j, p in enumerate(_level_probabilities(s, taus)))
         residual = k - mean
         mode = _posterior_mode(s, v_s, lambda t: k - moments(t)[0],
                                lambda t: moments(t)[1], steps=self.mode_steps)
@@ -969,7 +1028,9 @@ class PartialCreditEstimator(RaschEstimator):
             # the gradient that makes the shared rank-1 update land on the mode, with the
             # posterior's curvature taken there: a Laplace step along the predictor
             gradient = (mode - s) * (1.0 + info * v_s) / v_s
-        return _Evidence(gradient, info, residual / m, residual / m)
+        # d(mode)/dk = v / (1 + v * info), so the effective gradient moves one for one
+        # with the score: its sampling variance is the score's, Var[X] at the plug-in.
+        return _Evidence(gradient, info, residual / m, residual / m, var, third)
 
     def score_probabilities(
         self,

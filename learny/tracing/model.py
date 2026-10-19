@@ -42,10 +42,10 @@ __all__ = [
 
 #: How many posterior standard deviations below its comparator a label must be before
 #: :meth:`LearnerModel.weakest` calls it a weakness. 1.0 is a one-sided ~84% credible
-#: bound. With the default ``multiplicity="bonferroni"`` it is the bound for the *whole
-#: set* of labels tested — a student with no real weakness gets a label flagged at most
-#: about one time in six, however many labels there are — and with ``multiplicity="none"`` it is per
-#: label. It stops a set of labels that never vary independently (many labels on every
+#: bound. With the default ``multiplicity="calibrated"`` (and ``"bonferroni"``) it is the
+#: bound for the *whole set* of labels tested — a student with no real weakness gets a
+#: label flagged about one time in six at most, however many labels there are — and with
+#: ``multiplicity="none"`` it is per label. It stops a set of labels that never vary independently (many labels on every
 #: item) from being ranked at all. Raise it when a false "practise this" is costly.
 DEFAULT_CREDIBLE_BELOW = 1.0
 
@@ -57,20 +57,30 @@ DEFAULT_CREDIBLE_BELOW = 1.0
 #: with, so nothing is credibly weak.
 DEFAULT_RELATIVE_TO = "labels"
 
-#: How the bound accounts for testing several labels at once. ``"bonferroni"`` raises the
-#: per-label z so the chance of *any* false flag is at most ``1 - Phi(credible_below)``,
-#: whatever the dependence between labels (far less with little evidence, where a shrunk
-#: posterior's sd overstates how far its mean wanders — the cost is power, see
-#: :meth:`LearnerModel.weakest`);
-#: ``"none"`` applies ``credible_below`` to each label separately, as the original
-#: gate did.
-DEFAULT_MULTIPLICITY = "bonferroni"
+#: How the bound accounts for testing several labels at once. ``"calibrated"`` raises the
+#: per-label z as Bonferroni does, so the chance of *any* false flag is about
+#: ``1 - Phi(credible_below)``, and measures each label against how far its contrast
+#: would wander with no real weakness (:attr:`Mastery.null_var
+#: <learny.tracing.estimators.Mastery.null_var>`) rather than against its posterior sd,
+#: which a shrunk posterior mean stays well inside (#22). ``"bonferroni"`` does the same
+#: on the posterior sd: a bound rather than a calibration, far below its target with
+#: little evidence, so it costs power at cold start. ``"none"`` applies
+#: ``credible_below`` to each label separately, as the original gate did.
+DEFAULT_MULTIPLICITY = "calibrated"
 
 WeakestReason = Literal["no_evidence", "no_credible_weakness"]
 RelativeTo = Literal["labels", "global"]
-Multiplicity = Literal["bonferroni", "none"]
+Multiplicity = Literal["calibrated", "bonferroni", "none"]
+
+#: Fewest rare outcomes a label's null must rest on before its moments describe its
+#: tail. A compound-Poisson fit to a label's null cumulants, ``nv`` and ``nk3``, puts
+#: ``lambda = nv**3 / nk3**2`` rare jumps behind it (one wrong answer among a few that a
+#: student nearly always gets right: ``lambda`` well below 1). With less than one, the
+#: null is a single discrete event, no moment expansion holds, and the label is measured
+#: by its posterior spread instead (#22, #35).
+_MIN_RARE_EVENTS = 1.0
 _RELATIVE_TO = ("labels", "global")
-_MULTIPLICITY = ("bonferroni", "none")
+_MULTIPLICITY = ("calibrated", "bonferroni", "none")
 
 
 def _bonferroni_z(z: float, m: int) -> float:
@@ -91,6 +101,87 @@ def _bonferroni_z(z: float, m: int) -> float:
     if m <= 1 or alpha == 0.0:  # one test, or a tail beyond float resolution
         return z
     return -NormalDist().inv_cdf(alpha / m)
+
+
+def _null_spreads(
+    masteries: Sequence[Mastery], relative_to: RelativeTo
+) -> list[tuple[float, float]]:
+    """Each contrast's ``(sd, skewness)`` for a test calibrated to "no real weakness".
+
+    The contrast and its weights are :func:`_contrasts`'s. Its posterior variance has two
+    parts: each label's own residual (``var - loading**2``) and the part the labels share
+    through the global skill (``(loading_i - weighted loadings)**2``). Only the first is
+    sampling noise that shrinkage overstates, so only it is replaced, by each label's
+    :attr:`Mastery.null_var <learny.tracing.estimators.Mastery.null_var>`. The shared
+    part is kept at its posterior size: it is the direction in which the record cannot
+    tell "weak overall" from "weak on this label", where a label's mean is moved by the
+    priors' split of a shortfall rather than by chance (#23), and a test that ignored it
+    would blame the most heavily weighted label for every shortfall.
+
+    The skewness is the own parts' third cumulant (:attr:`Mastery.null_k3
+    <learny.tracing.estimators.Mastery.null_k3>`, 0 when not tracked) over ``sd**3``;
+    the shared part is taken as normal. A label without a ``null_var`` (an estimator
+    that does not track it, or a label stored before it was tracked) contributes its
+    posterior own residual instead, so with none tracked this is exactly the posterior
+    contrast spread of :func:`_contrasts`.
+
+    >>> from learny.tracing.estimators import Skill
+    >>> ms = [Mastery(k, Skill(0.0, 1.0), deviation=Skill(0.0, 0.2), null_var=0.05)
+    ...       for k in 'ab']
+    >>> [(round(sd, 3), g) for sd, g in _null_spreads(ms, 'labels')]
+    [(0.316, 0.0), (0.316, 0.0)]
+    >>> heavy = [Mastery('a', Skill(0.0, 1.0), deviation=Skill(0.0, 0.2), null_var=0.05,
+    ...                  loading=-0.4), ms[1]]
+    >>> [round(sd, 3) for sd, _ in _null_spreads(heavy, 'labels')]  # the shared part stays
+    [0.51, 0.51]
+    >>> untracked = Mastery('a', Skill(0.0, 1.0), deviation=Skill(0.0, 0.2))
+    >>> _null_spreads([untracked], 'global') == [(_contrasts([untracked], 'global')[0][1], 0.0)]
+    True
+    """
+    loads = [float(getattr(m, "loading", 0.0) or 0.0) for m in masteries]
+
+    def own(m: Mastery, a: float) -> tuple[float, float]:
+        nv, k3 = m.null_var, float(getattr(m, "null_k3", None) or 0.0)
+        if nv is None or (k3 and nv**3 < _MIN_RARE_EVENTS * k3 * k3):
+            return max(m.deviation.var - a * a, 0.0), 0.0  # the posterior own residual
+        return max(nv, 0.0), k3
+
+    nvs, k3s = map(list, zip(*(own(m, a) for m, a in zip(masteries, loads))))
+
+    def spread(var: float, k3: float) -> tuple[float, float]:
+        sd = math.sqrt(var)
+        return sd, (k3 / sd**3 if sd > 0 else 0.0)
+
+    if relative_to == "global":
+        return [spread(nv + a * a, k3) for nv, a, k3 in zip(nvs, loads, k3s)]
+    devs = [m.deviation for m in masteries]
+
+    def contrast(i: int) -> tuple[float, float]:
+        rest = [j for j in range(len(devs)) if j != i]
+        rest_prec = sum(1.0 / devs[j].var for j in rest)
+        w = {j: 1.0 / devs[j].var / rest_prec for j in rest}
+        shared = loads[i] - sum(w[j] * loads[j] for j in rest)
+        var = nvs[i] + sum(w[j] ** 2 * nvs[j] for j in rest) + shared**2
+        return spread(var, k3s[i] - sum(w[j] ** 3 * k3s[j] for j in rest))
+
+    return [contrast(i) for i in range(len(devs))]
+
+
+def _skew_corrected_z(z: float, skewness: float) -> float:
+    """The lower-tail critical z for a null with this skewness, never below ``z``.
+
+    First-order Cornish-Fisher: the lower ``Phi(-z)`` quantile of a standardised
+    distribution with skewness ``g`` is about ``-z + (z**2 - 1) * g / 6``. A negative
+    skew (a rare wrong answer is a large drop) moves it further out. A positive skew
+    would move it in, where the expansion is least reliable and a gate would turn lax,
+    so it is never allowed to.
+
+    >>> _skew_corrected_z(2.0, 0.0), _skew_corrected_z(2.0, 1.5)
+    (2.0, 2.0)
+    >>> _skew_corrected_z(2.0, -1.2)
+    2.6
+    """
+    return z + max(0.0, -skewness) * max(z * z - 1.0, 0.0) / 6.0
 
 
 def _contrasts(
@@ -285,14 +376,22 @@ class LearnerModel:
           comparator on average. ``None`` switches the gate off and ranks every
           label with evidence by posterior mean — check :meth:`separation` before
           believing that ranking.
-        * ``multiplicity`` — ``"bonferroni"`` (default) corrects for testing every label with
-          evidence at once, so ``z`` bounds the chance of *any* false flag; ``"none"``
-          applies ``z`` to each label separately, which with six labels, a few hundred
-          responses and no real weakness flags something more often than not. The
-          correction is on posterior bounds, which shrinkage already makes cautious
-          when evidence is thin, so in cold start it mostly costs power: with a few
-          responses per label even a large real weakness is rarely returned. Pass
-          ``"none"`` there if a missed weakness costs more than a false one (#22).
+        * ``multiplicity`` — ``"calibrated"`` (default) corrects for testing every label
+          with evidence at once, so ``z`` sets the chance of *any* false flag (about
+          one student in six with no real weakness, at ``z = 1``), and measures each
+          contrast against its sampling spread under no real weakness
+          (:attr:`Mastery.null_var <learny.tracing.estimators.Mastery.null_var>`) and
+          skew (a rare wrong answer from a student who is usually right is a large
+          drop), so the correction costs little power at cold start (#22). An estimator that does
+          not fill ``null_var`` gets ``"bonferroni"`` (a label it leaves unfilled is
+          measured by its posterior spread): the same correction on the posterior sd, which shrinkage already makes cautious when evidence is thin, so
+          with a few responses per label even a large real weakness is rarely returned.
+          ``"none"`` applies ``z`` to each label separately, which with six labels, a few
+          hundred responses and no real weakness flags something more often than not.
+          Under ``relative_to="global"`` the calibrated spread is more cautious (the
+          part of a label's spread it shares with the others is counted, not removed).
+          A label stored before null spreads were tracked is measured by its posterior
+          spread until it is answered again.
         * ``relative_to`` — ``"labels"`` (default) as above; ``"global"`` measures each
           label's deviation against zero, the student's global skill. The default
           estimator carries the global/label covariance, so a shortfall every item
@@ -374,15 +473,17 @@ class LearnerModel:
         if relative_to == "labels" and len(ranked) < 2:
             return Weakest(reason="no_credible_weakness")
         z = (
-            _bonferroni_z(credible_below, len(ranked))
-            if multiplicity == "bonferroni"
-            else credible_below
+            credible_below
+            if multiplicity == "none"
+            else _bonferroni_z(credible_below, len(ranked))
         )
-        credible = [
-            m
-            for m, (mu, sd) in zip(ranked, _contrasts(ranked, relative_to))
-            if mu + z * sd < 0.0
-        ]
+        contrasts = [(mu, sd, z) for mu, sd in _contrasts(ranked, relative_to)]
+        if multiplicity == "calibrated":
+            contrasts = [
+                (mu, sd, _skew_corrected_z(z, g))
+                for (mu, _, _), (sd, g) in zip(contrasts, _null_spreads(ranked, relative_to))
+            ]
+        credible = [m for m, (mu, sd, zi) in zip(ranked, contrasts) if mu + zi * sd < 0.0]
         if not credible:
             return Weakest(reason="no_credible_weakness")
         return Weakest(credible[:n])
