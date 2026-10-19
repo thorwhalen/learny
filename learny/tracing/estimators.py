@@ -65,6 +65,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
+from numbers import Real
 from typing import Any, NamedTuple, Protocol, runtime_checkable
 
 from learny.tracing.records import Item, Outcome, Response
@@ -178,6 +179,15 @@ class _Label(NamedTuple):
     cov: float  # Cov(global, label)
     beta: float  # cov / var_global
     cond_var: float  # var - cov * beta: Var(label | global)
+
+
+class _Evidence(NamedTuple):
+    """What one response says about the item's linear predictor ``s``."""
+
+    gradient: float  # what the Bayes step moves s by, times (1 + information * v_s)
+    information: float  # the curvature that shrinks the posterior along s
+    residual: float  # observed minus expected, unit scale: moves a co-estimated difficulty
+    elo: float  # the fixed-gain (gain='elo') step, before elo_rate
 
 
 class _Joint(NamedTuple):
@@ -605,16 +615,17 @@ class RaschEstimator:
         return self.guess, self.abstain_weight
 
     def _likelihood(
-        self, response: Response, item: Item, s: float
-    ) -> tuple[float, float, float]:
-        """``(gradient, information, residual)`` of one response at predictor ``s``.
+        self, response: Response, item: Item, s: float, v_s: float
+    ) -> _Evidence:
+        """What one response says about the predictor, whose posterior is ``N(s, v_s)``.
 
         The gradient and Fisher information of the response's log-likelihood with respect
-        to the item's linear predictor ``s``, which is all the joint update needs; and the
-        residual (observed minus expected, on the unit scale) that moves a co-estimated
-        item difficulty. Evaluated at the posterior mean (a plug-in), for a response
-        :meth:`_target` did not discard. This is the one place the dichotomous model
-        lives, so a different response model overrides it and inherits the rest.
+        to the item's linear predictor, which is all the joint update needs; the residual
+        (observed minus expected, on the unit scale) that moves a co-estimated item
+        difficulty; and Elo's fixed-gain step. Here they are evaluated at the posterior
+        mean (one Newton step), for a response :meth:`_target` did not discard. This is
+        the one place the dichotomous model lives, so a different response model
+        overrides it and inherits the rest.
         """
         target, weight = self._target(response)
         q = expit(s)
@@ -623,7 +634,7 @@ class RaschEstimator:
         denom = max(p * (1.0 - p), 1e-9)
         score = weight * (target - p) * dp_ds / denom        # gradient of the log-likelihood
         info = weight * dp_ds * dp_ds / denom                # Fisher information
-        return score, info, target - p
+        return _Evidence(score, info, target - p, score)
 
     def observe(
         self, state: Mapping[str, Any], response: Response, item: Item | None
@@ -656,7 +667,7 @@ class RaschEstimator:
         )
         s = glob.mu + label_mu - self._difficulty(state, item)
 
-        score, info, residual = self._likelihood(response, item, s)
+        score, info, residual, elo = self._likelihood(response, item, s, joint.v_s)
 
         # Entries are replaced, never edited in place, so unchanged ones are shared.
         new = {
@@ -687,7 +698,7 @@ class RaschEstimator:
         step = score / (1.0 + info * joint.v_s)
 
         u0 = joint.u0
-        moved = u0 * step if bayes else self.elo_rate * score
+        moved = u0 * step if bayes else self.elo_rate * elo
         mu_g = glob.mu + moved
         vg = max(glob.var - shrink * u0 * u0, _MIN_VAR)
         frame = joint.frame
@@ -709,7 +720,7 @@ class RaschEstimator:
             frame = fresh
         for label, share in joint.shares.items():
             lab, u = joint.labels[label], joint.u[label]
-            mu = lab.skill.mu + (u * step if bayes else self.elo_rate * share * score)
+            mu = lab.skill.mu + (u * step if bayes else self.elo_rate * share * elo)
             var = max(lab.skill.var - shrink * u * u, _MIN_VAR)
             cov = _clamp_cov(lab.cov - shrink * u0 * u, vg, var)
             beta = cov / vg
@@ -791,9 +802,10 @@ def binomial_thresholds(item: Item, max_score: int) -> list[float]:
     *fraction* of the maximum equals the right/wrong model's probability of a correct
     answer, and an item's ``difficulty`` means the same thing however it is scored. That
     is why it is the default: it is the one choice that keeps an externally calibrated
-    difficulty meaningful with no new parameters. It is not a claim that the steps really
-    are independent, and it makes a score out of ``m`` carry up to ``m`` times the evidence
-    of one right/wrong answer; thresholds spread wider apart carry less.
+    difficulty meaningful with no new parameters (with ``guess=0``: a score is never a
+    guess). It is not a claim that the steps really are independent, and it makes a score
+    out of ``m`` carry up to ``m`` times the evidence of one right/wrong answer; thresholds
+    spread wider apart carry less.
 
     >>> binomial_thresholds(Item('q'), 1)  # one step: the right/wrong model
     [0.0]
@@ -814,6 +826,42 @@ def _level_probabilities(s: float, taus: Sequence[float]) -> list[float]:
     return [w / total for w in weights]
 
 
+def _posterior_mode(
+    s: float,
+    v: float,
+    gradient: Callable[[float], float],
+    information: Callable[[float], float],
+    *,
+    steps: int,
+    tol: float = 1e-12,
+) -> float | None:
+    """The mode of ``N(t; s, v) * likelihood(t)`` for a log-concave likelihood.
+
+    ``gradient`` and ``information`` are the log-likelihood's first derivative and minus
+    its second. The objective's derivative falls monotonically, so the mode lies between
+    ``s`` and the first Newton step; Newton is run inside that bracket, falling back to
+    bisection whenever a step would leave it. ``None`` when there is nothing to iterate
+    (``steps <= 1``, or no posterior width).
+    """
+    if steps <= 1 or not v > 0:
+        return None
+    lo, hi = sorted((s, s + v * gradient(s)))
+    t = s
+    for _ in range(steps):
+        f = -(t - s) / v + gradient(t)
+        if f > 0:
+            lo = t
+        else:
+            hi = t
+        nxt = t + f / (1.0 / v + information(t))
+        if not lo <= nxt <= hi:
+            nxt = 0.5 * (lo + hi)
+        if abs(nxt - t) <= tol * (1.0 + abs(t)):
+            return nxt
+        t = nxt
+    return t
+
+
 @dataclass
 class PartialCreditEstimator(RaschEstimator):
     """Masters' Partial Credit Model on the Rasch predictor: reads an ordered score.
@@ -828,9 +876,16 @@ class PartialCreditEstimator(RaschEstimator):
     :func:`binomial_thresholds`. The log-likelihood's gradient in ``s`` is
     ``k - E[X]`` and its Fisher information ``Var[X]``, which is all the joint update
     needs, so the hierarchy, forgetting, the global/label covariance and replay are the
-    default estimator's, unchanged. A response *without* a score is a right/wrong answer
-    and is scored exactly as :class:`RaschEstimator` scores it — guessing, skips and all;
-    ``guess`` applies to those only. For a score, ``outcome`` is not read.
+    default estimator's, unchanged. For a score the update iterates to the posterior mode
+    along the predictor (``mode_steps``), since one Newton step overshoots on a surprising
+    score out of many levels. A response *without* a score is a right/wrong answer and is
+    scored exactly as :class:`RaschEstimator` scores it — guessing, skips and all.
+
+    **``guess`` applies only to responses without a score**: a score is never modelled as
+    a guess, so on a multiple-choice item that is also scored, ``expected_score`` is not
+    ``max_score * predict()`` unless ``guess=0``. For a score, ``outcome`` is not read,
+    and a score that contradicts it is not an error: the outcome is the caller's own
+    right/wrong reading of the attempt.
 
     >>> est = PartialCreditEstimator()
     >>> item = Item('song-7/tempo', labels=('tempo',), difficulty=0.5)
@@ -851,26 +906,54 @@ class PartialCreditEstimator(RaschEstimator):
 
     #: How an item scored ``0..max_score`` places its steps; see :data:`Thresholds`.
     thresholds: Thresholds = binomial_thresholds
+    #: Newton iterations allowed to find the posterior mode along the predictor for a
+    #: score. One step (the right/wrong update's plug-in) is fine for a few stars but
+    #: overshoots on a surprising score out of many levels, whose gradient is bounded by
+    #: ``max_score`` rather than by 1; iterating to the mode (a Laplace step) does not.
+    #: ``1`` restores the plain one-step update.
+    mode_steps: int = 50
 
     def _taus(self, item: Item, max_score: int) -> list[float]:
-        taus = [float(t) for t in self.thresholds(item, max_score)]
+        taus = list(self.thresholds(item, max_score))
         if len(taus) != max_score:
             raise ValueError(
                 f"thresholds({item.id!r}, {max_score}) returned {len(taus)} thresholds; "
                 f"a score out of {max_score} needs exactly {max_score}"
             )
-        return taus
+        bad = [t for t in taus if isinstance(t, bool) or not isinstance(t, Real)
+               or not math.isfinite(t)]
+        if bad:
+            raise ValueError(
+                f"thresholds({item.id!r}, {max_score}) must be finite numbers (logits), "
+                f"got {bad!r}"
+            )
+        return [float(t) for t in taus]
 
     def _likelihood(
-        self, response: Response, item: Item, s: float
-    ) -> tuple[float, float, float]:
+        self, response: Response, item: Item, s: float, v_s: float
+    ) -> _Evidence:
         if response.score is None:
-            return super()._likelihood(response, item, s)
-        probs = _level_probabilities(s, self._taus(item, response.max_score))
-        mean = sum(k * p for k, p in enumerate(probs))
-        var = sum(k * k * p for k, p in enumerate(probs)) - mean * mean
-        residual = response.score - mean
-        return residual, max(var, 0.0), residual / response.max_score
+            return super()._likelihood(response, item, s, v_s)
+        k, m = response.score, response.max_score
+        taus = self._taus(item, m)
+
+        def moments(t: float) -> tuple[float, float]:
+            probs = _level_probabilities(t, taus)
+            mean = sum(j * p for j, p in enumerate(probs))
+            return mean, max(sum(j * j * p for j, p in enumerate(probs)) - mean * mean, 0.0)
+
+        mean, var = moments(s)
+        residual = k - mean
+        mode = _posterior_mode(s, v_s, lambda t: k - moments(t)[0],
+                               lambda t: moments(t)[1], steps=self.mode_steps)
+        if mode is None:  # one step, or no posterior width to move in
+            gradient, info = residual, var
+        else:
+            info = moments(mode)[1]
+            # the gradient that makes the shared rank-1 update land on the mode, with the
+            # posterior's curvature taken there: a Laplace step along the predictor
+            gradient = (mode - s) * (1.0 + info * v_s) / v_s
+        return _Evidence(gradient, info, residual / m, residual / m)
 
     def score_probabilities(
         self,
@@ -883,8 +966,9 @@ class PartialCreditEstimator(RaschEstimator):
         """``P(score = k)`` for ``k = 0..max_score``, over the posterior.
 
         The posterior is integrated with the same probit approximation as
-        :meth:`~RaschEstimator.predict`: exact in the mean for the default thresholds,
-        approximate for the spread of the levels.
+        :meth:`~RaschEstimator.predict`, so with the default thresholds and ``guess=0``
+        the expected score is exactly ``max_score * predict()``; both are approximations
+        to the posterior integral. Guessing is not modelled for a score (see the class).
 
         >>> est = PartialCreditEstimator()
         >>> [round(p, 3) for p in est.score_probabilities(est.init(), Item('q'), 2)]

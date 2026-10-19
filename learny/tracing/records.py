@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, field, asdict, replace
 from enum import Enum
+from numbers import Integral
 from typing import Any
 
 __all__ = ["Outcome", "Item", "Response", "LabelWeights", "restrict_labels"]
@@ -200,8 +201,9 @@ class Response:
             )
         for name in ("score", "max_score"):
             value = getattr(self, name)
-            if isinstance(value, bool) or not isinstance(value, int):
+            if isinstance(value, bool) or not isinstance(value, Integral):
                 raise TypeError(f"Response {self.item!r}: {name} must be an int, got {value!r}")
+            object.__setattr__(self, name, int(value))  # a numpy int serialises as int
         if not 0 <= self.score <= self.max_score or self.max_score < 1:
             raise ValueError(
                 f"Response {self.item!r}: need 0 <= score <= max_score and max_score >= 1, "

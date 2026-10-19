@@ -61,7 +61,7 @@ class TestResponseScore:
         with pytest.raises(ValueError, match="0 <= score <= max_score"):
             Response("a", "q", "correct", score=score, max_score=max_score)
 
-    @pytest.mark.parametrize("score,max_score", [(2.5, 4), (True, 1), ("3", 4)])
+    @pytest.mark.parametrize("score,max_score", [(2.5, 4), (3.0, 4), (True, 1), ("3", 4)])
     def test_score_must_be_an_int(self, score, max_score):
         with pytest.raises(TypeError, match="must be an int"):
             Response("a", "q", "correct", score=score, max_score=max_score)
@@ -99,8 +99,12 @@ class TestPartialCredit:
         pcm = _fold(PartialCreditEstimator(**kw), rs, ITEMS)
         assert pcm == _fold(RaschEstimator(**kw), rs, ITEMS)
 
-    def test_one_step_score_is_the_rasch_model(self):
-        """A score out of 1 under the default thresholds is a right/wrong answer."""
+    @pytest.mark.parametrize(
+        "kw", [{}, {"gain": "elo"}, {"update_difficulty": True}, {"conjunctivity": 2.0}]
+    )
+    def test_one_step_score_is_the_rasch_model(self, kw):
+        """With one Newton step, a score out of 1 under the default thresholds is a
+        right/wrong answer (with ``guess=0``: a score is never a guess)."""
         outcomes = ["correct", "wrong", "correct", "correct", "wrong"]
         items = ["q1", "q2", "q3", "q2", "q1"]
         scored = [
@@ -109,9 +113,34 @@ class TestPartialCredit:
         ]
         plain = [Response("a", i, o, at=k * WEEK) for k, (i, o) in enumerate(zip(items, outcomes))]
         _assert_states_close(
-            _fold(PartialCreditEstimator(), scored, ITEMS),
-            _fold(RaschEstimator(), plain, ITEMS),
+            _fold(PartialCreditEstimator(mode_steps=1, **kw), scored, ITEMS),
+            _fold(RaschEstimator(**kw), plain, ITEMS),
         )
+
+    @pytest.mark.parametrize("m", [4, 20, 100, 1000])
+    def test_a_surprising_score_lands_on_the_posterior_mode(self, m):
+        """No overshoot on many levels: the update is a Laplace step to the mode."""
+        prior_mu, prior_var = 3.0, 0.5
+        est = PartialCreditEstimator(prior_var=prior_var)
+        state = {"global": {"mu": prior_mu, "var": prior_var, "n": 0, "t": None},
+                 "labels": {}}
+        r = Response("a", "q", "wrong", score=0, max_score=m)
+        got = est.observe(state, r, Item("q"))["global"]["mu"]
+
+        def objective(t):  # log prior + binomial log-likelihood of 0 out of m
+            return -((t - prior_mu) ** 2) / (2 * prior_var) - m * math.log1p(math.exp(t))
+
+        grid = [prior_mu - 20 + i * 1e-4 for i in range(int(23 / 1e-4))]
+        brute = max(grid, key=objective)
+        assert got == pytest.approx(brute, abs=1e-3)
+
+    def test_the_elo_step_is_on_the_unit_scale(self):
+        """A full score moves Elo by at most ``elo_rate``, however many levels it has."""
+        est = PartialCreditEstimator(gain="elo")
+        for m in (1, 4, 100):
+            r = Response("a", "q", "correct", score=m, max_score=m)
+            mu = est.observe(est.init(), r, Item("q"))["global"]["mu"]
+            assert 0 < mu <= est.elo_rate
 
     def test_the_default_estimator_ignores_the_score(self):
         """The default stays Rasch on ``outcome``: adding a score changes nothing."""
@@ -166,6 +195,13 @@ class TestPartialCredit:
         wide_est = PartialCreditEstimator(thresholds=spread)
         wide = wide_est.observe(wide_est.init(), r, ITEMS["q3"])
         assert wide["global"]["var"] > default["global"]["var"]
+
+    @pytest.mark.parametrize("bad", [math.nan, math.inf, "0.5", True])
+    def test_non_finite_or_non_numeric_thresholds_are_loud(self, bad):
+        est = PartialCreditEstimator(thresholds=lambda item, m: [0.0] * (m - 1) + [bad])
+        r = Response("a", "q3", "correct", score=2, max_score=4)
+        with pytest.raises(ValueError, match="finite numbers"):
+            est.observe(est.init(), r, ITEMS["q3"])
 
     def test_a_wrong_number_of_thresholds_is_loud(self):
         est = PartialCreditEstimator(thresholds=lambda item, m: [0.0])
