@@ -75,6 +75,8 @@ __all__ = [
     "RaschEstimator",
     "PartialCreditEstimator",
     "binomial_thresholds",
+    "spread_thresholds",
+    "SpreadThresholds",
     "Mastery",
     "Skill",
     "logit",
@@ -871,6 +873,46 @@ def binomial_thresholds(item: Item, max_score: int) -> list[float]:
     [-1.386, -0.405, 0.405, 1.386]
     """
     return [math.log(k / (max_score - k + 1)) for k in range(1, max_score + 1)]
+
+
+@dataclass(frozen=True)
+class SpreadThresholds:
+    """Binomial thresholds stretched by ``spread``; see :func:`spread_thresholds`.
+
+    A frozen dataclass rather than a closure, so an estimator holding one pickles, and
+    two with the same spread compare equal.
+    """
+
+    spread: float
+
+    def __post_init__(self) -> None:
+        if isinstance(self.spread, bool) or not (
+            isinstance(self.spread, (int, float)) and self.spread > 0
+            and math.isfinite(self.spread)
+        ):
+            raise ValueError(f"spread must be a positive number, got {self.spread!r}")
+
+    def __call__(self, item: Item, max_score: int) -> list[float]:
+        return [self.spread * t for t in binomial_thresholds(item, max_score)]
+
+
+def spread_thresholds(spread: float) -> SpreadThresholds:
+    """Binomial thresholds stretched by ``spread``: ``tau_k = spread * log(k / (m - k + 1))``.
+
+    ``spread=1`` is :func:`binomial_thresholds`. A wider spread makes the middle levels
+    more likely and the extremes rarer, so one score carries less evidence; narrower
+    makes a score sharper. It keeps the thresholds centred, so an item's ``difficulty``
+    still sits at the middle of its scale. :func:`~learny.tracing.diagnostics.fit_threshold_spread`
+    picks ``spread`` from a log.
+
+    >>> [round(t, 3) for t in spread_thresholds(2.0)(Item('q'), 2)]
+    [-1.386, 1.386]
+    >>> spread_thresholds(1.0)(Item('q'), 4) == binomial_thresholds(Item('q'), 4)
+    True
+    >>> spread_thresholds(2.0) == spread_thresholds(2.0)
+    True
+    """
+    return SpreadThresholds(spread)
 
 
 def _level_probabilities(s: float, taus: Sequence[float]) -> list[float]:

@@ -27,10 +27,15 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
-from learny.tracing.estimators import Estimator, RaschEstimator
+from learny.tracing.estimators import (
+    Estimator,
+    PartialCreditEstimator,
+    RaschEstimator,
+    spread_thresholds,
+)
 from learny.tracing.records import Item, Outcome, Response
 
 __all__ = [
@@ -43,6 +48,10 @@ __all__ = [
     "ScoreCalibrationReport",
     "score_calibration",
     "reads_scores",
+    "Comparison",
+    "compare_estimators",
+    "fit_threshold_spread",
+    "DEFAULT_SPREADS",
     "DEFAULT_SEPARATION_THRESHOLD",
     "DEFAULT_N_BINS",
 ]
@@ -548,3 +557,167 @@ def score_calibration(
                 probs = estimator.score_probabilities(state, item, response.max_score)
                 forecasts.append((list(probs), response.score))
     return ScoreCalibrationReport.from_forecasts(forecasts, n_bins=n_bins)
+
+
+# -- choosing between estimators -------------------------------------------------
+
+
+def _forecast_loss(
+    estimator: Any, state: Mapping[str, Any], response: Response, item: Item
+) -> float | None:
+    """Log loss of what ``estimator`` forecasts for ``response``, or ``None`` if unscored.
+
+    A score, for an estimator that reads scores, is scored on its level; anything else
+    scored, as right/wrong against ``predict()`` (as :func:`calibration` does).
+    """
+    if not response.outcome.is_scored:
+        return None
+    if response.score is not None and reads_scores(estimator):
+        probs = estimator.score_probabilities(state, item, response.max_score)
+        return -math.log(min(max(probs[response.score], _EPS), 1.0))
+    p = min(max(estimator.predict(state, item), _EPS), 1.0 - _EPS)
+    return -math.log(p if response.outcome is Outcome.CORRECT else 1.0 - p)
+
+
+@dataclass(frozen=True)
+class Comparison:
+    """Prequential log loss of several candidate estimators on the same log.
+
+    ``losses`` is each candidate's mean log loss per scored response (lower is better)
+    and ``best`` the lowest. ``se`` is each candidate's standard error of its loss *minus
+    the best's*, paired response by response and clustered by student (one student's
+    responses are not independent of each other). ``chosen`` is the first candidate, in
+    the order given, whose loss is within ``tolerance_se`` of those standard errors of
+    the best: the one-standard-error rule, which keeps the candidate listed first (the
+    default, the simplest) unless the log says clearly otherwise. Short histories make
+    prequential loss favour sharper forecasts than the truth (#32); this is the guard.
+    """
+
+    n: int
+    n_students: int
+    losses: Mapping[str, float]
+    se: Mapping[str, float]
+    best: str
+    chosen: str
+
+
+def compare_estimators(
+    log: Mapping[str, Iterable[Response]],
+    *,
+    items: Mapping[str, Item],
+    candidates: Mapping[str, Estimator],
+    students: Iterable[str] | None = None,
+    tolerance_se: float = 1.0,
+) -> Comparison:
+    """Replay ``log`` prequentially under each candidate and pick one; see :class:`Comparison`.
+
+    ``candidates`` maps a name to an estimator, **most preferred first**. Every candidate
+    is scored on the same responses, so the comparison is paired. ``tolerance_se`` is how
+    many standard errors of slack the earlier candidates get: 1 is the usual rule, 0 is
+    plain arg-min. This is the tool for refitting any estimator setting on a log
+    (``prior_var``, ``forget_per_week``, a threshold spread), one candidate per value.
+
+    >>> items = {'q': Item('q', labels=('x',), difficulty=0.5)}
+    >>> log = {s: [Response(s, 'q', 'correct')] * 5 for s in 'abc'}
+    >>> c = compare_estimators(log, items=items, candidates={
+    ...     'default': RaschEstimator(), 'sure': RaschEstimator(prior_var=0.01)})
+    >>> c.best, c.chosen
+    ('default', 'default')
+    """
+    if not candidates:
+        raise ValueError("compare_estimators needs at least one candidate")
+    if len({reads_scores(est) for est in candidates.values()}) > 1:
+        raise ValueError(
+            "the candidates disagree on what they forecast (some read scores, some only "
+            "right/wrong), so their log losses are on different events and not comparable; "
+            "compare score-reading estimators with each other, outcome-reading with each other"
+        )
+    if not (isinstance(tolerance_se, (int, float)) and tolerance_se >= 0
+            and math.isfinite(tolerance_se)):
+        raise ValueError(f"tolerance_se must be a non-negative number, got {tolerance_se!r}")
+    names = _names(log, students)
+    records = {name: list(log[name]) for name in names}  # read once: every candidate replays it
+    per: dict[str, list[list[float]]] = {}  # candidate -> per student -> losses
+    for label, est in candidates.items():
+        per[label] = [
+            [
+                loss
+                for response, item, state in _before_each(records[name], items=items, estimator=est)
+                if (loss := _forecast_loss(est, state, response, item)) is not None
+            ]
+            for name in names
+        ]
+    n = sum(len(ls) for ls in next(iter(per.values())))
+    if n == 0:
+        raise ValueError("the log has no scored responses to compare on")
+    means = {label: sum(map(sum, ls)) / n for label, ls in per.items()}
+    best = min(means, key=means.get)
+    counted = [k for k, ls in enumerate(per[best]) if ls]
+
+    def se_vs_best(label: str) -> float:
+        if label == best:
+            return 0.0
+        diff = means[label] - means[best]
+        if len(counted) > 1:  # clustered by student
+            totals = [sum(a - b for a, b in zip(per[label][k], per[best][k])) for k in counted]
+            sizes = [len(per[best][k]) for k in counted]
+            s = len(counted)
+            var = s / (s - 1) * sum((t - m * diff) ** 2 for t, m in zip(totals, sizes)) / n**2
+        else:  # one student: per response
+            d = [a - b for a, b in zip(per[label][counted[0]], per[best][counted[0]])]
+            var = sum((x - diff) ** 2 for x in d) / max(len(d) - 1, 1) / len(d)
+        return math.sqrt(var)
+
+    se = {label: se_vs_best(label) for label in candidates}
+    chosen = next(
+        label for label in candidates if means[label] - means[best] <= tolerance_se * se[label]
+    )
+    return Comparison(n=n, n_students=len(counted), losses=means, se=se, best=best, chosen=chosen)
+
+
+#: The spreads :func:`fit_threshold_spread` tries by default: the binomial default and
+#: factors of 4/3, 2 and 3 either way of it, symmetric on a log scale.
+DEFAULT_SPREADS = (1.0, 0.75, 4 / 3, 0.5, 2.0, 1 / 3, 3.0)
+
+
+def fit_threshold_spread(
+    log: Mapping[str, Iterable[Response]],
+    *,
+    items: Mapping[str, Item],
+    spreads: Iterable[float] = DEFAULT_SPREADS,
+    estimator: PartialCreditEstimator | None = None,
+    students: Iterable[str] | None = None,
+    tolerance_se: float = 1.0,
+) -> tuple[float, Comparison]:
+    """The threshold spread a log supports for :class:`PartialCreditEstimator`.
+
+    Each spread is a candidate ``thresholds=spread_thresholds(spread)`` on ``estimator``
+    (default: a plain ``PartialCreditEstimator``), compared by prequential score log loss
+    with the one-standard-error rule (:func:`compare_estimators`), preferring spreads
+    nearer the binomial default (1.0) on a log scale whatever order they are given in (a
+    tie, such as 0.75 and 4/3, goes to the narrower). Returns the chosen spread and the
+    comparison, whose candidates are named ``f"{spread:.4g}"``; use it as
+    ``PartialCreditEstimator(thresholds=spread_thresholds(spread))``.
+
+    With few students the rule keeps the default unless the log is clear: at a true
+    spread of 2 it chose 2 in 11-15 of 30 fits with one to three students, against 17-20
+    of 20 with twenty (decision 11). Prefer it to arg-min when a wrong spread costs more
+    than a missed one.
+
+    >>> items = {'q': Item('q', difficulty=0.5)}
+    >>> log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2) for k in (1, 2, 1, 0)]}
+    >>> spread, comparison = fit_threshold_spread(log, items=items)
+    >>> spread   # four scores cannot overturn the default
+    1.0
+    """
+    base = estimator if estimator is not None else PartialCreditEstimator()
+    grid = {spread_thresholds(c).spread for c in spreads}  # validates each spread
+    ordered = sorted(grid, key=lambda c: (round(abs(math.log(c)), 12), c))
+    by_name = {f"{c:.4g}": c for c in ordered}
+    candidates = {
+        name: replace(base, thresholds=spread_thresholds(c)) for name, c in by_name.items()
+    }
+    result = compare_estimators(
+        log, items=items, candidates=candidates, students=students, tolerance_se=tolerance_se
+    )
+    return by_name[result.chosen], result
