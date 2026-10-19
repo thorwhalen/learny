@@ -110,8 +110,19 @@ class TestPredictAndApply:
         q = "q7"
         x = bank[q].meta["features"]
         own = model.predict(x, item_id=q)
-        assert own.mean - model.predict(x).mean == pytest.approx(model.residuals[q])
+        assert own.mean - model.predict(x).mean == pytest.approx(model.residuals[q][0])
         assert abs(own.mean - b[q]) < abs(model.predict(x).mean - b[q]) + 0.5
+        assert own.sd < model.predict(x).sd  # its own answers narrow it
+
+    def test_apply_uses_features_alone_unless_asked(self):
+        """A fitted residual carries the fitted students' answers (#18 review)."""
+        bank, _, log = _world(seed=16)
+        model = fit(log, items=bank)
+        x = bank["q2"].meta["features"]
+        plain = model.apply(bank)["q2"].difficulty
+        own = model.apply(bank, use_residuals=True)["q2"].difficulty
+        assert logit(plain) == pytest.approx(model.predict(x).mean, abs=1e-9)
+        assert logit(own) == pytest.approx(model.predict(x, item_id="q2").mean, abs=1e-9)
 
     def test_apply_fills_the_bank_for_the_items_seam(self):
         bank, _, log = _world(seed=7)
@@ -141,7 +152,7 @@ class TestPredictAndApply:
         q = "q3"
         filled = model.apply(bank)[q]
         assert logit(filled.difficulty) == pytest.approx(
-            model.predict(bank[q].meta["features"], item_id=q).mean, abs=1e-6
+            model.predict(bank[q].meta["features"]).mean, abs=1e-6
         )
 
 
@@ -178,3 +189,52 @@ class TestRefusals:
         bank, _, log = _world(seed=14, students=2, per_student=5)
         with pytest.raises(ValueError, match="positive number"):
             fit(log, items=bank, weight_prior_var=bad)
+
+
+class TestScaleAndConvergence:
+    def test_anchored_items_put_the_fit_on_the_banks_scale(self):
+        """Strong students (mean ability +2) and half the bank published: without
+        anchors the filled items sit ~2 logits off the published ones (#18 review)."""
+        rng = random.Random(20)
+        bank, b = {}, {}
+        for i in range(60):
+            x = {"length": rng.gauss(0, 1)}
+            b[f"q{i}"] = 0.3 + 0.8 * x["length"] + rng.gauss(0, 0.3)
+            published = expit(b[f"q{i}"]) if i % 2 else None
+            bank[f"q{i}"] = Item(f"q{i}", difficulty=published, meta={"features": x})
+        log = {}
+        for s in range(30):
+            theta = 2.0 + rng.gauss(0, 1)
+            log[f"s{s}"] = [Response(f"s{s}", q, rng.random() < expit(theta - b[q]))
+                            for q in (rng.choice(sorted(bank)) for _ in range(40))]
+        anchored = fit_feature_difficulty(log, items=bank)
+        floating = fit_feature_difficulty(log, items=bank, anchor=False)
+        unpublished = [q for q in bank if bank[q].difficulty is None]
+
+        def offset(model):
+            filled = model.apply(bank)
+            return sum(logit(filled[q].difficulty) - b[q] for q in unpublished) / len(unpublished)
+
+        assert anchored.anchors == 30 and floating.anchors == 0
+        assert abs(offset(anchored)) < 0.3
+        assert offset(floating) < -1.0
+        assert anchored.ability_mean > 1.5
+
+    def test_hitting_an_iteration_cap_warns_and_is_recorded(self):
+        bank, _, log = _world(seed=21)
+        with pytest.warns(RuntimeWarning, match="iteration cap"):
+            model = fit(log, items=bank, max_iter=1)
+        assert not model.converged
+        assert FeatureDifficulty.from_dict(model.to_dict()).converged is False
+
+    @pytest.mark.parametrize("bad", [math.nan, None, "3", True])
+    def test_a_feature_that_is_not_a_finite_number_is_loud(self, bad):
+        bank, _, log = _world(seed=22)
+        bank = {**bank, "q0": Item("q0", meta={"features": {**bank["q0"].meta["features"], "length": bad}})}
+        with pytest.raises(ValueError, match="finite number"):
+            fit(log, items=bank)
+
+    def test_a_student_not_in_the_log_is_loud(self):
+        bank, _, log = _world(seed=23)
+        with pytest.raises(KeyError, match="not in the log"):
+            fit(log, items=bank, students=["s0", "nobody"])
