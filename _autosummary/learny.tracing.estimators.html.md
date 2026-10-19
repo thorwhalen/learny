@@ -105,7 +105,8 @@ Per-label mastery, for showing the model to the learner.
 Fill each `Mastery.deviation` (the label relative to the student’s global
 skill) if you can: [`LearnerModel.weakest`](learny.tracing.model.html.md#learny.tracing.model.LearnerModel.weakest) gates on it by default and raises
 `TypeError` for an estimator that leaves it `None` (callers can still pass
-`credible_below=None`).
+`credible_below=None`). [`Mastery.null_var`](#learny.tracing.estimators.Mastery.null_var) calibrates that gate; left
+`None`, the gate falls back to the more cautious posterior bound.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](#learny.tracing.estimators.Mastery)]
@@ -124,7 +125,7 @@ Probability this student answers this item correctly.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* learny.tracing.estimators.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0)
+### *class* learny.tracing.estimators.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0, null_var=None, null_k3=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -164,6 +165,26 @@ The deviation’s loading on what every label of this student shares — for the
 default estimator, its covariance with the global skill over the global skill’s
 sd — so that two labels’ deviations covary by `loading_a * loading_b`. 0 (the
 default) treats the deviations as independent.
+
+#### null_k3 *: [float](https://docs.python.org/3/builtins/functions.html#float) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+The third cumulant of the same sampling distribution. A student who mostly gets a
+label right makes a rare wrong answer a large one-sided jump, so the null is
+skewed and its lower tail is heavier than a normal one with `null_var`; a test
+of many labels at once lives in that tail. `None`: not tracked (no correction).
+
+#### null_var *: [float](https://docs.python.org/3/builtins/functions.html#float) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+How far this label’s own evidence moves `deviation.mu` by chance, as a sampling
+variance, had the student no real deviation on it: the spread a test of “is this
+label really weaker than the others?” is calibrated to. Smaller than
+`deviation.var` because a posterior mean is shrunk, and tracked rather than
+derived from it because forgetting re-opens the posterior variance without moving
+the mean (the identity `v - v**2 / tau**2` breaks; #11). The part of the label’s
+movement that rides on the global skill is common to every label and is left out,
+so that a leave-one-out contrast’s spread is the sum of its labels’ `null_var`.
+`None`: not tracked (the posterior variance is the conservative stand-in); the
+default estimator tracks it under `gain='bayes'`.
 
 #### *property* probability *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 

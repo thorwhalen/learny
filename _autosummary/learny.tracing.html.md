@@ -114,7 +114,8 @@ Per-label mastery, for showing the model to the learner.
 Fill each `Mastery.deviation` (the label relative to the student’s global
 skill) if you can: [`LearnerModel.weakest`](learny.tracing.model.html.md#learny.tracing.model.LearnerModel.weakest) gates on it by default and raises
 `TypeError` for an estimator that leaves it `None` (callers can still pass
-`credible_below=None`).
+`credible_below=None`). [`Mastery.null_var`](#learny.tracing.Mastery.null_var) calibrates that gate; left
+`None`, the gate falls back to the more cautious posterior bound.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
@@ -310,7 +311,7 @@ Check `.distinguishable` before acting on an ordering from [`weakest()`](#learny
 * **Return type:**
   [`LabelSeparation`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
 
-#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='bonferroni')
+#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='calibrated')
 
 The labels this student is credibly weakest on — what to practise next.
 
@@ -329,14 +330,22 @@ Three keywords set the gate:
   comparator on average. `None` switches the gate off and ranks every
   label with evidence by posterior mean — check [`separation()`](#learny.tracing.LearnerModel.separation) before
   believing that ranking.
-* `multiplicity` — `"bonferroni"` (default) corrects for testing every label with
-  evidence at once, so `z` bounds the chance of *any* false flag; `"none"`
-  applies `z` to each label separately, which with six labels, a few hundred
-  responses and no real weakness flags something more often than not. The
-  correction is on posterior bounds, which shrinkage already makes cautious
-  when evidence is thin, so in cold start it mostly costs power: with a few
-  responses per label even a large real weakness is rarely returned. Pass
-  `"none"` there if a missed weakness costs more than a false one (#22).
+* `multiplicity` — `"calibrated"` (default) corrects for testing every label
+  with evidence at once, so `z` sets the chance of *any* false flag (about
+  one student in six with no real weakness, at `z = 1`), and measures each
+  contrast against its sampling spread under no real weakness
+  ([`Mastery.null_var`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery.null_var)) and
+  skew (a rare wrong answer from a student who is usually right is a large
+  drop), so the correction costs little power at cold start (#22). An estimator that does
+  not fill `null_var` gets `"bonferroni"` (a label it leaves unfilled is
+  measured by its posterior spread): the same correction on the posterior sd, which shrinkage already makes cautious when evidence is thin, so
+  with a few responses per label even a large real weakness is rarely returned.
+  `"none"` applies `z` to each label separately, which with six labels, a few
+  hundred responses and no real weakness flags something more often than not.
+  Under `relative_to="global"` the calibrated spread is more cautious (the
+  part of a label’s spread it shares with the others is counted, not removed).
+  A label stored before null spreads were tracked is measured by its posterior
+  spread until it is answered again.
 * `relative_to` — `"labels"` (default) as above; `"global"` measures each
   label’s deviation against zero, the student’s global skill. The default
   estimator carries the global/label covariance, so a shortfall every item
@@ -390,7 +399,7 @@ the estimator’s [`Mastery`](learny.tracing.estimators.html.md#learny.tracing.e
 * **Return type:**
   [`Weakest`](learny.tracing.model.html.md#learny.tracing.model.Weakest)
 
-### *class* learny.tracing.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0)
+### *class* learny.tracing.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0, null_var=None, null_k3=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -430,6 +439,26 @@ The deviation’s loading on what every label of this student shares — for the
 default estimator, its covariance with the global skill over the global skill’s
 sd — so that two labels’ deviations covary by `loading_a * loading_b`. 0 (the
 default) treats the deviations as independent.
+
+#### null_k3 *: [float](https://docs.python.org/3/builtins/functions.html#float) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+The third cumulant of the same sampling distribution. A student who mostly gets a
+label right makes a rare wrong answer a large one-sided jump, so the null is
+skewed and its lower tail is heavier than a normal one with `null_var`; a test
+of many labels at once lives in that tail. `None`: not tracked (no correction).
+
+#### null_var *: [float](https://docs.python.org/3/builtins/functions.html#float) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+How far this label’s own evidence moves `deviation.mu` by chance, as a sampling
+variance, had the student no real deviation on it: the spread a test of “is this
+label really weaker than the others?” is calibrated to. Smaller than
+`deviation.var` because a posterior mean is shrunk, and tracked rather than
+derived from it because forgetting re-opens the posterior variance without moving
+the mean (the identity `v - v**2 / tau**2` breaks; #11). The part of the label’s
+movement that rides on the global skill is common to every label and is left out,
+so that a leave-one-out contrast’s spread is the sum of its labels’ `null_var`.
+`None`: not tracked (the posterior variance is the conservative stand-in); the
+default estimator tracks it under `gain='bayes'`.
 
 #### *property* probability *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 

@@ -451,23 +451,24 @@ and every part can be replaced without touching the others:</p>
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.model.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_CREDIBLE_BELOW</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="headerlink" href="#learny.tracing.model.DEFAULT_CREDIBLE_BELOW" title="Link to this definition">#</a></dt>
 <dd><p>How many posterior standard deviations below its comparator a label must be before
 <a class="reference internal" href="#learny.tracing.model.LearnerModel.weakest" title="learny.tracing.model.LearnerModel.weakest"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LearnerModel.weakest()</span></code></a> calls it a weakness. 1.0 is a one-sided ~84% credible
-bound. With the default <code class="docutils literal notranslate"><span class="pre">multiplicity=&quot;bonferroni&quot;</span></code> it is the bound for the *whole
-set* of labels tested — a student with no real weakness gets a label flagged at most
-about one time in six, however many labels there are — and with <code class="docutils literal notranslate"><span class="pre">multiplicity=&quot;none&quot;</span></code> it is per
-label. It stops a set of labels that never vary independently (many labels on every
+bound. With the default <code class="docutils literal notranslate"><span class="pre">multiplicity=&quot;calibrated&quot;</span></code> (and <code class="docutils literal notranslate"><span class="pre">&quot;bonferroni&quot;</span></code>) it is the
+bound for the <em>whole set</em> of labels tested — a student with no real weakness gets a
+label flagged about one time in six at most, however many labels there are — and with
+<code class="docutils literal notranslate"><span class="pre">multiplicity=&quot;none&quot;</span></code> it is per label. It stops a set of labels that never vary independently (many labels on every
 item) from being ranked at all. Raise it when a false “practise this” is costly.</p>
 </dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="learny.tracing.model.DEFAULT_MULTIPLICITY">
-<span class="sig-prename descclassname"><span class="pre">learny.tracing.model.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_MULTIPLICITY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'bonferroni'</span></span><a class="headerlink" href="#learny.tracing.model.DEFAULT_MULTIPLICITY" title="Link to this definition">#</a></dt>
-<dd><p>How the bound accounts for testing several labels at once. <code class="docutils literal notranslate"><span class="pre">&quot;bonferroni&quot;</span></code> raises the
-per-label z so the chance of <em>any</em> false flag is at most <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">Phi(credible_below)</span></code>,
-whatever the dependence between labels (far less with little evidence, where a shrunk
-posterior’s sd overstates how far its mean wanders — the cost is power, see
-<a class="reference internal" href="#learny.tracing.model.LearnerModel.weakest" title="learny.tracing.model.LearnerModel.weakest"><code class="xref py py-meth docutils literal notranslate"><span class="pre">LearnerModel.weakest()</span></code></a>);
-<code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> applies <code class="docutils literal notranslate"><span class="pre">credible_below</span></code> to each label separately, as the original
-gate did.</p>
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.model.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_MULTIPLICITY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'calibrated'</span></span><a class="headerlink" href="#learny.tracing.model.DEFAULT_MULTIPLICITY" title="Link to this definition">#</a></dt>
+<dd><p>How the bound accounts for testing several labels at once. <code class="docutils literal notranslate"><span class="pre">&quot;calibrated&quot;</span></code> raises the
+per-label z as Bonferroni does, so the chance of <em>any</em> false flag is about
+<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">Phi(credible_below)</span></code>, and measures each label against how far its contrast
+would wander with no real weakness (<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.Mastery.null_var" title="learny.tracing.estimators.Mastery.null_var"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mastery.null_var</span></code></a>) rather than against its posterior sd,
+which a shrunk posterior mean stays well inside (#22). <code class="docutils literal notranslate"><span class="pre">&quot;bonferroni&quot;</span></code> does the same
+on the posterior sd: a bound rather than a calibration, far below its target with
+little evidence, so it costs power at cold start. <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> applies
+<code class="docutils literal notranslate"><span class="pre">credible_below</span></code> to each label separately, as the original gate did.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -613,7 +614,7 @@ state that live recording produced.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="learny.tracing.model.LearnerModel.weakest">
-<span class="sig-name descname"><span class="pre">weakest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">credible_below</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'labels'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bonferroni'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.weakest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.weakest" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">weakest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">credible_below</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'labels'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'calibrated'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.weakest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.model.LearnerModel.weakest" title="Link to this definition">#</a></dt>
 <dd><p>The labels this student is credibly weakest on — what to practise next.</p>
 <p>By default a label is returned only when it is credibly below the student’s
 <em>other</em> labels: the upper bound <code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">+</span> <span class="pre">z</span> <span class="pre">*</span> <span class="pre">sd</span></code> of its contrast <code class="docutils literal notranslate"><span class="pre">c</span></code> — its
@@ -629,14 +630,22 @@ first <code class="docutils literal notranslate"><span class="pre">n</span></cod
 comparator on average. <code class="docutils literal notranslate"><span class="pre">None</span></code> switches the gate off and ranks every
 label with evidence by posterior mean — check <a class="reference internal" href="#learny.tracing.model.LearnerModel.separation" title="learny.tracing.model.LearnerModel.separation"><code class="xref py py-meth docutils literal notranslate"><span class="pre">separation()</span></code></a> before
 believing that ranking.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">multiplicity</span></code> — <code class="docutils literal notranslate"><span class="pre">&quot;bonferroni&quot;</span></code> (default) corrects for testing every label with
-evidence at once, so <code class="docutils literal notranslate"><span class="pre">z</span></code> bounds the chance of <em>any</em> false flag; <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>
-applies <code class="docutils literal notranslate"><span class="pre">z</span></code> to each label separately, which with six labels, a few hundred
-responses and no real weakness flags something more often than not. The
-correction is on posterior bounds, which shrinkage already makes cautious
-when evidence is thin, so in cold start it mostly costs power: with a few
-responses per label even a large real weakness is rarely returned. Pass
-<code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> there if a missed weakness costs more than a false one (#22).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiplicity</span></code> — <code class="docutils literal notranslate"><span class="pre">&quot;calibrated&quot;</span></code> (default) corrects for testing every label
+with evidence at once, so <code class="docutils literal notranslate"><span class="pre">z</span></code> sets the chance of <em>any</em> false flag (about
+one student in six with no real weakness, at <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">1</span></code>), and measures each
+contrast against its sampling spread under no real weakness
+(<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.Mastery.null_var" title="learny.tracing.estimators.Mastery.null_var"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mastery.null_var</span></code></a>) and
+skew (a rare wrong answer from a student who is usually right is a large
+drop), so the correction costs little power at cold start (#22). An estimator that does
+not fill <code class="docutils literal notranslate"><span class="pre">null_var</span></code> gets <code class="docutils literal notranslate"><span class="pre">&quot;bonferroni&quot;</span></code> (a label it leaves unfilled is
+measured by its posterior spread): the same correction on the posterior sd, which shrinkage already makes cautious when evidence is thin, so
+with a few responses per label even a large real weakness is rarely returned.
+<code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> applies <code class="docutils literal notranslate"><span class="pre">z</span></code> to each label separately, which with six labels, a few
+hundred responses and no real weakness flags something more often than not.
+Under <code class="docutils literal notranslate"><span class="pre">relative_to=&quot;global&quot;</span></code> the calibrated spread is more cautious (the
+part of a label’s spread it shares with the others is counted, not removed).
+A label stored before null spreads were tracked is measured by its posterior
+spread until it is answered again.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">relative_to</span></code> — <code class="docutils literal notranslate"><span class="pre">&quot;labels&quot;</span></code> (default) as above; <code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code> measures each
 label’s deviation against zero, the student’s global skill. The default
 estimator carries the global/label covariance, so a shortfall every item

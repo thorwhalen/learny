@@ -756,10 +756,10 @@ window.runMermaid = runMermaid;</script>
 
 <span class="c1">#: How many posterior standard deviations below its comparator a label must be before</span>
 <span class="c1">#: :meth:`LearnerModel.weakest` calls it a weakness. 1.0 is a one-sided ~84% credible</span>
-<span class="c1">#: bound. With the default ``multiplicity="bonferroni"`` it is the bound for the *whole</span>
-<span class="c1">#: set* of labels tested — a student with no real weakness gets a label flagged at most</span>
-<span class="c1">#: about one time in six, however many labels there are — and with ``multiplicity="none"`` it is per</span>
-<span class="c1">#: label. It stops a set of labels that never vary independently (many labels on every</span>
+<span class="c1">#: bound. With the default ``multiplicity="calibrated"`` (and ``"bonferroni"``) it is the</span>
+<span class="c1">#: bound for the *whole set* of labels tested — a student with no real weakness gets a</span>
+<span class="c1">#: label flagged about one time in six at most, however many labels there are — and with</span>
+<span class="c1">#: ``multiplicity="none"`` it is per label. It stops a set of labels that never vary independently (many labels on every</span>
 <span class="c1">#: item) from being ranked at all. Raise it when a false "practise this" is costly.</span>
 <span class="n">DEFAULT_CREDIBLE_BELOW</span> <span class="o">=</span> <span class="mf">1.0</span>
 
@@ -771,20 +771,30 @@ window.runMermaid = runMermaid;</script>
 <span class="c1">#: with, so nothing is credibly weak.</span>
 <span class="n">DEFAULT_RELATIVE_TO</span> <span class="o">=</span> <span class="s2">"labels"</span>
 
-<span class="c1">#: How the bound accounts for testing several labels at once. ``"bonferroni"`` raises the</span>
-<span class="c1">#: per-label z so the chance of *any* false flag is at most ``1 - Phi(credible_below)``,</span>
-<span class="c1">#: whatever the dependence between labels (far less with little evidence, where a shrunk</span>
-<span class="c1">#: posterior's sd overstates how far its mean wanders — the cost is power, see</span>
-<span class="c1">#: :meth:`LearnerModel.weakest`);</span>
-<span class="c1">#: ``"none"`` applies ``credible_below`` to each label separately, as the original</span>
-<span class="c1">#: gate did.</span>
-<span class="n">DEFAULT_MULTIPLICITY</span> <span class="o">=</span> <span class="s2">"bonferroni"</span>
+<span class="c1">#: How the bound accounts for testing several labels at once. ``"calibrated"`` raises the</span>
+<span class="c1">#: per-label z as Bonferroni does, so the chance of *any* false flag is about</span>
+<span class="c1">#: ``1 - Phi(credible_below)``, and measures each label against how far its contrast</span>
+<span class="c1">#: would wander with no real weakness (:attr:`Mastery.null_var</span>
+<span class="c1">#: &lt;learny.tracing.estimators.Mastery.null_var&gt;`) rather than against its posterior sd,</span>
+<span class="c1">#: which a shrunk posterior mean stays well inside (#22). ``"bonferroni"`` does the same</span>
+<span class="c1">#: on the posterior sd: a bound rather than a calibration, far below its target with</span>
+<span class="c1">#: little evidence, so it costs power at cold start. ``"none"`` applies</span>
+<span class="c1">#: ``credible_below`` to each label separately, as the original gate did.</span>
+<span class="n">DEFAULT_MULTIPLICITY</span> <span class="o">=</span> <span class="s2">"calibrated"</span>
 
 <span class="n">WeakestReason</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"no_evidence"</span><span class="p">,</span> <span class="s2">"no_credible_weakness"</span><span class="p">]</span>
 <span class="n">RelativeTo</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"labels"</span><span class="p">,</span> <span class="s2">"global"</span><span class="p">]</span>
-<span class="n">Multiplicity</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"bonferroni"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">]</span>
+<span class="n">Multiplicity</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"calibrated"</span><span class="p">,</span> <span class="s2">"bonferroni"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">]</span>
+
+<span class="c1">#: Fewest rare outcomes a label's null must rest on before its moments describe its</span>
+<span class="c1">#: tail. A compound-Poisson fit to a label's null cumulants, ``nv`` and ``nk3``, puts</span>
+<span class="c1">#: ``lambda = nv**3 / nk3**2`` rare jumps behind it (one wrong answer among a few that a</span>
+<span class="c1">#: student nearly always gets right: ``lambda`` well below 1). With less than one, the</span>
+<span class="c1">#: null is a single discrete event, no moment expansion holds, and the label is measured</span>
+<span class="c1">#: by its posterior spread instead (#22, #35).</span>
+<span class="n">_MIN_RARE_EVENTS</span> <span class="o">=</span> <span class="mf">1.0</span>
 <span class="n">_RELATIVE_TO</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"labels"</span><span class="p">,</span> <span class="s2">"global"</span><span class="p">)</span>
-<span class="n">_MULTIPLICITY</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"bonferroni"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">)</span>
+<span class="n">_MULTIPLICITY</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"calibrated"</span><span class="p">,</span> <span class="s2">"bonferroni"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_bonferroni_z</span><span class="p">(</span><span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">m</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -805,6 +815,87 @@ window.runMermaid = runMermaid;</script>
     <span class="k">if</span> <span class="n">m</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">alpha</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>  <span class="c1"># one test, or a tail beyond float resolution</span>
         <span class="k">return</span> <span class="n">z</span>
     <span class="k">return</span> <span class="o">-</span><span class="n">NormalDist</span><span class="p">()</span><span class="o">.</span><span class="n">inv_cdf</span><span class="p">(</span><span class="n">alpha</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_null_spreads</span><span class="p">(</span>
+    <span class="n">masteries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Mastery</span><span class="p">],</span> <span class="n">relative_to</span><span class="p">:</span> <span class="n">RelativeTo</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Each contrast's ``(sd, skewness)`` for a test calibrated to "no real weakness".</span>
+
+<span class="sd">    The contrast and its weights are :func:`_contrasts`'s. Its posterior variance has two</span>
+<span class="sd">    parts: each label's own residual (``var - loading**2``) and the part the labels share</span>
+<span class="sd">    through the global skill (``(loading_i - weighted loadings)**2``). Only the first is</span>
+<span class="sd">    sampling noise that shrinkage overstates, so only it is replaced, by each label's</span>
+<span class="sd">    :attr:`Mastery.null_var &lt;learny.tracing.estimators.Mastery.null_var&gt;`. The shared</span>
+<span class="sd">    part is kept at its posterior size: it is the direction in which the record cannot</span>
+<span class="sd">    tell "weak overall" from "weak on this label", where a label's mean is moved by the</span>
+<span class="sd">    priors' split of a shortfall rather than by chance (#23), and a test that ignored it</span>
+<span class="sd">    would blame the most heavily weighted label for every shortfall.</span>
+
+<span class="sd">    The skewness is the own parts' third cumulant (:attr:`Mastery.null_k3</span>
+<span class="sd">    &lt;learny.tracing.estimators.Mastery.null_k3&gt;`, 0 when not tracked) over ``sd**3``;</span>
+<span class="sd">    the shared part is taken as normal. A label without a ``null_var`` (an estimator</span>
+<span class="sd">    that does not track it, or a label stored before it was tracked) contributes its</span>
+<span class="sd">    posterior own residual instead, so with none tracked this is exactly the posterior</span>
+<span class="sd">    contrast spread of :func:`_contrasts`.</span>
+
+<span class="sd">    &gt;&gt;&gt; from learny.tracing.estimators import Skill</span>
+<span class="sd">    &gt;&gt;&gt; ms = [Mastery(k, Skill(0.0, 1.0), deviation=Skill(0.0, 0.2), null_var=0.05)</span>
+<span class="sd">    ...       for k in 'ab']</span>
+<span class="sd">    &gt;&gt;&gt; [(round(sd, 3), g) for sd, g in _null_spreads(ms, 'labels')]</span>
+<span class="sd">    [(0.316, 0.0), (0.316, 0.0)]</span>
+<span class="sd">    &gt;&gt;&gt; heavy = [Mastery('a', Skill(0.0, 1.0), deviation=Skill(0.0, 0.2), null_var=0.05,</span>
+<span class="sd">    ...                  loading=-0.4), ms[1]]</span>
+<span class="sd">    &gt;&gt;&gt; [round(sd, 3) for sd, _ in _null_spreads(heavy, 'labels')]  # the shared part stays</span>
+<span class="sd">    [0.51, 0.51]</span>
+<span class="sd">    &gt;&gt;&gt; untracked = Mastery('a', Skill(0.0, 1.0), deviation=Skill(0.0, 0.2))</span>
+<span class="sd">    &gt;&gt;&gt; _null_spreads([untracked], 'global') == [(_contrasts([untracked], 'global')[0][1], 0.0)]</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">loads</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">"loading"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">masteries</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">own</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">Mastery</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="n">nv</span><span class="p">,</span> <span class="n">k3</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">null_var</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">"null_k3"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nv</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="n">k3</span> <span class="ow">and</span> <span class="n">nv</span><span class="o">**</span><span class="mi">3</span> <span class="o">&lt;</span> <span class="n">_MIN_RARE_EVENTS</span> <span class="o">*</span> <span class="n">k3</span> <span class="o">*</span> <span class="n">k3</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">deviation</span><span class="o">.</span><span class="n">var</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">a</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span>  <span class="c1"># the posterior own residual</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">nv</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">k3</span>
+
+    <span class="n">nvs</span><span class="p">,</span> <span class="n">k3s</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">own</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">masteries</span><span class="p">,</span> <span class="n">loads</span><span class="p">))))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">spread</span><span class="p">(</span><span class="n">var</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">k3</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sd</span><span class="p">,</span> <span class="p">(</span><span class="n">k3</span> <span class="o">/</span> <span class="n">sd</span><span class="o">**</span><span class="mi">3</span> <span class="k">if</span> <span class="n">sd</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">relative_to</span> <span class="o">==</span> <span class="s2">"global"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">spread</span><span class="p">(</span><span class="n">nv</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">a</span><span class="p">,</span> <span class="n">k3</span><span class="p">)</span> <span class="k">for</span> <span class="n">nv</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">k3</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">nvs</span><span class="p">,</span> <span class="n">loads</span><span class="p">,</span> <span class="n">k3s</span><span class="p">)]</span>
+    <span class="n">devs</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">deviation</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">masteries</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">contrast</span><span class="p">(</span><span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="n">rest</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">devs</span><span class="p">))</span> <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="n">i</span><span class="p">]</span>
+        <span class="n">rest_prec</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">devs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">var</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="p">{</span><span class="n">j</span><span class="p">:</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">devs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">var</span> <span class="o">/</span> <span class="n">rest_prec</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">}</span>
+        <span class="n">shared</span> <span class="o">=</span> <span class="n">loads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">loads</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="n">nvs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nvs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">)</span> <span class="o">+</span> <span class="n">shared</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">spread</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">k3s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">**</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">k3s</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">rest</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">contrast</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">devs</span><span class="p">))]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_skew_corrected_z</span><span class="p">(</span><span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">skewness</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The lower-tail critical z for a null with this skewness, never below ``z``.</span>
+
+<span class="sd">    First-order Cornish-Fisher: the lower ``Phi(-z)`` quantile of a standardised</span>
+<span class="sd">    distribution with skewness ``g`` is about ``-z + (z**2 - 1) * g / 6``. A negative</span>
+<span class="sd">    skew (a rare wrong answer is a large drop) moves it further out. A positive skew</span>
+<span class="sd">    would move it in, where the expansion is least reliable and a gate would turn lax,</span>
+<span class="sd">    so it is never allowed to.</span>
+
+<span class="sd">    &gt;&gt;&gt; _skew_corrected_z(2.0, 0.0), _skew_corrected_z(2.0, 1.5)</span>
+<span class="sd">    (2.0, 2.0)</span>
+<span class="sd">    &gt;&gt;&gt; _skew_corrected_z(2.0, -1.2)</span>
+<span class="sd">    2.6</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">z</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="n">skewness</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">z</span> <span class="o">*</span> <span class="n">z</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">6.0</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_contrasts</span><span class="p">(</span>
@@ -1018,14 +1109,22 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">          comparator on average. ``None`` switches the gate off and ranks every</span>
 <span class="sd">          label with evidence by posterior mean — check :meth:`separation` before</span>
 <span class="sd">          believing that ranking.</span>
-<span class="sd">        * ``multiplicity`` — ``"bonferroni"`` (default) corrects for testing every label with</span>
-<span class="sd">          evidence at once, so ``z`` bounds the chance of *any* false flag; ``"none"``</span>
-<span class="sd">          applies ``z`` to each label separately, which with six labels, a few hundred</span>
-<span class="sd">          responses and no real weakness flags something more often than not. The</span>
-<span class="sd">          correction is on posterior bounds, which shrinkage already makes cautious</span>
-<span class="sd">          when evidence is thin, so in cold start it mostly costs power: with a few</span>
-<span class="sd">          responses per label even a large real weakness is rarely returned. Pass</span>
-<span class="sd">          ``"none"`` there if a missed weakness costs more than a false one (#22).</span>
+<span class="sd">        * ``multiplicity`` — ``"calibrated"`` (default) corrects for testing every label</span>
+<span class="sd">          with evidence at once, so ``z`` sets the chance of *any* false flag (about</span>
+<span class="sd">          one student in six with no real weakness, at ``z = 1``), and measures each</span>
+<span class="sd">          contrast against its sampling spread under no real weakness</span>
+<span class="sd">          (:attr:`Mastery.null_var &lt;learny.tracing.estimators.Mastery.null_var&gt;`) and</span>
+<span class="sd">          skew (a rare wrong answer from a student who is usually right is a large</span>
+<span class="sd">          drop), so the correction costs little power at cold start (#22). An estimator that does</span>
+<span class="sd">          not fill ``null_var`` gets ``"bonferroni"`` (a label it leaves unfilled is</span>
+<span class="sd">          measured by its posterior spread): the same correction on the posterior sd, which shrinkage already makes cautious when evidence is thin, so</span>
+<span class="sd">          with a few responses per label even a large real weakness is rarely returned.</span>
+<span class="sd">          ``"none"`` applies ``z`` to each label separately, which with six labels, a few</span>
+<span class="sd">          hundred responses and no real weakness flags something more often than not.</span>
+<span class="sd">          Under ``relative_to="global"`` the calibrated spread is more cautious (the</span>
+<span class="sd">          part of a label's spread it shares with the others is counted, not removed).</span>
+<span class="sd">          A label stored before null spreads were tracked is measured by its posterior</span>
+<span class="sd">          spread until it is answered again.</span>
 <span class="sd">        * ``relative_to`` — ``"labels"`` (default) as above; ``"global"`` measures each</span>
 <span class="sd">          label's deviation against zero, the student's global skill. The default</span>
 <span class="sd">          estimator carries the global/label covariance, so a shortfall every item</span>
@@ -1107,15 +1206,17 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">relative_to</span> <span class="o">==</span> <span class="s2">"labels"</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">ranked</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Weakest</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">"no_credible_weakness"</span><span class="p">)</span>
         <span class="n">z</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">_bonferroni_z</span><span class="p">(</span><span class="n">credible_below</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ranked</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">multiplicity</span> <span class="o">==</span> <span class="s2">"bonferroni"</span>
-            <span class="k">else</span> <span class="n">credible_below</span>
+            <span class="n">credible_below</span>
+            <span class="k">if</span> <span class="n">multiplicity</span> <span class="o">==</span> <span class="s2">"none"</span>
+            <span class="k">else</span> <span class="n">_bonferroni_z</span><span class="p">(</span><span class="n">credible_below</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ranked</span><span class="p">))</span>
         <span class="p">)</span>
-        <span class="n">credible</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">m</span>
-            <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sd</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ranked</span><span class="p">,</span> <span class="n">_contrasts</span><span class="p">(</span><span class="n">ranked</span><span class="p">,</span> <span class="n">relative_to</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="n">sd</span> <span class="o">&lt;</span> <span class="mf">0.0</span>
-        <span class="p">]</span>
+        <span class="n">contrasts</span> <span class="o">=</span> <span class="p">[(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sd</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sd</span> <span class="ow">in</span> <span class="n">_contrasts</span><span class="p">(</span><span class="n">ranked</span><span class="p">,</span> <span class="n">relative_to</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">multiplicity</span> <span class="o">==</span> <span class="s2">"calibrated"</span><span class="p">:</span>
+            <span class="n">contrasts</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sd</span><span class="p">,</span> <span class="n">_skew_corrected_z</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">g</span><span class="p">))</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="p">(</span><span class="n">sd</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">contrasts</span><span class="p">,</span> <span class="n">_null_spreads</span><span class="p">(</span><span class="n">ranked</span><span class="p">,</span> <span class="n">relative_to</span><span class="p">))</span>
+            <span class="p">]</span>
+        <span class="n">credible</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sd</span><span class="p">,</span> <span class="n">zi</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ranked</span><span class="p">,</span> <span class="n">contrasts</span><span class="p">)</span> <span class="k">if</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">zi</span> <span class="o">*</span> <span class="n">sd</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">credible</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Weakest</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">"no_credible_weakness"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Weakest</span><span class="p">(</span><span class="n">credible</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span></div>

@@ -1,4 +1,4 @@
-> built 2026-10-19 10:44 UTC from fe00938 (main) · learny 0.0.1. Details: build_info.json
+> built 2026-10-19 11:33 UTC from 1051975 (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -84,7 +84,7 @@ model.weakest('ada', credible_below=None)    # plain ranking, no credibility gat
 model.calibration()                          # prequential: are the probabilities honest?
 ```
 
-`weakest()` flags a label only when it is credibly below the student’s *other* labels, with the credibility bound corrected for how many labels are tested at once (Bonferroni). So a student with no real weakness is rarely told to practise something, however many labels the bank has, and a student who is weak everywhere is not told every label is a weakness. **This is a change of default:** earlier versions compared each label with the student’s global skill using a per-label bound, which flagged at least one label for most students with no weakness at all. That gate is still one call away: `model.weakest('ada', relative_to='global', multiplicity='none')`. Evidence on a single label is never a relative weakness under the default; pass `relative_to='global'` when unlabelled items are what the label should be compared with. The correction costs power when evidence is thin (a few responses per label): pass `multiplicity='none'` there if a missed weakness costs more than a false one.
+`weakest()` flags a label only when it is credibly below the student’s *other* labels, with the bound corrected for how many labels are tested at once and calibrated to how far a label’s estimate wanders by chance. So a student with no real weakness is told to practise something about one time in six at most, however many labels the bank has, and a student who is weak everywhere is not told every label is a weakness. **This is a change of default:** earlier versions compared each label with the student’s global skill using a per-label bound, which flagged at least one label for most students with no weakness at all. That gate is still one call away: `model.weakest('ada', relative_to='global', multiplicity='none')`. Evidence on a single label is never a relative weakness under the default; pass `relative_to='global'` when unlabelled items are what the label should be compared with. The calibration matters most at cold start: with 3 labels and 18 responses a real 2-logit weakness is found 40% of the time (the uncalibrated Bonferroni bound, `multiplicity='bonferroni'`, found it 1% of the time; the per-label `multiplicity='none'`, 27%).
 
 If every item carries many labels at once, the labels cannot be told apart however much data there is. `restrict_labels(items, keep=...)` projects the bank onto one facet; the library never collapses a taxonomy on its own.
 
@@ -499,7 +499,8 @@ Per-label mastery, for showing the model to the learner.
 Fill each `Mastery.deviation` (the label relative to the student’s global
 skill) if you can: [`LearnerModel.weakest`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.weakest) gates on it by default and raises
 `TypeError` for an estimator that leaves it `None` (callers can still pass
-`credible_below=None`).
+`credible_below=None`). [`Mastery.null_var`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery.null_var) calibrates that gate; left
+`None`, the gate falls back to the more cautious posterior bound.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
@@ -518,7 +519,7 @@ Probability this student answers this item correctly.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
-### *class* learny.tracing.estimators.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0)
+### *class* learny.tracing.estimators.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0, null_var=None, null_k3=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -558,6 +559,26 @@ The deviation’s loading on what every label of this student shares — for the
 default estimator, its covariance with the global skill over the global skill’s
 sd — so that two labels’ deviations covary by `loading_a * loading_b`. 0 (the
 default) treats the deviations as independent.
+
+#### null_k3 *: [float](https://docs.python.org/3/builtins/functions.html#float) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+The third cumulant of the same sampling distribution. A student who mostly gets a
+label right makes a rare wrong answer a large one-sided jump, so the null is
+skewed and its lower tail is heavier than a normal one with `null_var`; a test
+of many labels at once lives in that tail. `None`: not tracked (no correction).
+
+#### null_var *: [float](https://docs.python.org/3/builtins/functions.html#float) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+How far this label’s own evidence moves `deviation.mu` by chance, as a sampling
+variance, had the student no real deviation on it: the spread a test of “is this
+label really weaker than the others?” is calibrated to. Smaller than
+`deviation.var` because a posterior mean is shrunk, and tracked rather than
+derived from it because forgetting re-opens the posterior variance without moving
+the mean (the identity `v - v**2 / tau**2` breaks; #11). The part of the label’s
+movement that rides on the global skill is common to every label and is left out,
+so that a leave-one-out contrast’s spread is the sum of its labels’ `null_var`.
+`None`: not tracked (the posterior variance is the conservative stand-in); the
+default estimator tracks it under `gain='bayes'`.
 
 #### *property* probability *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 
@@ -1036,7 +1057,8 @@ Per-label mastery, for showing the model to the learner.
 Fill each `Mastery.deviation` (the label relative to the student’s global
 skill) if you can: [`LearnerModel.weakest`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.weakest) gates on it by default and raises
 `TypeError` for an estimator that leaves it `None` (callers can still pass
-`credible_below=None`).
+`credible_below=None`). [`Mastery.null_var`](_autosummary/learny.tracing.html.md#learny.tracing.Mastery.null_var) calibrates that gate; left
+`None`, the gate falls back to the more cautious posterior bound.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
@@ -1232,7 +1254,7 @@ Check `.distinguishable` before acting on an ordering from [`weakest()`](_autosu
 * **Return type:**
   [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
 
-#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='bonferroni')
+#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='calibrated')
 
 The labels this student is credibly weakest on — what to practise next.
 
@@ -1251,14 +1273,22 @@ Three keywords set the gate:
   comparator on average. `None` switches the gate off and ranks every
   label with evidence by posterior mean — check [`separation()`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel.separation) before
   believing that ranking.
-* `multiplicity` — `"bonferroni"` (default) corrects for testing every label with
-  evidence at once, so `z` bounds the chance of *any* false flag; `"none"`
-  applies `z` to each label separately, which with six labels, a few hundred
-  responses and no real weakness flags something more often than not. The
-  correction is on posterior bounds, which shrinkage already makes cautious
-  when evidence is thin, so in cold start it mostly costs power: with a few
-  responses per label even a large real weakness is rarely returned. Pass
-  `"none"` there if a missed weakness costs more than a false one (#22).
+* `multiplicity` — `"calibrated"` (default) corrects for testing every label
+  with evidence at once, so `z` sets the chance of *any* false flag (about
+  one student in six with no real weakness, at `z = 1`), and measures each
+  contrast against its sampling spread under no real weakness
+  ([`Mastery.null_var`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery.null_var)) and
+  skew (a rare wrong answer from a student who is usually right is a large
+  drop), so the correction costs little power at cold start (#22). An estimator that does
+  not fill `null_var` gets `"bonferroni"` (a label it leaves unfilled is
+  measured by its posterior spread): the same correction on the posterior sd, which shrinkage already makes cautious when evidence is thin, so
+  with a few responses per label even a large real weakness is rarely returned.
+  `"none"` applies `z` to each label separately, which with six labels, a few
+  hundred responses and no real weakness flags something more often than not.
+  Under `relative_to="global"` the calibrated spread is more cautious (the
+  part of a label’s spread it shares with the others is counted, not removed).
+  A label stored before null spreads were tracked is measured by its posterior
+  spread until it is answered again.
 * `relative_to` — `"labels"` (default) as above; `"global"` measures each
   label’s deviation against zero, the student’s global skill. The default
   estimator carries the global/label covariance, so a shortfall every item
@@ -1312,7 +1342,7 @@ the estimator’s [`Mastery`](_autosummary/learny.tracing.estimators.html.md#lea
 * **Return type:**
   [`Weakest`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.Weakest)
 
-### *class* learny.tracing.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0)
+### *class* learny.tracing.Mastery(label, skill, prior_var=1.0, , deviation=None, loading=0.0, null_var=None, null_k3=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -1352,6 +1382,26 @@ The deviation’s loading on what every label of this student shares — for the
 default estimator, its covariance with the global skill over the global skill’s
 sd — so that two labels’ deviations covary by `loading_a * loading_b`. 0 (the
 default) treats the deviations as independent.
+
+#### null_k3 *: [float](https://docs.python.org/3/builtins/functions.html#float) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+The third cumulant of the same sampling distribution. A student who mostly gets a
+label right makes a rare wrong answer a large one-sided jump, so the null is
+skewed and its lower tail is heavier than a normal one with `null_var`; a test
+of many labels at once lives in that tail. `None`: not tracked (no correction).
+
+#### null_var *: [float](https://docs.python.org/3/builtins/functions.html#float) | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+How far this label’s own evidence moves `deviation.mu` by chance, as a sampling
+variance, had the student no real deviation on it: the spread a test of “is this
+label really weaker than the others?” is calibrated to. Smaller than
+`deviation.var` because a posterior mean is shrunk, and tracked rather than
+derived from it because forgetting re-opens the posterior variance without moving
+the mean (the identity `v - v**2 / tau**2` breaks; #11). The part of the label’s
+movement that rides on the global skill is common to every label and is left out,
+so that a leave-one-out contrast’s spread is the sum of its labels’ `null_var`.
+`None`: not tracked (the posterior variance is the conservative stand-in); the
+default estimator tracks it under `gain='bayes'`.
 
 #### *property* probability *: [float](https://docs.python.org/3/builtins/functions.html#float)*
 
@@ -2081,21 +2131,22 @@ and every part can be replaced without touching the others:
 
 How many posterior standard deviations below its comparator a label must be before
 [`LearnerModel.weakest()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.weakest) calls it a weakness. 1.0 is a one-sided ~84% credible
-bound. With the default `multiplicity="bonferroni"` it is the bound for the \*whole
-set\* of labels tested — a student with no real weakness gets a label flagged at most
-about one time in six, however many labels there are — and with `multiplicity="none"` it is per
-label. It stops a set of labels that never vary independently (many labels on every
+bound. With the default `multiplicity="calibrated"` (and `"bonferroni"`) it is the
+bound for the *whole set* of labels tested — a student with no real weakness gets a
+label flagged about one time in six at most, however many labels there are — and with
+`multiplicity="none"` it is per label. It stops a set of labels that never vary independently (many labels on every
 item) from being ranked at all. Raise it when a false “practise this” is costly.
 
-### learny.tracing.model.DEFAULT_MULTIPLICITY *= 'bonferroni'*
+### learny.tracing.model.DEFAULT_MULTIPLICITY *= 'calibrated'*
 
-How the bound accounts for testing several labels at once. `"bonferroni"` raises the
-per-label z so the chance of *any* false flag is at most `1 - Phi(credible_below)`,
-whatever the dependence between labels (far less with little evidence, where a shrunk
-posterior’s sd overstates how far its mean wanders — the cost is power, see
-[`LearnerModel.weakest()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.weakest));
-`"none"` applies `credible_below` to each label separately, as the original
-gate did.
+How the bound accounts for testing several labels at once. `"calibrated"` raises the
+per-label z as Bonferroni does, so the chance of *any* false flag is about
+`1 - Phi(credible_below)`, and measures each label against how far its contrast
+would wander with no real weakness ([`Mastery.null_var`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery.null_var)) rather than against its posterior sd,
+which a shrunk posterior mean stays well inside (#22). `"bonferroni"` does the same
+on the posterior sd: a bound rather than a calibration, far below its target with
+little evidence, so it costs power at cold start. `"none"` applies
+`credible_below` to each label separately, as the original gate did.
 
 ### learny.tracing.model.DEFAULT_RELATIVE_TO *= 'labels'*
 
@@ -2213,7 +2264,7 @@ Check `.distinguishable` before acting on an ordering from [`weakest()`](_autosu
 * **Return type:**
   [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
 
-#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='bonferroni')
+#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='calibrated')
 
 The labels this student is credibly weakest on — what to practise next.
 
@@ -2232,14 +2283,22 @@ Three keywords set the gate:
   comparator on average. `None` switches the gate off and ranks every
   label with evidence by posterior mean — check [`separation()`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel.separation) before
   believing that ranking.
-* `multiplicity` — `"bonferroni"` (default) corrects for testing every label with
-  evidence at once, so `z` bounds the chance of *any* false flag; `"none"`
-  applies `z` to each label separately, which with six labels, a few hundred
-  responses and no real weakness flags something more often than not. The
-  correction is on posterior bounds, which shrinkage already makes cautious
-  when evidence is thin, so in cold start it mostly costs power: with a few
-  responses per label even a large real weakness is rarely returned. Pass
-  `"none"` there if a missed weakness costs more than a false one (#22).
+* `multiplicity` — `"calibrated"` (default) corrects for testing every label
+  with evidence at once, so `z` sets the chance of *any* false flag (about
+  one student in six with no real weakness, at `z = 1`), and measures each
+  contrast against its sampling spread under no real weakness
+  ([`Mastery.null_var`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery.null_var)) and
+  skew (a rare wrong answer from a student who is usually right is a large
+  drop), so the correction costs little power at cold start (#22). An estimator that does
+  not fill `null_var` gets `"bonferroni"` (a label it leaves unfilled is
+  measured by its posterior spread): the same correction on the posterior sd, which shrinkage already makes cautious when evidence is thin, so
+  with a few responses per label even a large real weakness is rarely returned.
+  `"none"` applies `z` to each label separately, which with six labels, a few
+  hundred responses and no real weakness flags something more often than not.
+  Under `relative_to="global"` the calibrated spread is more cautious (the
+  part of a label’s spread it shares with the others is counted, not removed).
+  A label stored before null spreads were tracked is measured by its posterior
+  spread until it is answered again.
 * `relative_to` — `"labels"` (default) as above; `"global"` measures each
   label’s deviation against zero, the student’s global skill. The default
   estimator carries the global/label covariance, so a shortfall every item
@@ -2628,7 +2687,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-10-19 10:44 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/fe00938d799629d8950a50d37e52e2bdf610f156"><code>fe00938</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 11:33 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/10519751481e696f39f3a840efc915fc257a5c10"><code>1051975</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -2637,7 +2696,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/fe00938d799629d8950a50d37e52e2bdf610f156"><code>fe00938d799629d8950a50d37e52e2bdf610f156</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/10519751481e696f39f3a840efc915fc257a5c10"><code>10519751481e696f39f3a840efc915fc257a5c10</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -2648,15 +2707,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39239427419">39239427419</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39245314956">39245314956</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>fe00938d799629d8950a50d37e52e2bdf610f156</code> (in the history of the built commit) |
+| Event commit | <code>10519751481e696f39f3a840efc915fc257a5c10</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.17  |
+| epythet  | 0.2.18  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -2681,8 +2740,8 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout fe00938d799629d8950a50d37e52e2bdf610f156
-pip install "epythet==0.2.17"
+git checkout 10519751481e696f39f3a840efc915fc257a5c10
+pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 
