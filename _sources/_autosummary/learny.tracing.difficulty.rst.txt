@@ -1,0 +1,20 @@
+learny.tracing.difficulty
+=========================
+
+.. automodule:: learny.tracing.difficulty
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      fit_feature_difficulty
+      item_features
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Estimate
+      FeatureDifficulty
+   

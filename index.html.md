@@ -85,6 +85,21 @@ model.score_calibration()                    # the same for star / partial-credi
 
 If every item carries many labels at once, the labels cannot be told apart however much data there is. `restrict_labels(items, keep=...)` projects the bank onto one facet; the library never collapses a taxonomy on its own.
 
+### Which item features make an item hard?
+
+When the bank gives every item features (`Item(..., meta={'features': {'n_glyphs': 4, 'rhythm_cv': 0.3}})`), `fit_feature_difficulty` learns from the play of all your students which features predict difficulty. It fits the Linear Logistic Test Model with a residual per item, and returns each feature’s weight with its uncertainty, plus a predicted difficulty for an item nobody has played yet:
+
+```python
+from learny.tracing import fit_feature_difficulty
+
+fd = fit_feature_difficulty(log, items=items)
+fd.weights()                    # {'n_glyphs': Estimate(mean=0.41, sd=0.09), ...}
+fd.predict({'n_glyphs': 6, 'rhythm_cv': 0.1})   # logit difficulty of a new item
+items = fd.apply(items)         # fill missing difficulties, for LearnerModel(items=...)
+```
+
+This is the one place that reads across students, so it runs only when you call it, and what it learns leaves as a JSON artifact (`fd.to_dict()`) that you store and review. It enters the model through `items=`, like any difficulty.
+
 ### The log is the source of truth
 
 Estimates are a cache. `model.replay()` rebuilds them from the log alone, and a test asserts it reproduces live state exactly — which is what lets the estimator be replaced later without migrating any data.

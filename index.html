@@ -408,6 +408,19 @@
 <p><code class="docutils literal notranslate"><span class="pre">weakest()</span></code> flags a label only when it is credibly below the student’s <em>other</em> labels, with the bound corrected for how many labels are tested at once and calibrated to how far a label’s estimate wanders by chance. So a student with no real weakness is told to practise something about one time in six at most, however many labels the bank has, and a student who is weak everywhere is not told every label is a weakness. <strong>This is a change of default:</strong> earlier versions compared each label with the student’s global skill using a per-label bound, which flagged at least one label for most students with no weakness at all. That gate is still one call away: <code class="docutils literal notranslate"><span class="pre">model.weakest('ada',</span> <span class="pre">relative_to='global',</span> <span class="pre">multiplicity='none')</span></code>. Evidence on a single label is never a relative weakness under the default; pass <code class="docutils literal notranslate"><span class="pre">relative_to='global'</span></code> when unlabelled items are what the label should be compared with. The calibration matters most at cold start: with 3 labels and 18 responses a real 2-logit weakness is found 40% of the time (the uncalibrated Bonferroni bound, <code class="docutils literal notranslate"><span class="pre">multiplicity='bonferroni'</span></code>, found it 1% of the time; the per-label <code class="docutils literal notranslate"><span class="pre">multiplicity='none'</span></code>, 27%).</p>
 <p>If every item carries many labels at once, the labels cannot be told apart however much data there is. <code class="docutils literal notranslate"><span class="pre">restrict_labels(items,</span> <span class="pre">keep=...)</span></code> projects the bank onto one facet; the library never collapses a taxonomy on its own.</p>
 </section>
+<section id="which-item-features-make-an-item-hard">
+<h3>Which item features make an item hard?<a class="headerlink" href="#which-item-features-make-an-item-hard" title="Link to this heading">#</a></h3>
+<p>When the bank gives every item features (<code class="docutils literal notranslate"><span class="pre">Item(...,</span> <span class="pre">meta={'features':</span> <span class="pre">{'n_glyphs':</span> <span class="pre">4,</span> <span class="pre">'rhythm_cv':</span> <span class="pre">0.3}})</span></code>), <code class="docutils literal notranslate"><span class="pre">fit_feature_difficulty</span></code> learns from the play of all your students which features predict difficulty. It fits the Linear Logistic Test Model with a residual per item, and returns each feature’s weight with its uncertainty, plus a predicted difficulty for an item nobody has played yet:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_feature_difficulty</span>
+
+<span class="n">fd</span> <span class="o">=</span> <span class="n">fit_feature_difficulty</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">)</span>
+<span class="n">fd</span><span class="o">.</span><span class="n">weights</span><span class="p">()</span>                    <span class="c1"># {'n_glyphs': Estimate(mean=0.41, sd=0.09), ...}</span>
+<span class="n">fd</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">'n_glyphs'</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span> <span class="s1">'rhythm_cv'</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">})</span>   <span class="c1"># logit difficulty of a new item</span>
+<span class="n">items</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>         <span class="c1"># fill missing difficulties, for LearnerModel(items=...)</span>
+</pre></div>
+</div>
+<p>This is the one place that reads across students, so it runs only when you call it, and what it learns leaves as a JSON artifact (<code class="docutils literal notranslate"><span class="pre">fd.to_dict()</span></code>) that you store and review. It enters the model through <code class="docutils literal notranslate"><span class="pre">items=</span></code>, like any difficulty.</p>
+</section>
 <section id="the-log-is-the-source-of-truth">
 <h3>The log is the source of truth<a class="headerlink" href="#the-log-is-the-source-of-truth" title="Link to this heading">#</a></h3>
 <p>Estimates are a cache. <code class="docutils literal notranslate"><span class="pre">model.replay()</span></code> rebuilds them from the log alone, and a test asserts it reproduces live state exactly — which is what lets the estimator be replaced later without migrating any data.</p>
@@ -430,7 +443,7 @@
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 11:46 UTC from <a href="https://github.com/thorwhalen/learny/commit/2fc462f1fb419c14ae9593b062a2fcb76645071e">2fc462f</a> (main) · learny 0.0.1 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-19 13:06 UTC from <a href="https://github.com/thorwhalen/learny/commit/ee3169c58074e9e0f71f4bc6ce66cf7341c77dde">ee3169c</a> (main) · learny 0.0.1 · <a href="about-this-build.html">about this build</a></p>
 
                 </article>
               
@@ -474,6 +487,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-assumes-and-what-you-can-change">What it assumes, and what you can change</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#three-things-worth-knowing">Three things worth knowing</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-believe-it">When to believe it</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#which-item-features-make-an-item-hard">Which item features make an item hard?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-log-is-the-source-of-truth">The log is the source of truth</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#privacy">Privacy</a></li>
 </ul>

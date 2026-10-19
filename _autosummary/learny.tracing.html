@@ -322,6 +322,7 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="learny.html">learny</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active has-children"><a aria-current="page" class="current reference internal" href="#">learny.tracing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.diagnostics.html">learny.tracing.diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.difficulty.html">learny.tracing.difficulty</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.estimators.html">learny.tracing.estimators</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.model.html">learny.tracing.model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.records.html">learny.tracing.records</a></li>
@@ -436,6 +437,12 @@ lets the estimator be replaced later without a data migration, and it is why
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.prequential" title="learny.tracing.prequential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prequential</span></code></a>(responses, *, items, estimator)</p></td>
 <td><p>Yield <code class="docutils literal notranslate"><span class="pre">(response,</span> <span class="pre">p)</span></code> where <code class="docutils literal notranslate"><span class="pre">p</span></code> was predicted <em>before</em> the response was seen.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.fit_feature_difficulty" title="learny.tracing.fit_feature_difficulty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_feature_difficulty</span></code></a>(log, *, items[, ...])</p></td>
+<td><p>Fit which item features predict difficulty, from a log of play.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.item_features" title="learny.tracing.item_features"><code class="xref py py-obj docutils literal notranslate"><span class="pre">item_features</span></code></a>(item)</p></td>
+<td><p>The default feature source: <code class="docutils literal notranslate"><span class="pre">item.meta['features']</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.restrict_labels" title="learny.tracing.restrict_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">restrict_labels</span></code></a>(items, *, keep[, ...])</p></td>
 <td><p>Project an item bank onto a subset of its labels — one facet, say.</p></td>
 </tr>
@@ -505,6 +512,12 @@ lets the estimator be replaced later without a data migration, and it is why
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.ScoreCalibrationReport" title="learny.tracing.ScoreCalibrationReport"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScoreCalibrationReport</span></code></a>(n, log_loss, ...)</p></td>
 <td><p>Prequential scores for forecasts of an ordered score.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.FeatureDifficulty" title="learny.tracing.FeatureDifficulty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeatureDifficulty</span></code></a>(names, center, scale, ...)</p></td>
+<td><p>A fitted explanatory difficulty model; see <a class="reference internal" href="#learny.tracing.fit_feature_difficulty" title="learny.tracing.fit_feature_difficulty"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_feature_difficulty()</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.Estimate" title="learny.tracing.Estimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Estimate</span></code></a>(mean, sd)</p></td>
+<td><p>A posterior mean and standard deviation, on the logit scale.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -555,6 +568,27 @@ so <code class="docutils literal notranslate"><span class="pre">log_loss</span> 
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.diagnostics.html#learny.tracing.diagnostics.CalibrationReport" title="learny.tracing.diagnostics.CalibrationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalibrationReport</span></code></a></span></p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.Estimate">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">Estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/difficulty.html#Estimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.Estimate" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.NamedTuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></a></p>
+<p>A posterior mean and standard deviation, on the logit scale.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.tracing.Estimate.mean">
+<span class="sig-name descname"><span class="pre">mean</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.Estimate.mean" title="Link to this definition">#</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.tracing.Estimate.sd">
+<span class="sig-name descname"><span class="pre">sd</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="headerlink" href="#learny.tracing.Estimate.sd" title="Link to this definition">#</a></dt>
+<dd><p>Alias for field number 1</p>
 </dd></dl>
 
 </dd></dl>
@@ -612,6 +646,96 @@ skill) if you can: <a class="reference internal" href="learny.tracing.model.html
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.tracing.FeatureDifficulty">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">FeatureDifficulty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coef</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">covariance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residual_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ability_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ability_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residuals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_responses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/difficulty.html#FeatureDifficulty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.FeatureDifficulty" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A fitted explanatory difficulty model; see <a class="reference internal" href="#learny.tracing.fit_feature_difficulty" title="learny.tracing.fit_feature_difficulty"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit_feature_difficulty()</span></code></a>.</p>
+<p>Features are stored standardised (<code class="docutils literal notranslate"><span class="pre">(x</span> <span class="pre">-</span> <span class="pre">center)</span> <span class="pre">/</span> <span class="pre">scale</span></code> over the fitted items),
+which is what the priors and the covariance refer to; <a class="reference internal" href="#learny.tracing.FeatureDifficulty.weights" title="learny.tracing.FeatureDifficulty.weights"><code class="xref py py-meth docutils literal notranslate"><span class="pre">weights()</span></code></a> reports them
+in each feature’s own units. <code class="docutils literal notranslate"><span class="pre">covariance</span></code> is over <code class="docutils literal notranslate"><span class="pre">(intercept,</span> <span class="pre">*weights)</span></code> in the
+standardised form. <code class="docutils literal notranslate"><span class="pre">residual_var</span></code> is the prior variance of a new item’s departure
+from what its features predict, <code class="docutils literal notranslate"><span class="pre">ability_mean</span></code> and <code class="docutils literal notranslate"><span class="pre">ability_var</span></code> the fitted
+students’ ability distribution, on the scale of the bank’s given difficulties when
+the fit was anchored on them. <code class="docutils literal notranslate"><span class="pre">residuals</span></code> holds each fitted item’s own departure,
+as <code class="docutils literal notranslate"><span class="pre">(mean,</span> <span class="pre">variance,</span> <span class="pre">*covariance</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">coefficients)</span></code>; it carries the fitted
+students’ data, so <a class="reference internal" href="#learny.tracing.FeatureDifficulty.apply" title="learny.tracing.FeatureDifficulty.apply"><code class="xref py py-meth docutils literal notranslate"><span class="pre">apply()</span></code></a> leaves it out unless asked. <code class="docutils literal notranslate"><span class="pre">converged</span></code> is false
+when an iteration cap was hit (a <code class="docutils literal notranslate"><span class="pre">RuntimeWarning</span></code> said so at fit time).</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.FeatureDifficulty.apply">
+<span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_residuals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/difficulty.html#FeatureDifficulty.apply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.FeatureDifficulty.apply" title="Link to this definition">#</a></dt>
+<dd><p>A copy of <code class="docutils literal notranslate"><span class="pre">items</span></code> with each item’s <code class="docutils literal notranslate"><span class="pre">difficulty</span></code> predicted from features.</p>
+<p>Only items without a difficulty are filled unless <code class="docutils literal notranslate"><span class="pre">overwrite=True</span></code>; an item
+with no features is left as it is. The difficulty comes from the features alone
+unless <code class="docutils literal notranslate"><span class="pre">use_residuals=True</span></code> adds each fitted item’s own residual. That residual
+is learned from the fitted students’ answers, so feeding it back to estimate
+those same students counts their answers twice; with one or two learners it is
+mostly their own results (#18 review). The result is an item bank for the
+<code class="docutils literal notranslate"><span class="pre">items=</span></code> seam of <a class="reference internal" href="learny.tracing.model.html#learny.tracing.model.LearnerModel" title="learny.tracing.model.LearnerModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerModel</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Item" title="learny.tracing.records.Item"><code class="xref py py-class docutils literal notranslate"><span class="pre">Item</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.FeatureDifficulty.from_dict">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/difficulty.html#FeatureDifficulty.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.FeatureDifficulty.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Inverse of <a class="reference internal" href="#learny.tracing.FeatureDifficulty.to_dict" title="learny.tracing.FeatureDifficulty.to_dict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dict()</span></code></a>; refuses an artifact of another schema.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.difficulty.html#learny.tracing.difficulty.FeatureDifficulty" title="learny.tracing.difficulty.FeatureDifficulty"><code class="xref py py-class docutils literal notranslate"><span class="pre">FeatureDifficulty</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.FeatureDifficulty.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/difficulty.html#FeatureDifficulty.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.FeatureDifficulty.predict" title="Link to this definition">#</a></dt>
+<dd><p>The difficulty, in logits, of an item with these features.</p>
+<p>For any item the residual is unknown, so its prior variance <code class="docutils literal notranslate"><span class="pre">residual_var</span></code> is
+added to the features’ part. Pass <code class="docutils literal notranslate"><span class="pre">item_id</span></code> of an item the model was fitted on
+to use that item’s own fitted residual instead, with its posterior variance and
+its covariance with the coefficients. Features far outside the fitted range are
+extrapolated linearly, without warning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.difficulty.html#learny.tracing.difficulty.Estimate" title="learny.tracing.difficulty.Estimate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimate</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.FeatureDifficulty.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/difficulty.html#FeatureDifficulty.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.FeatureDifficulty.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>A JSON-ready dict: the artifact to store, version and review.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.FeatureDifficulty.weights">
+<span class="sig-name descname"><span class="pre">weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/difficulty.html#FeatureDifficulty.weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.FeatureDifficulty.weights" title="Link to this definition">#</a></dt>
+<dd><p>Each feature’s weight in logits of difficulty per unit of the feature.</p>
+<p>Positive: more of the feature makes an item harder. The sd is the weight’s
+posterior sd; a weight within about two of zero is not distinguishable from
+“this feature does not matter”. Two features that move together split their
+weight between them, each with a wide sd.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="learny.tracing.difficulty.html#learny.tracing.difficulty.Estimate" title="learny.tracing.difficulty.Estimate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimate</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1678,6 +1802,87 @@ the response log, and the tests assert exactly that.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.fit_feature_difficulty">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">fit_feature_difficulty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">students</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'location'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ability_prior_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residual_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_prior_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intercept_prior_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_em_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-09</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/difficulty.html#fit_feature_difficulty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.fit_feature_difficulty" title="Link to this definition">#</a></dt>
+<dd><p>Fit which item features predict difficulty, from a log of play.</p>
+<p><code class="docutils literal notranslate"><span class="pre">features</span></code> maps an item key to <code class="docutils literal notranslate"><span class="pre">{name:</span> <span class="pre">value}</span></code>; by default each item’s
+<code class="docutils literal notranslate"><span class="pre">meta['features']</span></code> (<a class="reference internal" href="#learny.tracing.item_features" title="learny.tracing.item_features"><code class="xref py py-func docutils literal notranslate"><span class="pre">item_features()</span></code></a>). Every item answered in the log needs a
+finite value for every feature named anywhere, or the fit is refused rather than
+guessed. A right/wrong response counts as one trial, a score <code class="docutils literal notranslate"><span class="pre">k</span></code> out of
+<code class="docutils literal notranslate"><span class="pre">max_score</span></code> as <code class="docutils literal notranslate"><span class="pre">k</span></code> successes in <code class="docutils literal notranslate"><span class="pre">max_score</span></code> trials (the binomial reading that
+<a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.binomial_thresholds" title="learny.tracing.estimators.binomial_thresholds"><code class="xref py py-func docutils literal notranslate"><span class="pre">binomial_thresholds()</span></code></a> gives a score; other step
+spacings are not modelled here); skips are not evidence about difficulty and are
+left out. Guessing is not modelled.</p>
+<p><strong>The scale.</strong> Every answered item that already has a <code class="docutils literal notranslate"><span class="pre">difficulty</span></code> can anchor
+the fit to the bank’s scale. <code class="docutils literal notranslate"><span class="pre">anchor=&quot;location&quot;</span></code> (the default) fits on play alone
+and then shifts the intercept (and the students’ mean ability) so that the anchors’
+fitted difficulties average their given ones: filled items land where the bank’s
+would, while the weights stay exactly what play says, whatever the bank’s spread
+(a published band from <a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.difficulty_from_rank" title="learny.tracing.estimators.difficulty_from_rank"><code class="xref py py-func docutils literal notranslate"><span class="pre">difficulty_from_rank()</span></code></a> is
+an ordering, not a scale). <code class="docutils literal notranslate"><span class="pre">anchor=&quot;exact&quot;</span></code> holds each anchor at its given value
+instead, which also lets the given values inform the weights; it trusts them, spread
+included, and a bank anchored throughout is then a regression of the given values
+on the features, with play only placing the students. <code class="docutils literal notranslate"><span class="pre">anchor=&quot;none&quot;</span></code> keeps the
+fitted students’ scale (mean ability 0). A given difficulty of exactly 0 or 1 has no
+finite logit and is skipped as an anchor, with a warning.</p>
+<p><strong>What it assumes about the log.</strong> Each student has one ability over the log
+(learning within the window is not modelled, so fit on a window short enough for
+that). Which items a student was given may depend on their <em>earlier answers</em>, as an
+adaptive game’s choice does, but not on anything about them the log does not show:
+stronger students steered to harder items by some other route confound ability
+with difficulty, and no fit of this log can undo that.</p>
+<p><strong>The priors.</strong> Weights are per <em>standard deviation</em> of each feature across the
+fitted items, so <code class="docutils literal notranslate"><span class="pre">weight_prior_var=1</span></code> says a one-sd change in a feature plausibly
+moves difficulty by up to a logit or two, whatever its units. <code class="docutils literal notranslate"><span class="pre">residual_var</span></code> (how
+far an item may sit from what its features predict) and <code class="docutils literal notranslate"><span class="pre">ability_prior_var</span></code> (how
+spread the students are) are estimated from the log when left <code class="docutils literal notranslate"><span class="pre">None</span></code> (empirical
+Bayes, by EM; the ability spread only with two or more students, else 1.0), which is what keeps the weights’ sds honest: fixed below the truth,
+the 95% intervals covered the true weights 72-80% of the time; estimated, 93-97%
+(<code class="docutils literal notranslate"><span class="pre">docs/learner-model-design.md</span></code>, decision 13). With around 15 responses per item
+the estimates run about 20% low, as Laplace estimates of variance components do on
+right/wrong data.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bank</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s1">'features'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'length'</span><span class="p">:</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">6</span><span class="p">}})</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">theta</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">gauss</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">log</span><span class="p">[</span><span class="sa">f</span><span class="s1">'s</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">... </span>        <span class="n">Response</span><span class="p">(</span><span class="sa">f</span><span class="s1">'s</span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">expit</span><span class="p">(</span><span class="n">theta</span> <span class="o">-</span> <span class="p">(</span><span class="mf">0.6</span> <span class="o">*</span> <span class="n">bank</span><span class="p">[</span><span class="n">q</span><span class="p">]</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">'features'</span><span class="p">][</span><span class="s1">'length'</span><span class="p">]</span> <span class="o">-</span> <span class="mf">1.5</span><span class="p">)))</span>
+<span class="gp">... </span>        <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">bank</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">fit_feature_difficulty</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">bank</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">weights</span><span class="p">()[</span><span class="s1">'length'</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">mean</span> <span class="o">-</span> <span class="mf">0.6</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">w</span><span class="o">.</span><span class="n">sd</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">mean</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">w</span><span class="o">.</span><span class="n">sd</span>   <span class="c1"># recovered, and it matters</span>
+<span class="go">(True, True)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">'length'</span><span class="p">:</span> <span class="mi">5</span><span class="p">})</span><span class="o">.</span><span class="n">mean</span> <span class="o">&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">'length'</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span><span class="o">.</span><span class="n">mean</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.difficulty.html#learny.tracing.difficulty.FeatureDifficulty" title="learny.tracing.difficulty.FeatureDifficulty"><code class="xref py py-class docutils literal notranslate"><span class="pre">FeatureDifficulty</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.item_features">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">item_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/difficulty.html#item_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.item_features" title="Link to this definition">#</a></dt>
+<dd><p>The default feature source: <code class="docutils literal notranslate"><span class="pre">item.meta['features']</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">item_features</span><span class="p">(</span><span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s1">'features'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'n_glyphs'</span><span class="p">:</span> <span class="mi">4</span><span class="p">}}))</span>
+<span class="go">{'n_glyphs': 4}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">item_features</span><span class="p">(</span><span class="n">Item</span><span class="p">(</span><span class="s1">'q'</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>] | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.label_separation">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.</span></span><span class="sig-name descname"><span class="pre">label_separation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/diagnostics.html#label_separation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.label_separation" title="Link to this definition">#</a></dt>
 <dd><p>Separation of one student’s label deviations, from their estimator state.</p>
@@ -1880,16 +2085,19 @@ scored. The estimator must read scores (<a class="reference internal" href="#lea
 <tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.diagnostics.html#module-learny.tracing.diagnostics" title="learny.tracing.diagnostics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">diagnostics</span></code></a></p></td>
 <td><p>Diagnostics: when to believe the model, and how well it has predicted so far.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="learny.tracing.estimators.html#module-learny.tracing.estimators" title="learny.tracing.estimators"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimators</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="learny.tracing.difficulty.html#module-learny.tracing.difficulty" title="learny.tracing.difficulty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">difficulty</span></code></a></p></td>
+<td><p>Explanatory item difficulty: which item features make an item hard.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.estimators.html#module-learny.tracing.estimators" title="learny.tracing.estimators"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimators</span></code></a></p></td>
 <td><p>Estimators: how one response changes what we believe about a student.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.model.html#module-learny.tracing.model" title="learny.tracing.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="learny.tracing.model.html#module-learny.tracing.model" title="learny.tracing.model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model</span></code></a></p></td>
 <td><p>The facade: one object that records responses and answers questions about a student.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="learny.tracing.records.html#module-learny.tracing.records" title="learny.tracing.records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">records</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.records.html#module-learny.tracing.records" title="learny.tracing.records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">records</span></code></a></p></td>
 <td><p>Core data types for learner modelling: items, outcomes, and responses.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.stores.html#module-learny.tracing.stores" title="learny.tracing.stores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stores</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="learny.tracing.stores.html#module-learny.tracing.stores" title="learny.tracing.stores"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stores</span></code></a></p></td>
 <td><p>Where learner data lives, and how code reaches it.</p></td>
 </tr>
 </tbody>
@@ -1952,11 +2160,24 @@ scored. The estimator must read scores (<a class="reference internal" href="#lea
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.CalibrationReport.from_pairs"><code class="docutils literal notranslate"><span class="pre">CalibrationReport.from_pairs()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimate"><code class="docutils literal notranslate"><span class="pre">Estimate</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimate.mean"><code class="docutils literal notranslate"><span class="pre">Estimate.mean</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimate.sd"><code class="docutils literal notranslate"><span class="pre">Estimate.sd</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimator"><code class="docutils literal notranslate"><span class="pre">Estimator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimator.init"><code class="docutils literal notranslate"><span class="pre">Estimator.init()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimator.mastery"><code class="docutils literal notranslate"><span class="pre">Estimator.mastery()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimator.observe"><code class="docutils literal notranslate"><span class="pre">Estimator.observe()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Estimator.predict"><code class="docutils literal notranslate"><span class="pre">Estimator.predict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.FeatureDifficulty"><code class="docutils literal notranslate"><span class="pre">FeatureDifficulty</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.FeatureDifficulty.apply"><code class="docutils literal notranslate"><span class="pre">FeatureDifficulty.apply()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.FeatureDifficulty.from_dict"><code class="docutils literal notranslate"><span class="pre">FeatureDifficulty.from_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.FeatureDifficulty.predict"><code class="docutils literal notranslate"><span class="pre">FeatureDifficulty.predict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.FeatureDifficulty.to_dict"><code class="docutils literal notranslate"><span class="pre">FeatureDifficulty.to_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.FeatureDifficulty.weights"><code class="docutils literal notranslate"><span class="pre">FeatureDifficulty.weights()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.Item"><code class="docutils literal notranslate"><span class="pre">Item</span></code></a><ul class="nav section-nav flex-column">
@@ -2048,6 +2269,8 @@ scored. The estimator must read scores (<a class="reference internal" href="#lea
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.difficulty_from_rank"><code class="docutils literal notranslate"><span class="pre">difficulty_from_rank()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimate_store"><code class="docutils literal notranslate"><span class="pre">estimate_store()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.expit"><code class="docutils literal notranslate"><span class="pre">expit()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.fit_feature_difficulty"><code class="docutils literal notranslate"><span class="pre">fit_feature_difficulty()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.item_features"><code class="docutils literal notranslate"><span class="pre">item_features()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.label_separation"><code class="docutils literal notranslate"><span class="pre">label_separation()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.logit"><code class="docutils literal notranslate"><span class="pre">logit()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.mark_not_reached"><code class="docutils literal notranslate"><span class="pre">mark_not_reached()</span></code></a></li>

@@ -1,4 +1,4 @@
-> built 2026-10-19 11:46 UTC from 2fc462f (main) · learny 0.0.1. Details: build_info.json
+> built 2026-10-19 13:06 UTC from ee3169c (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -88,6 +88,21 @@ model.score_calibration()                    # the same for star / partial-credi
 `weakest()` flags a label only when it is credibly below the student’s *other* labels, with the bound corrected for how many labels are tested at once and calibrated to how far a label’s estimate wanders by chance. So a student with no real weakness is told to practise something about one time in six at most, however many labels the bank has, and a student who is weak everywhere is not told every label is a weakness. **This is a change of default:** earlier versions compared each label with the student’s global skill using a per-label bound, which flagged at least one label for most students with no weakness at all. That gate is still one call away: `model.weakest('ada', relative_to='global', multiplicity='none')`. Evidence on a single label is never a relative weakness under the default; pass `relative_to='global'` when unlabelled items are what the label should be compared with. The calibration matters most at cold start: with 3 labels and 18 responses a real 2-logit weakness is found 40% of the time (the uncalibrated Bonferroni bound, `multiplicity='bonferroni'`, found it 1% of the time; the per-label `multiplicity='none'`, 27%).
 
 If every item carries many labels at once, the labels cannot be told apart however much data there is. `restrict_labels(items, keep=...)` projects the bank onto one facet; the library never collapses a taxonomy on its own.
+
+### Which item features make an item hard?
+
+When the bank gives every item features (`Item(..., meta={'features': {'n_glyphs': 4, 'rhythm_cv': 0.3}})`), `fit_feature_difficulty` learns from the play of all your students which features predict difficulty. It fits the Linear Logistic Test Model with a residual per item, and returns each feature’s weight with its uncertainty, plus a predicted difficulty for an item nobody has played yet:
+
+```python
+from learny.tracing import fit_feature_difficulty
+
+fd = fit_feature_difficulty(log, items=items)
+fd.weights()                    # {'n_glyphs': Estimate(mean=0.41, sd=0.09), ...}
+fd.predict({'n_glyphs': 6, 'rhythm_cv': 0.1})   # logit difficulty of a new item
+items = fd.apply(items)         # fill missing difficulties, for LearnerModel(items=...)
+```
+
+This is the one place that reads across students, so it runs only when you call it, and what it learns leaves as a JSON artifact (`fd.to_dict()`) that you store and review. It enters the model through `items=`, like any difficulty.
 
 ### The log is the source of truth
 
@@ -469,6 +484,212 @@ scored. The estimator must read scores ([`reads_scores()`](_autosummary/learny.t
 
 * **Return type:**
   [`ScoreCalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.ScoreCalibrationReport)
+
+
+# _autosummary/learny.tracing.difficulty.html.md
+
+# learny.tracing.difficulty
+
+Explanatory item difficulty: which item features make an item hard.
+
+An item bank often carries features of every item — how many glyphs it has, how
+irregular its rhythm is, how frequent its words are — and a hypothesis that some of
+them drive difficulty. [`fit_feature_difficulty()`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.fit_feature_difficulty) tests that hypothesis against
+play. It fits the Linear Logistic Test Model (Fischer 1973) with a residual per item
+(the random-item extension of De Boeck 2008):
+
+```default
+logit P(correct) = ability[student] - difficulty[item]
+difficulty[item] = intercept + weights . features[item] + residual[item]
+```
+
+with Gaussian priors on every parameter, by maximum a posteriori and a Laplace
+approximation, so each weight comes with a standard deviation: which features matter,
+and how sure the fit is. The result predicts the difficulty of an item nobody has
+played yet from its features alone, which is the cold start for a new item.
+
+This is the one place in [`learny.tracing`](_autosummary/learny.tracing.html.md#module-learny.tracing) that reads *across* students, so it
+follows the rule for that (decision 8 in `docs/learner-model-design.md`): it runs
+only when called, over a log it is handed, and what it learns leaves as an exported,
+reviewable artifact ([`FeatureDifficulty`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty), JSON by [`to_dict()`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty.to_dict))
+that enters the learner model through the existing `items=` seam
+([`apply()`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty.apply)), never as a side effect of fitting.
+
+### Functions
+
+| [`fit_feature_difficulty`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.fit_feature_difficulty)(log, \*, items[, ...])   | Fit which item features predict difficulty, from a log of play.   |
+|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
+| [`item_features`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.item_features)(item)                             | The default feature source: `item.meta['features']`, or `None`.   |
+
+### Classes
+
+| [`Estimate`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.Estimate)(mean, sd)                           | A posterior mean and standard deviation, on the logit scale.                                                          |
+|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| [`FeatureDifficulty`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty)(names, center, scale, ...) | A fitted explanatory difficulty model; see [`fit_feature_difficulty()`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.fit_feature_difficulty). |
+
+### *class* learny.tracing.difficulty.Estimate(mean, sd)
+
+Bases: [`NamedTuple`](https://docs.python.org/3/library/typing.html#typing.NamedTuple)
+
+A posterior mean and standard deviation, on the logit scale.
+
+#### mean *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+Alias for field number 0
+
+#### sd *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+Alias for field number 1
+
+### *class* learny.tracing.difficulty.FeatureDifficulty(names, center, scale, coef, covariance, residual_var, ability_mean=0.0, ability_var=1.0, residuals=dict(), anchors=0, n_students=0, n_responses=0, converged=True)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A fitted explanatory difficulty model; see [`fit_feature_difficulty()`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.fit_feature_difficulty).
+
+Features are stored standardised (`(x - center) / scale` over the fitted items),
+which is what the priors and the covariance refer to; [`weights()`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty.weights) reports them
+in each feature’s own units. `covariance` is over `(intercept, *weights)` in the
+standardised form. `residual_var` is the prior variance of a new item’s departure
+from what its features predict, `ability_mean` and `ability_var` the fitted
+students’ ability distribution, on the scale of the bank’s given difficulties when
+the fit was anchored on them. `residuals` holds each fitted item’s own departure,
+as `(mean, variance, *covariance with the coefficients)`; it carries the fitted
+students’ data, so [`apply()`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty.apply) leaves it out unless asked. `converged` is false
+when an iteration cap was hit (a `RuntimeWarning` said so at fit time).
+
+#### apply(items, , features=None, overwrite=False, use_residuals=False)
+
+A copy of `items` with each item’s `difficulty` predicted from features.
+
+Only items without a difficulty are filled unless `overwrite=True`; an item
+with no features is left as it is. The difficulty comes from the features alone
+unless `use_residuals=True` adds each fitted item’s own residual. That residual
+is learned from the fitted students’ answers, so feeding it back to estimate
+those same students counts their answers twice; with one or two learners it is
+mostly their own results (#18 review). The result is an item bank for the
+`items=` seam of [`LearnerModel`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Item`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Item)]
+
+#### *classmethod* from_dict(d)
+
+Inverse of [`to_dict()`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty.to_dict); refuses an artifact of another schema.
+
+* **Return type:**
+  [`FeatureDifficulty`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty)
+
+#### predict(features, , item_id=None)
+
+The difficulty, in logits, of an item with these features.
+
+For any item the residual is unknown, so its prior variance `residual_var` is
+added to the features’ part. Pass `item_id` of an item the model was fitted on
+to use that item’s own fitted residual instead, with its posterior variance and
+its covariance with the coefficients. Features far outside the fitted range are
+extrapolated linearly, without warning.
+
+* **Return type:**
+  [`Estimate`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.Estimate)
+
+#### to_dict()
+
+A JSON-ready dict: the artifact to store, version and review.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
+#### weights()
+
+Each feature’s weight in logits of difficulty per unit of the feature.
+
+Positive: more of the feature makes an item harder. The sd is the weight’s
+posterior sd; a weight within about two of zero is not distinguishable from
+“this feature does not matter”. Two features that move together split their
+weight between them, each with a wide sd.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Estimate`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.Estimate)]
+
+### learny.tracing.difficulty.fit_feature_difficulty(log, , items, features=None, students=None, anchor='location', ability_prior_var=None, residual_var=None, weight_prior_var=1.0, intercept_prior_var=4.0, max_iter=100, max_em_iter=200, tol=1e-09)
+
+Fit which item features predict difficulty, from a log of play.
+
+`features` maps an item key to `{name: value}`; by default each item’s
+`meta['features']` ([`item_features()`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.item_features)). Every item answered in the log needs a
+finite value for every feature named anywhere, or the fit is refused rather than
+guessed. A right/wrong response counts as one trial, a score `k` out of
+`max_score` as `k` successes in `max_score` trials (the binomial reading that
+[`binomial_thresholds()`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.binomial_thresholds) gives a score; other step
+spacings are not modelled here); skips are not evidence about difficulty and are
+left out. Guessing is not modelled.
+
+**The scale.** Every answered item that already has a `difficulty` can anchor
+the fit to the bank’s scale. `anchor="location"` (the default) fits on play alone
+and then shifts the intercept (and the students’ mean ability) so that the anchors’
+fitted difficulties average their given ones: filled items land where the bank’s
+would, while the weights stay exactly what play says, whatever the bank’s spread
+(a published band from [`difficulty_from_rank()`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.difficulty_from_rank) is
+an ordering, not a scale). `anchor="exact"` holds each anchor at its given value
+instead, which also lets the given values inform the weights; it trusts them, spread
+included, and a bank anchored throughout is then a regression of the given values
+on the features, with play only placing the students. `anchor="none"` keeps the
+fitted students’ scale (mean ability 0). A given difficulty of exactly 0 or 1 has no
+finite logit and is skipped as an anchor, with a warning.
+
+**What it assumes about the log.** Each student has one ability over the log
+(learning within the window is not modelled, so fit on a window short enough for
+that). Which items a student was given may depend on their *earlier answers*, as an
+adaptive game’s choice does, but not on anything about them the log does not show:
+stronger students steered to harder items by some other route confound ability
+with difficulty, and no fit of this log can undo that.
+
+**The priors.** Weights are per *standard deviation* of each feature across the
+fitted items, so `weight_prior_var=1` says a one-sd change in a feature plausibly
+moves difficulty by up to a logit or two, whatever its units. `residual_var` (how
+far an item may sit from what its features predict) and `ability_prior_var` (how
+spread the students are) are estimated from the log when left `None` (empirical
+Bayes, by EM; the ability spread only with two or more students, else 1.0), which is what keeps the weights’ sds honest: fixed below the truth,
+the 95% intervals covered the true weights 72-80% of the time; estimated, 93-97%
+(`docs/learner-model-design.md`, decision 13). With around 15 responses per item
+the estimates run about 20% low, as Laplace estimates of variance components do on
+right/wrong data.
+
+```pycon
+>>> import random
+>>> rng = random.Random(0)
+>>> bank = {f'q{i}': Item(f'q{i}', meta={'features': {'length': i % 6}}) for i in range(30)}
+>>> log = {}
+>>> for s in range(20):
+...     theta = rng.gauss(0, 1)
+...     log[f's{s}'] = [
+...         Response(f's{s}', q, rng.random() < expit(theta - (0.6 * bank[q].meta['features']['length'] - 1.5)))
+...         for q in bank]
+>>> model = fit_feature_difficulty(log, items=bank)
+>>> w = model.weights()['length']
+>>> abs(w.mean - 0.6) < 2 * w.sd, w.mean > 2 * w.sd   # recovered, and it matters
+(True, True)
+>>> model.predict({'length': 5}).mean > model.predict({'length': 0}).mean
+True
+```
+
+* **Return type:**
+  [`FeatureDifficulty`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty)
+
+### learny.tracing.difficulty.item_features(item)
+
+The default feature source: `item.meta['features']`, or `None`.
+
+```pycon
+>>> item_features(Item('q', meta={'features': {'n_glyphs': 4}}))
+{'n_glyphs': 4}
+>>> item_features(Item('q')) is None
+True
+```
+
+* **Return type:**
+  [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)] | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 
 # _autosummary/learny.tracing.estimators.html.md
@@ -1052,6 +1273,8 @@ True
 | [`score_calibration`](_autosummary/learny.tracing.html.md#learny.tracing.score_calibration)(log, \*, items, estimator)  | Prequential calibration of `estimator`'s score forecasts over `log`.                                               |
 | [`reads_scores`](_autosummary/learny.tracing.html.md#learny.tracing.reads_scores)(estimator)                       | Whether `estimator` forecasts ordered scores: it has `score_probabilities`.                                        |
 | [`prequential`](_autosummary/learny.tracing.html.md#learny.tracing.prequential)(responses, \*, items, estimator)  | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                      |
+| [`fit_feature_difficulty`](_autosummary/learny.tracing.html.md#learny.tracing.fit_feature_difficulty)(log, \*, items[, ...]) | Fit which item features predict difficulty, from a log of play.                                                    |
+| [`item_features`](_autosummary/learny.tracing.html.md#learny.tracing.item_features)(item)                           | The default feature source: `item.meta['features']`, or `None`.                                                    |
 | [`restrict_labels`](_autosummary/learny.tracing.html.md#learny.tracing.restrict_labels)(items, \*, keep[, ...])       | Project an item bank onto a subset of its labels — one facet, say.                                                 |
 | [`difficulty_from_rank`](_autosummary/learny.tracing.html.md#learny.tracing.difficulty_from_rank)(rank, n_ranks)           | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                   |
 | [`binomial_thresholds`](_autosummary/learny.tracing.html.md#learny.tracing.binomial_thresholds)(item, max_score)          | Thresholds under which a score out of `m` is `m` steps taken at one rate.                                          |
@@ -1061,22 +1284,24 @@ True
 
 ### Classes
 
-| [`LearnerModel`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel)(\*[, items, estimator, log, ...])    | What a student knows, estimated from what they have answered.                                                        |
-|----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| [`Weakest`](_autosummary/learny.tracing.html.md#learny.tracing.Weakest)([masteries, reason])                      | What [`LearnerModel.weakest()`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel.weakest) returns: a list of `Mastery`, plus why. |
-| [`Item`](_autosummary/learny.tracing.html.md#learny.tracing.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty.                                          |
-| [`Outcome`](_autosummary/learny.tracing.html.md#learny.tracing.Outcome)(\*values)                                 | What happened when a student met an item.                                                                            |
-| [`Response`](_autosummary/learny.tracing.html.md#learny.tracing.Response)(student, item, outcome[, at, meta, ...]) | One student meeting one item, once.                                                                                  |
-| [`Mastery`](_autosummary/learny.tracing.html.md#learny.tracing.Mastery)(label, skill[, prior_var, ...])           | What the model believes about one student and one label.                                                             |
-| [`Skill`](_autosummary/learny.tracing.html.md#learny.tracing.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                                                               |
-| [`Estimator`](_autosummary/learny.tracing.html.md#learny.tracing.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                                                            |
-| [`RaschEstimator`](_autosummary/learny.tracing.html.md#learny.tracing.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                                                              |
-| [`PartialCreditEstimator`](_autosummary/learny.tracing.html.md#learny.tracing.PartialCreditEstimator)([prior_var, ...])          | Masters' Partial Credit Model on the Rasch predictor: reads an ordered score.                                        |
-| [`ResponseLog`](_autosummary/learny.tracing.html.md#learny.tracing.ResponseLog)(\*[, rootdir])                        | The append-only record of every response.                                                                            |
-| [`LabelSeparation`](_autosummary/learny.tracing.html.md#learny.tracing.LabelSeparation)(n_labels, observed_sd, rmse)      | How distinguishable one student's labels are from each other.                                                        |
-| [`CalibrationReport`](_autosummary/learny.tracing.html.md#learny.tracing.CalibrationReport)(n, log_loss, brier, ece, ...)   | Prequential scores for a set of predictions.                                                                         |
-| [`CalibrationBin`](_autosummary/learny.tracing.html.md#learny.tracing.CalibrationBin)(lo, hi, n, mean_predicted, ...)    | One row of a reliability table: predictions in `[lo, hi)` and what happened.                                         |
-| [`ScoreCalibrationReport`](_autosummary/learny.tracing.html.md#learny.tracing.ScoreCalibrationReport)(n, log_loss, ...)          | Prequential scores for forecasts of an ordered score.                                                                |
+| [`LearnerModel`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel)(\*[, items, estimator, log, ...])    | What a student knows, estimated from what they have answered.                                                         |
+|----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| [`Weakest`](_autosummary/learny.tracing.html.md#learny.tracing.Weakest)([masteries, reason])                      | What [`LearnerModel.weakest()`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel.weakest) returns: a list of `Mastery`, plus why.  |
+| [`Item`](_autosummary/learny.tracing.html.md#learny.tracing.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty.                                           |
+| [`Outcome`](_autosummary/learny.tracing.html.md#learny.tracing.Outcome)(\*values)                                 | What happened when a student met an item.                                                                             |
+| [`Response`](_autosummary/learny.tracing.html.md#learny.tracing.Response)(student, item, outcome[, at, meta, ...]) | One student meeting one item, once.                                                                                   |
+| [`Mastery`](_autosummary/learny.tracing.html.md#learny.tracing.Mastery)(label, skill[, prior_var, ...])           | What the model believes about one student and one label.                                                              |
+| [`Skill`](_autosummary/learny.tracing.html.md#learny.tracing.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                                                                |
+| [`Estimator`](_autosummary/learny.tracing.html.md#learny.tracing.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                                                             |
+| [`RaschEstimator`](_autosummary/learny.tracing.html.md#learny.tracing.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                                                               |
+| [`PartialCreditEstimator`](_autosummary/learny.tracing.html.md#learny.tracing.PartialCreditEstimator)([prior_var, ...])          | Masters' Partial Credit Model on the Rasch predictor: reads an ordered score.                                         |
+| [`ResponseLog`](_autosummary/learny.tracing.html.md#learny.tracing.ResponseLog)(\*[, rootdir])                        | The append-only record of every response.                                                                             |
+| [`LabelSeparation`](_autosummary/learny.tracing.html.md#learny.tracing.LabelSeparation)(n_labels, observed_sd, rmse)      | How distinguishable one student's labels are from each other.                                                         |
+| [`CalibrationReport`](_autosummary/learny.tracing.html.md#learny.tracing.CalibrationReport)(n, log_loss, brier, ece, ...)   | Prequential scores for a set of predictions.                                                                          |
+| [`CalibrationBin`](_autosummary/learny.tracing.html.md#learny.tracing.CalibrationBin)(lo, hi, n, mean_predicted, ...)    | One row of a reliability table: predictions in `[lo, hi)` and what happened.                                          |
+| [`ScoreCalibrationReport`](_autosummary/learny.tracing.html.md#learny.tracing.ScoreCalibrationReport)(n, log_loss, ...)          | Prequential scores for forecasts of an ordered score.                                                                 |
+| [`FeatureDifficulty`](_autosummary/learny.tracing.html.md#learny.tracing.FeatureDifficulty)(names, center, scale, ...)      | A fitted explanatory difficulty model; see [`fit_feature_difficulty()`](_autosummary/learny.tracing.html.md#learny.tracing.fit_feature_difficulty). |
+| [`Estimate`](_autosummary/learny.tracing.html.md#learny.tracing.Estimate)(mean, sd)                                | A posterior mean and standard deviation, on the logit scale.                                                          |
 
 ### *class* learny.tracing.CalibrationBin(lo, hi, n, mean_predicted, observed_rate)
 
@@ -1116,6 +1341,20 @@ Build a report from `(predicted, observed)` pairs, observed in `{0, 1}`.
 
 * **Return type:**
   [`CalibrationReport`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.CalibrationReport)
+
+### *class* learny.tracing.Estimate(mean, sd)
+
+Bases: [`NamedTuple`](https://docs.python.org/3/library/typing.html#typing.NamedTuple)
+
+A posterior mean and standard deviation, on the logit scale.
+
+#### mean *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+Alias for field number 0
+
+#### sd *: [float](https://docs.python.org/3/builtins/functions.html#float)*
+
+Alias for field number 1
 
 ### *class* learny.tracing.Estimator(\*args, \*\*kwargs)
 
@@ -1160,6 +1399,77 @@ Probability this student answers this item correctly.
 
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
+### *class* learny.tracing.FeatureDifficulty(names, center, scale, coef, covariance, residual_var, ability_mean=0.0, ability_var=1.0, residuals=dict(), anchors=0, n_students=0, n_responses=0, converged=True)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A fitted explanatory difficulty model; see [`fit_feature_difficulty()`](_autosummary/learny.tracing.html.md#learny.tracing.fit_feature_difficulty).
+
+Features are stored standardised (`(x - center) / scale` over the fitted items),
+which is what the priors and the covariance refer to; [`weights()`](_autosummary/learny.tracing.html.md#learny.tracing.FeatureDifficulty.weights) reports them
+in each feature’s own units. `covariance` is over `(intercept, *weights)` in the
+standardised form. `residual_var` is the prior variance of a new item’s departure
+from what its features predict, `ability_mean` and `ability_var` the fitted
+students’ ability distribution, on the scale of the bank’s given difficulties when
+the fit was anchored on them. `residuals` holds each fitted item’s own departure,
+as `(mean, variance, *covariance with the coefficients)`; it carries the fitted
+students’ data, so [`apply()`](_autosummary/learny.tracing.html.md#learny.tracing.FeatureDifficulty.apply) leaves it out unless asked. `converged` is false
+when an iteration cap was hit (a `RuntimeWarning` said so at fit time).
+
+#### apply(items, , features=None, overwrite=False, use_residuals=False)
+
+A copy of `items` with each item’s `difficulty` predicted from features.
+
+Only items without a difficulty are filled unless `overwrite=True`; an item
+with no features is left as it is. The difficulty comes from the features alone
+unless `use_residuals=True` adds each fitted item’s own residual. That residual
+is learned from the fitted students’ answers, so feeding it back to estimate
+those same students counts their answers twice; with one or two learners it is
+mostly their own results (#18 review). The result is an item bank for the
+`items=` seam of [`LearnerModel`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel).
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Item`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Item)]
+
+#### *classmethod* from_dict(d)
+
+Inverse of [`to_dict()`](_autosummary/learny.tracing.html.md#learny.tracing.FeatureDifficulty.to_dict); refuses an artifact of another schema.
+
+* **Return type:**
+  [`FeatureDifficulty`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty)
+
+#### predict(features, , item_id=None)
+
+The difficulty, in logits, of an item with these features.
+
+For any item the residual is unknown, so its prior variance `residual_var` is
+added to the features’ part. Pass `item_id` of an item the model was fitted on
+to use that item’s own fitted residual instead, with its posterior variance and
+its covariance with the coefficients. Features far outside the fitted range are
+extrapolated linearly, without warning.
+
+* **Return type:**
+  [`Estimate`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.Estimate)
+
+#### to_dict()
+
+A JSON-ready dict: the artifact to store, version and review.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
+#### weights()
+
+Each feature’s weight in logits of difficulty per unit of the feature.
+
+Positive: more of the feature makes an item harder. The sd is the weight’s
+posterior sd; a weight within about two of zero is not distinguishable from
+“this feature does not matter”. Two features that move together split their
+weight between them, each with a wide sd.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Estimate`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.Estimate)]
 
 ### *class* learny.tracing.Item(id, labels=(), difficulty=None, meta=dict())
 
@@ -2078,6 +2388,85 @@ The logistic function, overflow-safe at the tails.
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
+### learny.tracing.fit_feature_difficulty(log, , items, features=None, students=None, anchor='location', ability_prior_var=None, residual_var=None, weight_prior_var=1.0, intercept_prior_var=4.0, max_iter=100, max_em_iter=200, tol=1e-09)
+
+Fit which item features predict difficulty, from a log of play.
+
+`features` maps an item key to `{name: value}`; by default each item’s
+`meta['features']` ([`item_features()`](_autosummary/learny.tracing.html.md#learny.tracing.item_features)). Every item answered in the log needs a
+finite value for every feature named anywhere, or the fit is refused rather than
+guessed. A right/wrong response counts as one trial, a score `k` out of
+`max_score` as `k` successes in `max_score` trials (the binomial reading that
+[`binomial_thresholds()`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.binomial_thresholds) gives a score; other step
+spacings are not modelled here); skips are not evidence about difficulty and are
+left out. Guessing is not modelled.
+
+**The scale.** Every answered item that already has a `difficulty` can anchor
+the fit to the bank’s scale. `anchor="location"` (the default) fits on play alone
+and then shifts the intercept (and the students’ mean ability) so that the anchors’
+fitted difficulties average their given ones: filled items land where the bank’s
+would, while the weights stay exactly what play says, whatever the bank’s spread
+(a published band from [`difficulty_from_rank()`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.difficulty_from_rank) is
+an ordering, not a scale). `anchor="exact"` holds each anchor at its given value
+instead, which also lets the given values inform the weights; it trusts them, spread
+included, and a bank anchored throughout is then a regression of the given values
+on the features, with play only placing the students. `anchor="none"` keeps the
+fitted students’ scale (mean ability 0). A given difficulty of exactly 0 or 1 has no
+finite logit and is skipped as an anchor, with a warning.
+
+**What it assumes about the log.** Each student has one ability over the log
+(learning within the window is not modelled, so fit on a window short enough for
+that). Which items a student was given may depend on their *earlier answers*, as an
+adaptive game’s choice does, but not on anything about them the log does not show:
+stronger students steered to harder items by some other route confound ability
+with difficulty, and no fit of this log can undo that.
+
+**The priors.** Weights are per *standard deviation* of each feature across the
+fitted items, so `weight_prior_var=1` says a one-sd change in a feature plausibly
+moves difficulty by up to a logit or two, whatever its units. `residual_var` (how
+far an item may sit from what its features predict) and `ability_prior_var` (how
+spread the students are) are estimated from the log when left `None` (empirical
+Bayes, by EM; the ability spread only with two or more students, else 1.0), which is what keeps the weights’ sds honest: fixed below the truth,
+the 95% intervals covered the true weights 72-80% of the time; estimated, 93-97%
+(`docs/learner-model-design.md`, decision 13). With around 15 responses per item
+the estimates run about 20% low, as Laplace estimates of variance components do on
+right/wrong data.
+
+```pycon
+>>> import random
+>>> rng = random.Random(0)
+>>> bank = {f'q{i}': Item(f'q{i}', meta={'features': {'length': i % 6}}) for i in range(30)}
+>>> log = {}
+>>> for s in range(20):
+...     theta = rng.gauss(0, 1)
+...     log[f's{s}'] = [
+...         Response(f's{s}', q, rng.random() < expit(theta - (0.6 * bank[q].meta['features']['length'] - 1.5)))
+...         for q in bank]
+>>> model = fit_feature_difficulty(log, items=bank)
+>>> w = model.weights()['length']
+>>> abs(w.mean - 0.6) < 2 * w.sd, w.mean > 2 * w.sd   # recovered, and it matters
+(True, True)
+>>> model.predict({'length': 5}).mean > model.predict({'length': 0}).mean
+True
+```
+
+* **Return type:**
+  [`FeatureDifficulty`](_autosummary/learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty)
+
+### learny.tracing.item_features(item)
+
+The default feature source: `item.meta['features']`, or `None`.
+
+```pycon
+>>> item_features(Item('q', meta={'features': {'n_glyphs': 4}}))
+{'n_glyphs': 4}
+>>> item_features(Item('q')) is None
+True
+```
+
+* **Return type:**
+  [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)] | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
 ### learny.tracing.label_separation(state, , estimator=None, min_n=1, threshold=2.0)
 
 Separation of one student’s label deviations, from their estimator state.
@@ -2264,6 +2653,7 @@ scored. The estimator must read scores ([`reads_scores()`](_autosummary/learny.t
 
 | [`diagnostics`](_autosummary/learny.tracing.diagnostics.html.md#module-learny.tracing.diagnostics)   | Diagnostics: when to believe the model, and how well it has predicted so far.        |
 |--------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [`difficulty`](_autosummary/learny.tracing.difficulty.html.md#module-learny.tracing.difficulty)     | Explanatory item difficulty: which item features make an item hard.                  |
 | [`estimators`](_autosummary/learny.tracing.estimators.html.md#module-learny.tracing.estimators)     | Estimators: how one response changes what we believe about a student.                |
 | [`model`](_autosummary/learny.tracing.model.html.md#module-learny.tracing.model)               | The facade: one object that records responses and answers questions about a student. |
 | [`records`](_autosummary/learny.tracing.records.html.md#module-learny.tracing.records)           | Core data types for learner modelling: items, outcomes, and responses.               |
@@ -2871,7 +3261,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-10-19 11:46 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/2fc462f1fb419c14ae9593b062a2fcb76645071e"><code>2fc462f</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-19 13:06 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/ee3169c58074e9e0f71f4bc6ce66cf7341c77dde"><code>ee3169c</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -2880,7 +3270,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/2fc462f1fb419c14ae9593b062a2fcb76645071e"><code>2fc462f1fb419c14ae9593b062a2fcb76645071e</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/ee3169c58074e9e0f71f4bc6ce66cf7341c77dde"><code>ee3169c58074e9e0f71f4bc6ce66cf7341c77dde</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -2891,9 +3281,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39246860936">39246860936</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39256930335">39256930335</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>2fc462f1fb419c14ae9593b062a2fcb76645071e</code> (in the history of the built commit) |
+| Event commit | <code>ee3169c58074e9e0f71f4bc6ce66cf7341c77dde</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -2924,7 +3314,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout 2fc462f1fb419c14ae9593b062a2fcb76645071e
+git checkout ee3169c58074e9e0f71f4bc6ce66cf7341c77dde
 pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

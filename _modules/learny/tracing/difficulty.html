@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="alternate" type="text/markdown" href="difficulty.html.md">
+<link rel="describedby" href="../../../llms.txt" type="text/markdown">
+    <title>learny.tracing.difficulty &#8212; learny</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/epythet.css?v=1ba707ae" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/learny/tracing/difficulty';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.1" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">learny</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../ai-agents.html">
+    For AI agents
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/thorwhalen/learny" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../ai-agents.html">
+    For AI agents
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/thorwhalen/learny" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">learny.tracing.difficulty</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for learny.tracing.difficulty</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Explanatory item difficulty: which item features make an item hard.</span>
+
+<span class="sd">An item bank often carries features of every item — how many glyphs it has, how</span>
+<span class="sd">irregular its rhythm is, how frequent its words are — and a hypothesis that some of</span>
+<span class="sd">them drive difficulty. :func:`fit_feature_difficulty` tests that hypothesis against</span>
+<span class="sd">play. It fits the Linear Logistic Test Model (Fischer 1973) with a residual per item</span>
+<span class="sd">(the random-item extension of De Boeck 2008)::</span>
+
+<span class="sd">    logit P(correct) = ability[student] - difficulty[item]</span>
+<span class="sd">    difficulty[item] = intercept + weights . features[item] + residual[item]</span>
+
+<span class="sd">with Gaussian priors on every parameter, by maximum a posteriori and a Laplace</span>
+<span class="sd">approximation, so each weight comes with a standard deviation: which features matter,</span>
+<span class="sd">and how sure the fit is. The result predicts the difficulty of an item nobody has</span>
+<span class="sd">played yet from its features alone, which is the cold start for a new item.</span>
+
+<span class="sd">This is the one place in :mod:`learny.tracing` that reads *across* students, so it</span>
+<span class="sd">follows the rule for that (decision 8 in ``docs/learner-model-design.md``): it runs</span>
+<span class="sd">only when called, over a log it is handed, and what it learns leaves as an exported,</span>
+<span class="sd">reviewable artifact (:class:`FeatureDifficulty`, JSON by :meth:`~FeatureDifficulty.to_dict`)</span>
+<span class="sd">that enters the learner model through the existing ``items=`` seam</span>
+<span class="sd">(:meth:`~FeatureDifficulty.apply`), never as a side effect of fitting.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Real</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">NamedTuple</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">expit</span><span class="p">,</span> <span class="n">logit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Response</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Estimate"</span><span class="p">,</span> <span class="s2">"FeatureDifficulty"</span><span class="p">,</span> <span class="s2">"fit_feature_difficulty"</span><span class="p">,</span> <span class="s2">"item_features"</span><span class="p">]</span>
+
+<span class="n">Anchor</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"location"</span><span class="p">,</span> <span class="s2">"exact"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">]</span>
+<span class="n">_ANCHORS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"location"</span><span class="p">,</span> <span class="s2">"exact"</span><span class="p">,</span> <span class="s2">"none"</span><span class="p">)</span>
+
+<span class="c1">#: The tag :meth:`FeatureDifficulty.to_dict` writes, so a stored artifact says what it is.</span>
+<span class="n">_SCHEMA</span> <span class="o">=</span> <span class="s2">"learny.feature_difficulty/2"</span>
+
+<span class="c1">#: Empirical-Bayes variances: where EM starts, the floor that keeps one off zero (where</span>
+<span class="c1">#: it could not recover), and the change, relative to the variance plus a negligible</span>
+<span class="c1">#: one (0.01 logit², where EM would otherwise crawl toward zero), taken as converged.</span>
+<span class="n">_VAR_START</span><span class="p">,</span> <span class="n">_VAR_FLOOR</span><span class="p">,</span> <span class="n">_EM_TOL</span><span class="p">,</span> <span class="n">_EM_NEGLIGIBLE</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="mf">0.01</span>
+<span class="c1">#: The ability prior variance when there are too few students to estimate it: the</span>
+<span class="c1">#: default estimator's own (``RaschEstimator.prior_var``).</span>
+<span class="n">_ABILITY_VAR_DEFAULT</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+
+<div class="viewcode-block" id="Estimate">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.difficulty.html#learny.tracing.Estimate">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Estimate</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A posterior mean and standard deviation, on the logit scale."""</span>
+
+    <span class="n">mean</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">sd</span><span class="p">:</span> <span class="nb">float</span></div>
+
+
+
+<div class="viewcode-block" id="item_features">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.difficulty.html#learny.tracing.item_features">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">item_features</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The default feature source: ``item.meta['features']``, or ``None``.</span>
+
+<span class="sd">    &gt;&gt;&gt; item_features(Item('q', meta={'features': {'n_glyphs': 4}}))</span>
+<span class="sd">    {'n_glyphs': 4}</span>
+<span class="sd">    &gt;&gt;&gt; item_features(Item('q')) is None</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">item</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"features"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FeatureDifficulty">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.difficulty.html#learny.tracing.FeatureDifficulty">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FeatureDifficulty</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A fitted explanatory difficulty model; see :func:`fit_feature_difficulty`.</span>
+
+<span class="sd">    Features are stored standardised (``(x - center) / scale`` over the fitted items),</span>
+<span class="sd">    which is what the priors and the covariance refer to; :meth:`weights` reports them</span>
+<span class="sd">    in each feature's own units. ``covariance`` is over ``(intercept, *weights)`` in the</span>
+<span class="sd">    standardised form. ``residual_var`` is the prior variance of a new item's departure</span>
+<span class="sd">    from what its features predict, ``ability_mean`` and ``ability_var`` the fitted</span>
+<span class="sd">    students' ability distribution, on the scale of the bank's given difficulties when</span>
+<span class="sd">    the fit was anchored on them. ``residuals`` holds each fitted item's own departure,</span>
+<span class="sd">    as ``(mean, variance, *covariance with the coefficients)``; it carries the fitted</span>
+<span class="sd">    students' data, so :meth:`apply` leaves it out unless asked. ``converged`` is false</span>
+<span class="sd">    when an iteration cap was hit (a ``RuntimeWarning`` said so at fit time).</span>
+<span class="sd">    """</span>
+
+    <span class="n">names</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">center</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">coef</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>  <span class="c1"># (intercept, *standardised weights)</span>
+    <span class="n">covariance</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">residual_var</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">ability_mean</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">ability_var</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">residuals</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">anchors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_students</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_responses</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">converged</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="FeatureDifficulty.weights">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.difficulty.html#learny.tracing.FeatureDifficulty.weights">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Estimate</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Each feature's weight in logits of difficulty per unit of the feature.</span>
+
+<span class="sd">        Positive: more of the feature makes an item harder. The sd is the weight's</span>
+<span class="sd">        posterior sd; a weight within about two of zero is not distinguishable from</span>
+<span class="sd">        "this feature does not matter". Two features that move together split their</span>
+<span class="sd">        weight between them, each with a wide sd.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">Estimate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">[</span><span class="mi">1</span> <span class="o">+</span> <span class="n">f</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">[</span><span class="n">f</span><span class="p">],</span>
+                           <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">covariance</span><span class="p">[</span><span class="mi">1</span> <span class="o">+</span> <span class="n">f</span><span class="p">][</span><span class="mi">1</span> <span class="o">+</span> <span class="n">f</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">[</span><span class="n">f</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+        <span class="p">}</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">features</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"features </span><span class="si">{</span><span class="n">missing</span><span class="si">!r}</span><span class="s2"> are missing; the model needs </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">_number</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[(</span><span class="n">v</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="FeatureDifficulty.predict">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.difficulty.html#learny.tracing.FeatureDifficulty.predict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">item_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Estimate</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The difficulty, in logits, of an item with these features.</span>
+
+<span class="sd">        For any item the residual is unknown, so its prior variance ``residual_var`` is</span>
+<span class="sd">        added to the features' part. Pass ``item_id`` of an item the model was fitted on</span>
+<span class="sd">        to use that item's own fitted residual instead, with its posterior variance and</span>
+<span class="sd">        its covariance with the coefficients. Features far outside the fitted range are</span>
+<span class="sd">        extrapolated linearly, without warning.</span>
+<span class="sd">        """</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="n">x</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">,</span> <span class="n">h</span><span class="p">))</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariance</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span> <span class="o">*</span> <span class="n">h</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">own</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">item_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">own</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">var</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual_var</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">r_mean</span><span class="p">,</span> <span class="n">r_var</span><span class="p">,</span> <span class="o">*</span><span class="n">r_cov</span> <span class="o">=</span> <span class="n">own</span>
+            <span class="n">mean</span> <span class="o">+=</span> <span class="n">r_mean</span>
+            <span class="n">var</span> <span class="o">+=</span> <span class="n">r_var</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">c</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">r_cov</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Estimate</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="FeatureDifficulty.apply">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.difficulty.html#learny.tracing.FeatureDifficulty.apply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">items</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Item</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">features</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_residuals</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Item</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""A copy of ``items`` with each item's ``difficulty`` predicted from features.</span>
+
+<span class="sd">        Only items without a difficulty are filled unless ``overwrite=True``; an item</span>
+<span class="sd">        with no features is left as it is. The difficulty comes from the features alone</span>
+<span class="sd">        unless ``use_residuals=True`` adds each fitted item's own residual. That residual</span>
+<span class="sd">        is learned from the fitted students' answers, so feeding it back to estimate</span>
+<span class="sd">        those same students counts their answers twice; with one or two learners it is</span>
+<span class="sd">        mostly their own results (#18 review). The result is an item bank for the</span>
+<span class="sd">        ``items=`` seam of :class:`~learny.tracing.model.LearnerModel`.</span>
+<span class="sd">        """</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">difficulty</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">overwrite</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">_features_of</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">est</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">item_id</span><span class="o">=</span><span class="n">key</span> <span class="k">if</span> <span class="n">use_residuals</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">difficulty</span><span class="o">=</span><span class="n">expit</span><span class="p">(</span><span class="n">est</span><span class="o">.</span><span class="n">mean</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="FeatureDifficulty.to_dict">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.difficulty.html#learny.tracing.FeatureDifficulty.to_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""A JSON-ready dict: the artifact to store, version and review."""</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"schema"</span><span class="p">:</span> <span class="n">_SCHEMA</span><span class="p">,</span>
+            <span class="s2">"names"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">),</span>
+            <span class="s2">"center"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">),</span>
+            <span class="s2">"scale"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">),</span>
+            <span class="s2">"coef"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span>
+            <span class="s2">"covariance"</span><span class="p">:</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariance</span><span class="p">],</span>
+            <span class="s2">"residual_var"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual_var</span><span class="p">,</span>
+            <span class="s2">"ability_mean"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ability_mean</span><span class="p">,</span>
+            <span class="s2">"ability_var"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ability_var</span><span class="p">,</span>
+            <span class="s2">"residuals"</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">residuals</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+            <span class="s2">"anchors"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchors</span><span class="p">,</span>
+            <span class="s2">"n_students"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_students</span><span class="p">,</span>
+            <span class="s2">"n_responses"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_responses</span><span class="p">,</span>
+            <span class="s2">"converged"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">converged</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="FeatureDifficulty.from_dict">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.difficulty.html#learny.tracing.FeatureDifficulty.from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"FeatureDifficulty"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Inverse of :meth:`to_dict`; refuses an artifact of another schema."""</span>
+        <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schema"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">_SCHEMA</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"not a </span><span class="si">{</span><span class="n">_SCHEMA</span><span class="si">}</span><span class="s2"> artifact (schema </span><span class="si">{</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'schema'</span><span class="p">)</span><span class="si">!r}</span><span class="s2">)"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">names</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"names"</span><span class="p">]),</span>
+            <span class="n">center</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"center"</span><span class="p">]),</span>
+            <span class="n">scale</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"scale"</span><span class="p">]),</span>
+            <span class="n">coef</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"coef"</span><span class="p">]),</span>
+            <span class="n">covariance</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s2">"covariance"</span><span class="p">]),</span>
+            <span class="n">residual_var</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">"residual_var"</span><span class="p">]),</span>
+            <span class="n">ability_mean</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ability_mean"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+            <span class="n">ability_var</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ability_var"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+            <span class="n">residuals</span><span class="o">=</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"residuals"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+            <span class="n">anchors</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"anchors"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">n_students</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n_students"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">n_responses</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n_responses"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">converged</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"converged"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)),</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_number</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Real</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"feature </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must be a finite number, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_features_of</span><span class="p">(</span>
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">features</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">item_features</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cholesky_inverse</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""The inverse of a symmetric positive definite matrix, by Cholesky."""</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">low</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">low</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">low</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ArithmeticError</span><span class="p">(</span><span class="s2">"the posterior precision is not positive definite"</span><span class="p">)</span>
+                <span class="n">low</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">low</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span> <span class="o">/</span> <span class="n">low</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+    <span class="n">inv_low</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>  <span class="c1"># L^-1, lower triangular</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">inv_low</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">low</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            <span class="n">inv_low</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="nb">sum</span><span class="p">(</span><span class="n">low</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">inv_low</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span> <span class="o">/</span> <span class="n">low</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span>  <span class="c1"># (L L')^-1 = L^-T L^-1</span>
+        <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">inv_low</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">inv_low</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_shift_to_anchors</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">covariance</span><span class="p">,</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">published</span><span class="p">,</span> <span class="n">h_of</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Move the intercept so the anchors' fitted difficulties average their given ones.</span>
+
+<span class="sd">    With ``A`` the anchors, ``hbar`` their mean feature row and ``ebar`` their mean</span>
+<span class="sd">    residual, the new intercept is ``mean(given) - sum_f hbar_f w_f - ebar``: a linear</span>
+<span class="sd">    map of the fitted coefficients and residuals, so the covariance follows exactly,</span>
+<span class="sd">    except that residual-residual covariances between anchors (not kept) are taken as 0.</span>
+<span class="sd">    Returns the new ``(coef, covariance, residuals, shift)``.</span>
+<span class="sd">    """</span>
+    <span class="n">n_coef</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coef</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">published</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+    <span class="n">hbar</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">h_of</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span>
+    <span class="n">own</span> <span class="o">=</span> <span class="p">[</span><span class="n">residuals</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">]</span>  <span class="c1"># (mean, var, *cov with coef)</span>
+    <span class="n">ebar</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">own</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="n">cov_c_ebar</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span> <span class="o">+</span> <span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">own</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span>
+    <span class="n">var_ebar</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">own</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">fitted_mean</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">hbar</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">*</span> <span class="n">coef</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">))</span> <span class="o">+</span> <span class="n">ebar</span>
+    <span class="n">shift</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">published</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">/</span> <span class="n">n</span> <span class="o">-</span> <span class="n">fitted_mean</span>
+    <span class="c1"># new = M coef - u0 * ebar + const, with M = identity except row 0 = (0, -hbar_1..)</span>
+    <span class="n">m_rows</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="o">-</span><span class="n">hbar</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_coef</span><span class="p">)]]</span> <span class="o">+</span> <span class="p">[</span>
+        <span class="p">[</span><span class="mf">1.0</span> <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="n">r</span> <span class="k">else</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_coef</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">m_times</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">m_rows</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">c</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">))</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span>
+
+    <span class="n">m_cov</span> <span class="o">=</span> <span class="p">[</span><span class="n">m_times</span><span class="p">([</span><span class="n">covariance</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span>
+    <span class="n">m_cov</span> <span class="o">=</span> <span class="p">[[</span><span class="n">m_cov</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">r</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span>  <span class="c1"># M Sigma</span>
+    <span class="n">new_cov</span> <span class="o">=</span> <span class="p">[[</span><span class="nb">sum</span><span class="p">(</span><span class="n">m_cov</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">c</span><span class="p">]</span> <span class="o">*</span> <span class="n">m_rows</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span>
+               <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span>  <span class="c1"># M Sigma M'</span>
+    <span class="n">m_ce</span> <span class="o">=</span> <span class="n">m_times</span><span class="p">(</span><span class="n">cov_c_ebar</span><span class="p">)</span>  <span class="c1"># M Cov(coef, ebar)</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">):</span>
+        <span class="n">new_cov</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="n">m_ce</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+        <span class="n">new_cov</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">r</span><span class="p">]</span> <span class="o">-=</span> <span class="n">m_ce</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+    <span class="n">new_cov</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">var_ebar</span>
+    <span class="n">anchored</span> <span class="o">=</span> <span class="p">{</span><span class="n">keys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">}</span>
+    <span class="n">new_residuals</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="o">*</span><span class="n">c_e</span><span class="p">)</span> <span class="ow">in</span> <span class="n">residuals</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">cov_ebar_e</span> <span class="o">=</span> <span class="n">var</span> <span class="o">/</span> <span class="n">n</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">anchored</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="n">m_ce_j</span> <span class="o">=</span> <span class="n">m_times</span><span class="p">(</span><span class="n">c_e</span><span class="p">)</span>
+        <span class="n">m_ce_j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="n">cov_ebar_e</span>
+        <span class="n">new_residuals</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="o">*</span><span class="n">m_ce_j</span><span class="p">)</span>
+    <span class="n">new_coef</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">coef</span><span class="p">)</span>
+    <span class="n">new_coef</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">coef</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">shift</span>
+    <span class="k">return</span> <span class="n">new_coef</span><span class="p">,</span> <span class="n">new_cov</span><span class="p">,</span> <span class="n">new_residuals</span><span class="p">,</span> <span class="n">shift</span>
+
+
+<div class="viewcode-block" id="fit_feature_difficulty">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.difficulty.html#learny.tracing.fit_feature_difficulty">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fit_feature_difficulty</span><span class="p">(</span>
+    <span class="n">log</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Response</span><span class="p">]],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">items</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Item</span><span class="p">],</span>
+    <span class="n">features</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">students</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">anchor</span><span class="p">:</span> <span class="n">Anchor</span> <span class="o">=</span> <span class="s2">"location"</span><span class="p">,</span>
+    <span class="n">ability_prior_var</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">residual_var</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">weight_prior_var</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">intercept_prior_var</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4.0</span><span class="p">,</span>
+    <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">max_em_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FeatureDifficulty</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Fit which item features predict difficulty, from a log of play.</span>
+
+<span class="sd">    ``features`` maps an item key to ``{name: value}``; by default each item's</span>
+<span class="sd">    ``meta['features']`` (:func:`item_features`). Every item answered in the log needs a</span>
+<span class="sd">    finite value for every feature named anywhere, or the fit is refused rather than</span>
+<span class="sd">    guessed. A right/wrong response counts as one trial, a score ``k`` out of</span>
+<span class="sd">    ``max_score`` as ``k`` successes in ``max_score`` trials (the binomial reading that</span>
+<span class="sd">    :func:`~learny.tracing.estimators.binomial_thresholds` gives a score; other step</span>
+<span class="sd">    spacings are not modelled here); skips are not evidence about difficulty and are</span>
+<span class="sd">    left out. Guessing is not modelled.</span>
+
+<span class="sd">    **The scale.** Every answered item that already has a ``difficulty`` can anchor</span>
+<span class="sd">    the fit to the bank's scale. ``anchor="location"`` (the default) fits on play alone</span>
+<span class="sd">    and then shifts the intercept (and the students' mean ability) so that the anchors'</span>
+<span class="sd">    fitted difficulties average their given ones: filled items land where the bank's</span>
+<span class="sd">    would, while the weights stay exactly what play says, whatever the bank's spread</span>
+<span class="sd">    (a published band from :func:`~learny.tracing.estimators.difficulty_from_rank` is</span>
+<span class="sd">    an ordering, not a scale). ``anchor="exact"`` holds each anchor at its given value</span>
+<span class="sd">    instead, which also lets the given values inform the weights; it trusts them, spread</span>
+<span class="sd">    included, and a bank anchored throughout is then a regression of the given values</span>
+<span class="sd">    on the features, with play only placing the students. ``anchor="none"`` keeps the</span>
+<span class="sd">    fitted students' scale (mean ability 0). A given difficulty of exactly 0 or 1 has no</span>
+<span class="sd">    finite logit and is skipped as an anchor, with a warning.</span>
+
+<span class="sd">    **What it assumes about the log.** Each student has one ability over the log</span>
+<span class="sd">    (learning within the window is not modelled, so fit on a window short enough for</span>
+<span class="sd">    that). Which items a student was given may depend on their *earlier answers*, as an</span>
+<span class="sd">    adaptive game's choice does, but not on anything about them the log does not show:</span>
+<span class="sd">    stronger students steered to harder items by some other route confound ability</span>
+<span class="sd">    with difficulty, and no fit of this log can undo that.</span>
+
+<span class="sd">    **The priors.** Weights are per *standard deviation* of each feature across the</span>
+<span class="sd">    fitted items, so ``weight_prior_var=1`` says a one-sd change in a feature plausibly</span>
+<span class="sd">    moves difficulty by up to a logit or two, whatever its units. ``residual_var`` (how</span>
+<span class="sd">    far an item may sit from what its features predict) and ``ability_prior_var`` (how</span>
+<span class="sd">    spread the students are) are estimated from the log when left ``None`` (empirical</span>
+<span class="sd">    Bayes, by EM; the ability spread only with two or more students, else 1.0), which is what keeps the weights' sds honest: fixed below the truth,</span>
+<span class="sd">    the 95% intervals covered the true weights 72-80% of the time; estimated, 93-97%</span>
+<span class="sd">    (``docs/learner-model-design.md``, decision 13). With around 15 responses per item</span>
+<span class="sd">    the estimates run about 20% low, as Laplace estimates of variance components do on</span>
+<span class="sd">    right/wrong data.</span>
+
+<span class="sd">    &gt;&gt;&gt; import random</span>
+<span class="sd">    &gt;&gt;&gt; rng = random.Random(0)</span>
+<span class="sd">    &gt;&gt;&gt; bank = {f'q{i}': Item(f'q{i}', meta={'features': {'length': i % 6}}) for i in range(30)}</span>
+<span class="sd">    &gt;&gt;&gt; log = {}</span>
+<span class="sd">    &gt;&gt;&gt; for s in range(20):</span>
+<span class="sd">    ...     theta = rng.gauss(0, 1)</span>
+<span class="sd">    ...     log[f's{s}'] = [</span>
+<span class="sd">    ...         Response(f's{s}', q, rng.random() &lt; expit(theta - (0.6 * bank[q].meta['features']['length'] - 1.5)))</span>
+<span class="sd">    ...         for q in bank]</span>
+<span class="sd">    &gt;&gt;&gt; model = fit_feature_difficulty(log, items=bank)</span>
+<span class="sd">    &gt;&gt;&gt; w = model.weights()['length']</span>
+<span class="sd">    &gt;&gt;&gt; abs(w.mean - 0.6) &lt; 2 * w.sd, w.mean &gt; 2 * w.sd   # recovered, and it matters</span>
+<span class="sd">    (True, True)</span>
+<span class="sd">    &gt;&gt;&gt; model.predict({'length': 5}).mean &gt; model.predict({'length': 0}).mean</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="n">checked</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">"weight_prior_var"</span><span class="p">,</span> <span class="n">weight_prior_var</span><span class="p">),</span> <span class="p">(</span><span class="s2">"intercept_prior_var"</span><span class="p">,</span> <span class="n">intercept_prior_var</span><span class="p">)]</span>
+    <span class="n">checked</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"ability_prior_var"</span><span class="p">,</span> <span class="n">ability_prior_var</span><span class="p">),</span>
+                                    <span class="p">(</span><span class="s2">"residual_var"</span><span class="p">,</span> <span class="n">residual_var</span><span class="p">))</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">checked</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Real</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a positive number, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="c1"># -- the data: (student, item, successes, trials) ---------------------------------</span>
+    <span class="k">if</span> <span class="n">students</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">student_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">students</span><span class="p">)</span>
+        <span class="n">absent</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">student_names</span> <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">log</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">absent</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"students </span><span class="si">{</span><span class="n">absent</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> are not in the log"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">student_names</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">students</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="s2">"students"</span><span class="p">)</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+    <span class="n">rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">item_index</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">no_bank</span><span class="p">,</span> <span class="n">no_features</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">feats</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">student_index</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">student_names</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">log</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">outcome</span><span class="o">.</span><span class="n">is_scored</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">items</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">no_bank</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">_features_of</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">no_features</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">item_index</span><span class="p">:</span>
+                <span class="n">item_index</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">item_index</span><span class="p">)</span>
+                <span class="n">feats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">score</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">max_score</span><span class="p">)</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">score</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">correct</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">student_index</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">student_index</span><span class="p">))</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">item_index</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">item</span><span class="p">],</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">missing</span><span class="p">,</span> <span class="n">what</span> <span class="ow">in</span> <span class="p">((</span><span class="n">no_bank</span><span class="p">,</span> <span class="s2">"not in items"</span><span class="p">),</span> <span class="p">(</span><span class="n">no_features</span><span class="p">,</span> <span class="s2">"without features"</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">shown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">)[:</span><span class="mi">5</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2"> answered item(s) </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">, e.g. </span><span class="si">{</span><span class="n">shown</span><span class="si">!r}</span><span class="s2">: pass features= "</span>
+                <span class="s2">"or restrict the log to items that have them"</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"the log has no scored responses to fit"</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">({</span><span class="n">n</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">feats</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">x</span><span class="p">}))</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">item_index</span><span class="p">)</span>
+    <span class="n">incomplete</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">feats</span><span class="p">)</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">x</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">incomplete</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">incomplete</span><span class="p">)</span><span class="si">}</span><span class="s2"> item(s) lack a value for some feature, e.g. "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">incomplete</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span><span class="si">!r}</span><span class="s2">; every item needs all of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="c1"># -- standardise the features over the fitted items -------------------------------</span>
+    <span class="n">n_items</span><span class="p">,</span> <span class="n">n_feat</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">item_index</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="p">[[</span><span class="n">_number</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">feats</span><span class="p">]</span>
+    <span class="n">center</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">]</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_items</span>
+        <span class="n">sd</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">sum</span><span class="p">((</span><span class="n">v</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">col</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_items</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sd</span> <span class="o">&gt;</span> <span class="mf">1e-12</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mu</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"feature </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has the same value on every fitted item, so it cannot be "</span>
+                <span class="s2">"told apart from the intercept; drop it or fit on more varied items"</span>
+            <span class="p">)</span>
+        <span class="n">center</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span>
+        <span class="n">scale</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sd</span><span class="p">)</span>
+    <span class="n">h_of</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[(</span><span class="n">row</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">-</span> <span class="n">center</span><span class="p">[</span><span class="n">f</span><span class="p">])</span> <span class="o">/</span> <span class="n">scale</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_feat</span><span class="p">)]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">anchor</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ANCHORS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"anchor must be one of </span><span class="si">{</span><span class="n">_ANCHORS</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">anchor</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">given</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">items</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">difficulty</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">item_index</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+             <span class="k">if</span> <span class="n">anchor</span> <span class="o">!=</span> <span class="s2">"none"</span> <span class="ow">and</span> <span class="n">items</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">difficulty</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+    <span class="n">extreme</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">item_index</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">given</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">extreme</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">extreme</span><span class="p">)</span><span class="si">}</span><span class="s2"> item(s) with a given difficulty of exactly 0 or 1, e.g. "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">extreme</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span><span class="si">!r}</span><span class="s2">, have no finite logit and were not used as anchors"</span><span class="p">,</span>
+            <span class="ne">RuntimeWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">published</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">logit</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">given</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">}</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="n">published</span> <span class="k">if</span> <span class="n">anchor</span> <span class="o">==</span> <span class="s2">"exact"</span> <span class="k">else</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">k</span> <span class="o">==</span> <span class="n">m</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">k</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">"every answer in the log is right (or every one wrong): difficulty is not "</span>
+            <span class="s2">"identified by play, so the fit is the priors'"</span><span class="p">,</span>
+            <span class="ne">RuntimeWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># -- MAP by Newton, the free items' residuals eliminated by Schur complement ------</span>
+    <span class="n">n_stud</span><span class="p">,</span> <span class="n">n_coef</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">student_index</span><span class="p">),</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">n_feat</span>
+    <span class="n">g_dim</span> <span class="o">=</span> <span class="n">n_stud</span> <span class="o">+</span> <span class="n">n_coef</span>  <span class="c1"># (abilities, intercept, weights); residuals apart</span>
+    <span class="n">coef_prior</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">intercept_prior_var</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">weight_prior_var</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_feat</span>
+    <span class="n">by_item</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">by_item</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">g_dim</span>
+    <span class="n">resid</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_items</span>
+    <span class="n">newton_converged</span> <span class="o">=</span> <span class="n">em_converged</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">newton</span><span class="p">(</span><span class="n">tau2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a_mean</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">a_var</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Newton to the mode; returns the global covariance and, per free item, its</span>
+<span class="sd">        residual's ``(variance, Schur column, d)`` for the block inverse."""</span>
+        <span class="k">nonlocal</span> <span class="n">theta</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="n">newton_converged</span>
+        <span class="n">prior</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">a_var</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_stud</span> <span class="o">+</span> <span class="n">coef_prior</span>
+        <span class="n">center_of</span> <span class="o">=</span> <span class="p">[</span><span class="n">a_mean</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_stud</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_coef</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+            <span class="n">grad</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="n">prior</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">theta</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">-</span> <span class="n">center_of</span><span class="p">[</span><span class="n">a</span><span class="p">])</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">g_dim</span><span class="p">)]</span>
+            <span class="n">hess</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">g_dim</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">g_dim</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">g_dim</span><span class="p">):</span>
+                <span class="n">hess</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">prior</span><span class="p">[</span><span class="n">a</span><span class="p">]</span>
+            <span class="n">cols</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">grad_e</span><span class="p">,</span> <span class="n">d_e</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_items</span><span class="p">):</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">h_of</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">fixed</span> <span class="o">=</span> <span class="n">known</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">b_i</span> <span class="o">=</span> <span class="n">fixed</span> <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="n">theta</span><span class="p">[</span><span class="n">n_stud</span> <span class="o">+</span> <span class="n">c</span><span class="p">]</span> <span class="o">*</span> <span class="n">h</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)</span>
+                <span class="p">)</span> <span class="o">+</span> <span class="n">resid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># the anchor's known difficulty, regressed on h</span>
+                    <span class="n">gap</span> <span class="o">=</span> <span class="n">fixed</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">theta</span><span class="p">[</span><span class="n">n_stud</span> <span class="o">+</span> <span class="n">c</span><span class="p">]</span> <span class="o">*</span> <span class="n">h</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">):</span>
+                        <span class="n">grad</span><span class="p">[</span><span class="n">n_stud</span> <span class="o">+</span> <span class="n">c</span><span class="p">]</span> <span class="o">+=</span> <span class="n">gap</span> <span class="o">*</span> <span class="n">h</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">/</span> <span class="n">tau2</span>
+                        <span class="k">for</span> <span class="n">c2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">):</span>
+                            <span class="n">hess</span><span class="p">[</span><span class="n">n_stud</span> <span class="o">+</span> <span class="n">c</span><span class="p">][</span><span class="n">n_stud</span> <span class="o">+</span> <span class="n">c2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">h</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">*</span> <span class="n">h</span><span class="p">[</span><span class="n">c2</span><span class="p">]</span> <span class="o">/</span> <span class="n">tau2</span>
+                    <span class="n">coords</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">coords</span> <span class="o">=</span> <span class="p">[(</span><span class="n">n_stud</span> <span class="o">+</span> <span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">h</span><span class="p">[</span><span class="n">c</span><span class="p">])</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span>
+                    <span class="n">grad_e</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">d_e</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">cols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">resid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">tau2</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">tau2</span><span class="p">,</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">by_item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">()):</span>
+                    <span class="n">q</span> <span class="o">=</span> <span class="n">expit</span><span class="p">(</span><span class="n">theta</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">-</span> <span class="n">b_i</span><span class="p">)</span>
+                    <span class="n">r</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">k</span> <span class="o">-</span> <span class="n">m</span> <span class="o">*</span> <span class="n">q</span><span class="p">,</span> <span class="n">m</span> <span class="o">*</span> <span class="n">q</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span>
+                    <span class="n">g</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)]</span> <span class="o">+</span> <span class="n">coords</span>
+                    <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">ga</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+                        <span class="n">grad</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">+=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">ga</span>
+                        <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">gb</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+                            <span class="n">hess</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span> <span class="o">+=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">ga</span> <span class="o">*</span> <span class="n">gb</span>
+                    <span class="k">if</span> <span class="n">fixed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">ga</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>  <span class="c1"># cross term with the residual, d(eta)/d(e) = -1</span>
+                            <span class="n">cols</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">w</span> <span class="o">*</span> <span class="n">ga</span>
+                        <span class="n">grad_e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="n">r</span>
+                        <span class="n">d_e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">w</span>
+            <span class="n">rhs</span> <span class="o">=</span> <span class="n">grad</span><span class="p">[:]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>  <span class="c1"># S = A - sum_i b_i b_i' / d_i</span>
+                <span class="n">inv</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">d_e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">va</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">rhs</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">-=</span> <span class="n">va</span> <span class="o">*</span> <span class="n">inv</span> <span class="o">*</span> <span class="n">grad_e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">vb</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">hess</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span> <span class="o">-=</span> <span class="n">va</span> <span class="o">*</span> <span class="n">vb</span> <span class="o">*</span> <span class="n">inv</span>
+            <span class="n">cov</span> <span class="o">=</span> <span class="n">_cholesky_inverse</span><span class="p">(</span><span class="n">hess</span><span class="p">)</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">cov</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span> <span class="o">*</span> <span class="n">rhs</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">g_dim</span><span class="p">))</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">g_dim</span><span class="p">)]</span>
+            <span class="n">step_e</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="n">grad_e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span> <span class="o">*</span> <span class="n">step</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span> <span class="o">/</span> <span class="n">d_e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">cols</span>
+            <span class="p">}</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="o">+</span> <span class="n">d</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">step</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">step_e</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">resid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">d</span>
+            <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">step</span><span class="p">,</span> <span class="o">*</span><span class="n">step_e</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="n">newton_converged</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">newton_converged</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">cov</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">d_e</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">moments</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">d_e</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Posterior second moments for EM: residuals (free and anchored), abilities."""</span>
+        <span class="n">resid_sq</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_items</span><span class="p">):</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">h_of</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">hc</span> <span class="o">=</span> <span class="p">[</span><span class="n">n_stud</span> <span class="o">+</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
+                <span class="n">gap</span> <span class="o">=</span> <span class="n">known</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">theta</span><span class="p">[</span><span class="n">n_stud</span> <span class="o">+</span> <span class="n">c</span><span class="p">]</span> <span class="o">*</span> <span class="n">h</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">))</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">*</span> <span class="n">cov</span><span class="p">[</span><span class="n">hc</span><span class="p">[</span><span class="n">a</span><span class="p">]][</span><span class="n">hc</span><span class="p">[</span><span class="n">b</span><span class="p">]]</span> <span class="o">*</span> <span class="n">h</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_coef</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">col</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">gap</span> <span class="o">=</span> <span class="n">resid</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">d_e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="n">va</span> <span class="o">*</span> <span class="n">cov</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span> <span class="o">*</span> <span class="n">vb</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">va</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">vb</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">)</span> <span class="o">/</span> <span class="n">d_e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">resid_sq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gap</span> <span class="o">*</span> <span class="n">gap</span> <span class="o">+</span> <span class="n">v</span><span class="p">)</span>
+        <span class="n">abil</span> <span class="o">=</span> <span class="p">[(</span><span class="n">theta</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">cov</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="n">p</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_stud</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">resid_sq</span><span class="p">,</span> <span class="n">abil</span>
+
+    <span class="n">learn_ability_var</span> <span class="o">=</span> <span class="n">ability_prior_var</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">n_stud</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="n">tau2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">residual_var</span><span class="p">)</span> <span class="k">if</span> <span class="n">residual_var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_VAR_START</span>
+    <span class="n">a_var</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ability_prior_var</span><span class="p">)</span> <span class="k">if</span> <span class="n">ability_prior_var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_ABILITY_VAR_DEFAULT</span>
+    <span class="n">a_mean</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">estimate</span> <span class="o">=</span> <span class="n">residual_var</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">learn_ability_var</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span><span class="n">known</span><span class="p">)</span>
+    <span class="n">cov</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">d_e</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="n">tau2</span><span class="p">,</span> <span class="n">a_mean</span><span class="p">,</span> <span class="n">a_var</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">estimate</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_em_iter</span><span class="p">):</span>
+            <span class="n">resid_sq</span><span class="p">,</span> <span class="n">abil</span> <span class="o">=</span> <span class="n">moments</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">d_e</span><span class="p">)</span>
+            <span class="n">old</span> <span class="o">=</span> <span class="p">(</span><span class="n">tau2</span><span class="p">,</span> <span class="n">a_var</span><span class="p">,</span> <span class="n">a_mean</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">known</span><span class="p">:</span>  <span class="c1"># the scale is the anchors': the students' mean is free</span>
+                <span class="n">a_mean</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">abil</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_stud</span>
+            <span class="k">if</span> <span class="n">residual_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tau2</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">resid_sq</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_items</span><span class="p">,</span> <span class="n">_VAR_FLOOR</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">learn_ability_var</span><span class="p">:</span>
+                <span class="n">a_var</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">sum</span><span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">a_mean</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">v</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">abil</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_stud</span><span class="p">,</span> <span class="n">_VAR_FLOOR</span><span class="p">)</span>
+            <span class="n">cov</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">d_e</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="n">tau2</span><span class="p">,</span> <span class="n">a_mean</span><span class="p">,</span> <span class="n">a_var</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">new</span> <span class="o">-</span> <span class="n">prev</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">_EM_TOL</span> <span class="o">*</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">prev</span><span class="p">)</span> <span class="o">+</span> <span class="n">_EM_NEGLIGIBLE</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="n">new</span><span class="p">,</span> <span class="n">prev</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">((</span><span class="n">tau2</span><span class="p">,</span> <span class="n">a_var</span><span class="p">,</span> <span class="n">a_mean</span><span class="p">),</span> <span class="n">old</span><span class="p">)):</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">em_converged</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">converged</span> <span class="o">=</span> <span class="n">newton_converged</span> <span class="ow">and</span> <span class="n">em_converged</span>  <span class="c1"># judged on the final fit only</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">converged</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">"fit_feature_difficulty hit an iteration cap before converging; the weights "</span>
+            <span class="s2">"and their sds may be off (raise max_iter or max_em_iter)"</span><span class="p">,</span>
+            <span class="ne">RuntimeWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">coef_idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_stud</span><span class="p">,</span> <span class="n">g_dim</span><span class="p">))</span>
+    <span class="n">residuals</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">item_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">known</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">col</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">d_e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">s_b</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">cov</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span> <span class="o">*</span> <span class="n">vb</span> <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">vb</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">g_dim</span><span class="p">)}</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">d</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">va</span> <span class="o">*</span> <span class="n">s_b</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">va</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">/</span> <span class="n">d</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">cov_coef</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="n">s_b</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">/</span> <span class="n">d</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">coef_idx</span><span class="p">]</span>  <span class="c1"># Cov(coef, residual_i)</span>
+        <span class="n">residuals</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">resid</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">var</span><span class="p">,</span> <span class="o">*</span><span class="n">cov_coef</span><span class="p">)</span>
+    <span class="n">coef</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">theta</span><span class="p">[</span><span class="n">n_stud</span><span class="p">:])</span>
+    <span class="n">covariance</span> <span class="o">=</span> <span class="p">[[</span><span class="n">cov</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">coef_idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">coef_idx</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">anchor</span> <span class="o">==</span> <span class="s2">"location"</span> <span class="ow">and</span> <span class="n">published</span><span class="p">:</span>
+        <span class="n">coef</span><span class="p">,</span> <span class="n">covariance</span><span class="p">,</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">shift</span> <span class="o">=</span> <span class="n">_shift_to_anchors</span><span class="p">(</span>
+            <span class="n">coef</span><span class="p">,</span> <span class="n">covariance</span><span class="p">,</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">published</span><span class="p">,</span> <span class="n">h_of</span><span class="p">,</span> <span class="n">keys</span>
+        <span class="p">)</span>
+        <span class="n">a_mean</span> <span class="o">+=</span> <span class="n">shift</span>
+    <span class="k">return</span> <span class="n">FeatureDifficulty</span><span class="p">(</span>
+        <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
+        <span class="n">center</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">center</span><span class="p">),</span>
+        <span class="n">scale</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">scale</span><span class="p">),</span>
+        <span class="n">coef</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">coef</span><span class="p">),</span>
+        <span class="n">covariance</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">covariance</span><span class="p">),</span>
+        <span class="n">residual_var</span><span class="o">=</span><span class="n">tau2</span><span class="p">,</span>
+        <span class="n">ability_mean</span><span class="o">=</span><span class="n">a_mean</span><span class="p">,</span>
+        <span class="n">ability_var</span><span class="o">=</span><span class="n">a_var</span><span class="p">,</span>
+        <span class="n">residuals</span><span class="o">=</span><span class="n">residuals</span><span class="p">,</span>
+        <span class="n">anchors</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">published</span><span class="p">),</span>
+        <span class="n">n_students</span><span class="o">=</span><span class="n">n_stud</span><span class="p">,</span>
+        <span class="n">n_responses</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span>
+        <span class="n">converged</span><span class="o">=</span><span class="n">converged</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

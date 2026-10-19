@@ -16,6 +16,8 @@ learny.tracing
       score_calibration
       reads_scores
       prequential
+      fit_feature_difficulty
+      item_features
       restrict_labels
       difficulty_from_rank
       binomial_thresholds
@@ -42,6 +44,8 @@ learny.tracing
       CalibrationReport
       CalibrationBin
       ScoreCalibrationReport
+      FeatureDifficulty
+      Estimate
    
 .. rubric:: Modules
 
@@ -50,6 +54,7 @@ learny.tracing
    :recursive:
 
    diagnostics
+   difficulty
    estimators
    model
    records
