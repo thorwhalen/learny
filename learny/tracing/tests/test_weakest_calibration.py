@@ -14,20 +14,33 @@ from learny.tracing import Item, LearnerModel, Outcome, RaschEstimator, Response
 WEEK = 7 * 24 * 3600.0
 
 
-def _bank(n_labels):
-    return {f"l{j}": Item(f"l{j}", labels=(f"l{j}",), difficulty=0.5) for j in range(n_labels)}
+def _bank(n_labels, difficulty=0.5):
+    return {
+        f"l{j}": Item(f"l{j}", labels=(f"l{j}",), difficulty=difficulty)
+        for j in range(n_labels)
+    }
 
 
-def _student(rng, n_labels, n_responses, *, weakness=0.0, spacing=WEEK, estimator=None):
-    """One simulated student: global skill ~ N(0, 1), a real deviation on l0."""
+def _student(
+    rng, n_labels, n_responses, *, weakness=0.0, spacing=WEEK, estimator=None,
+    difficulty=0.5, skip=0.0,
+):
+    """One simulated student: global skill ~ N(0, 1), a real deviation on l0, and
+    interior skips at random with probability ``skip``."""
     theta = rng.gauss(0, 1)
     model = LearnerModel(
-        items=_bank(n_labels), estimator=estimator or RaschEstimator(), log={}, estimates={}
+        items=_bank(n_labels, difficulty),
+        estimator=estimator or RaschEstimator(), log={}, estimates={},
     )
+    b = math.log(difficulty / (1 - difficulty))
     for i in range(n_responses):
         label = f"l{i % n_labels}"
-        p = 1 / (1 + math.exp(-(theta + (weakness if label == "l0" else 0.0))))
-        model.record("s", label, "correct" if rng.random() < p else "wrong", at=i * spacing)
+        p = 1 / (1 + math.exp(-(theta + (weakness if label == "l0" else 0.0) - b)))
+        outcome = (
+            "skipped" if rng.random() < skip
+            else "correct" if rng.random() < p else "wrong"
+        )
+        model.record("s", label, outcome, at=i * spacing)
     return model
 
 
@@ -70,6 +83,20 @@ class TestNullVariance:
         new = est.observe(old, Response("s", "q", Outcome.WRONG), Item("q", labels=("a",)))
         assert 0.0 < est.mastery(new)["a"].null_var <= 0.2
 
+    def test_a_student_who_mostly_gets_it_right_has_a_skewed_null(self):
+        """A rare wrong answer is a large drop: the null's lower tail is heavy."""
+        model = _student(random.Random(2), 3, 18, difficulty=0.05)
+        assert all(m.null_k3 < 0 for m in model.mastery("s").values())
+
+    def test_a_skip_adds_sampling_spread(self):
+        """Whether a student skips is random too, so a skip is not noise-free."""
+        est = RaschEstimator()
+        item = Item("a", labels=("a",), difficulty=0.5)
+        answered = est.observe(est.init(), Response("s", "a", "correct"), item)
+        both = est.observe(answered, Response("s", "a", "skipped"), item)
+        assert both["labels"]["a"]["nv"] > answered["labels"]["a"]["nv"]
+        assert both["labels"]["a"]["nk3"] < 0  # a skip only ever pulls the label down
+
     def test_the_elo_gain_does_not_track_it(self):
         model = _student(random.Random(1), 3, 18, estimator=RaschEstimator(gain="elo"))
         assert all(m.null_var is None for m in model.mastery("s").values())
@@ -98,6 +125,21 @@ class TestCalibratedGate:
         assert false["calibrated"] <= 0.16 + 0.08  # target 1 - Phi(1), 2.5 MC sd
         assert found["calibrated"] > 2 * found["bonferroni"]
         assert found["calibrated"] >= found["none"] - 0.1
+
+    @pytest.mark.parametrize(
+        "n_labels,n_responses,kw",
+        [
+            (20, 40, {"difficulty": 0.05}),  # mostly right, sparse: was 0.64 (#34 review)
+            (6, 60, {"skip": 0.3}),  # random skips: was 0.22
+        ],
+    )
+    def test_false_flags_stay_near_target_off_the_grid(self, n_labels, n_responses, kw):
+        rng = random.Random(5)
+        flagged = sum(
+            bool(_student(rng, n_labels, n_responses, **kw).weakest("s", n=n_labels))
+            for _ in range(self.STUDENTS)
+        )
+        assert flagged / self.STUDENTS <= 0.16 + 0.08
 
     def test_it_is_the_default(self):
         from learny.tracing import DEFAULT_MULTIPLICITY

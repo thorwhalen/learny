@@ -95,8 +95,10 @@ def _bonferroni_z(z: float, m: int) -> float:
     return -NormalDist().inv_cdf(alpha / m)
 
 
-def _null_sds(masteries: Sequence[Mastery], relative_to: RelativeTo) -> list[float] | None:
-    """Each contrast's spread for a test calibrated to "no real weakness".
+def _null_spreads(
+    masteries: Sequence[Mastery], relative_to: RelativeTo
+) -> list[tuple[float, float]]:
+    """Each contrast's ``(sd, skewness)`` for a test calibrated to "no real weakness".
 
     The contrast and its weights are :func:`_contrasts`'s. Its posterior variance has two
     parts: each label's own residual (``var - loading**2``) and the part the labels share
@@ -106,37 +108,69 @@ def _null_sds(masteries: Sequence[Mastery], relative_to: RelativeTo) -> list[flo
     part is kept at its posterior size: it is the direction in which the record cannot
     tell "weak overall" from "weak on this label", where a label's mean is moved by the
     priors' split of a shortfall rather than by chance (#23), and a test that ignored it
-    would blame the most heavily weighted label for every shortfall. ``None`` when any
-    label lacks a ``null_var``: the caller falls back to the posterior spread.
+    would blame the most heavily weighted label for every shortfall.
+
+    The skewness is the own parts' third cumulant (:attr:`Mastery.null_k3
+    <learny.tracing.estimators.Mastery.null_k3>`, 0 when not tracked) over ``sd**3``;
+    the shared part is taken as normal. A label without a ``null_var`` (an estimator
+    that does not track it, or a label stored before it was tracked) contributes its
+    posterior own residual instead, so with none tracked this is exactly the posterior
+    contrast spread of :func:`_contrasts`.
 
     >>> from learny.tracing.estimators import Skill
     >>> ms = [Mastery(k, Skill(0.0, 1.0), deviation=Skill(0.0, 0.2), null_var=0.05)
     ...       for k in 'ab']
-    >>> [round(sd, 3) for sd in _null_sds(ms, 'labels')]
-    [0.316, 0.316]
+    >>> [(round(sd, 3), g) for sd, g in _null_spreads(ms, 'labels')]
+    [(0.316, 0.0), (0.316, 0.0)]
     >>> heavy = [Mastery('a', Skill(0.0, 1.0), deviation=Skill(0.0, 0.2), null_var=0.05,
     ...                  loading=-0.4), ms[1]]
-    >>> [round(sd, 3) for sd in _null_sds(heavy, 'labels')]  # the shared part stays
+    >>> [round(sd, 3) for sd, _ in _null_spreads(heavy, 'labels')]  # the shared part stays
     [0.51, 0.51]
-    >>> _null_sds([Mastery('a', Skill(0.0, 1.0), deviation=Skill(0.0, 0.2))], 'global')
+    >>> untracked = Mastery('a', Skill(0.0, 1.0), deviation=Skill(0.0, 0.2))
+    >>> _null_spreads([untracked], 'global') == [(_contrasts([untracked], 'global')[0][1], 0.0)]
+    True
     """
-    nvs = [m.null_var for m in masteries]
-    if any(nv is None for nv in nvs):
-        return None
-    nvs = [max(nv, 0.0) for nv in nvs]
     loads = [float(getattr(m, "loading", 0.0) or 0.0) for m in masteries]
+    nvs = [
+        max(m.deviation.var - a * a if m.null_var is None else m.null_var, 0.0)
+        for m, a in zip(masteries, loads)
+    ]
+    k3s = [float(getattr(m, "null_k3", None) or 0.0) for m in masteries]
+
+    def spread(var: float, k3: float) -> tuple[float, float]:
+        sd = math.sqrt(var)
+        return sd, (k3 / sd**3 if sd > 0 else 0.0)
+
     if relative_to == "global":
-        return [math.sqrt(nv + a * a) for nv, a in zip(nvs, loads)]
+        return [spread(nv + a * a, k3) for nv, a, k3 in zip(nvs, loads, k3s)]
     devs = [m.deviation for m in masteries]
 
-    def sd(i: int) -> float:
+    def contrast(i: int) -> tuple[float, float]:
         rest = [j for j in range(len(devs)) if j != i]
         rest_prec = sum(1.0 / devs[j].var for j in rest)
         w = {j: 1.0 / devs[j].var / rest_prec for j in rest}
         shared = loads[i] - sum(w[j] * loads[j] for j in rest)
-        return math.sqrt(nvs[i] + sum(w[j] ** 2 * nvs[j] for j in rest) + shared**2)
+        var = nvs[i] + sum(w[j] ** 2 * nvs[j] for j in rest) + shared**2
+        return spread(var, k3s[i] - sum(w[j] ** 3 * k3s[j] for j in rest))
 
-    return [sd(i) for i in range(len(devs))]
+    return [contrast(i) for i in range(len(devs))]
+
+
+def _skew_corrected_z(z: float, skewness: float) -> float:
+    """The lower-tail critical z for a null with this skewness, never below ``z``.
+
+    First-order Cornish-Fisher: the lower ``Phi(-z)`` quantile of a standardised
+    distribution with skewness ``g`` is about ``-z + (z**2 - 1) * g / 6``. A negative
+    skew (a rare wrong answer is a large drop) moves it further out. A positive skew
+    would move it in, where the expansion is least reliable and a gate would turn lax,
+    so it is never allowed to.
+
+    >>> _skew_corrected_z(2.0, 0.0), _skew_corrected_z(2.0, 1.5)
+    (2.0, 2.0)
+    >>> _skew_corrected_z(2.0, -1.2)
+    2.6
+    """
+    return z + max(0.0, -skewness) * max(z * z - 1.0, 0.0) / 6.0
 
 
 def _contrasts(
@@ -335,15 +369,18 @@ class LearnerModel:
           with evidence at once, so ``z`` sets the chance of *any* false flag (about
           one student in six with no real weakness, at ``z = 1``), and measures each
           contrast against its sampling spread under no real weakness
-          (:attr:`Mastery.null_var <learny.tracing.estimators.Mastery.null_var>`), so
-          the correction costs little power at cold start (#22). An estimator that does
-          not fill ``null_var`` gets ``"bonferroni"``: the same correction on the
-          posterior sd, which shrinkage already makes cautious when evidence is thin, so
+          (:attr:`Mastery.null_var <learny.tracing.estimators.Mastery.null_var>`) and
+          skew (a rare wrong answer from a student who is usually right is a large
+          drop), so the correction costs little power at cold start (#22). An estimator that does
+          not fill ``null_var`` gets ``"bonferroni"`` (a label it leaves unfilled is
+          measured by its posterior spread): the same correction on the posterior sd, which shrinkage already makes cautious when evidence is thin, so
           with a few responses per label even a large real weakness is rarely returned.
           ``"none"`` applies ``z`` to each label separately, which with six labels, a few
           hundred responses and no real weakness flags something more often than not.
-          Under ``relative_to="global"`` the calibrated spread is conservative (the part
-          of a label's spread it shares with the others is counted, not removed).
+          Under ``relative_to="global"`` the calibrated spread is more cautious (the
+          part of a label's spread it shares with the others is counted, not removed).
+          A label stored before null spreads were tracked is measured by its posterior
+          spread until it is answered again.
         * ``relative_to`` — ``"labels"`` (default) as above; ``"global"`` measures each
           label's deviation against zero, the student's global skill. The default
           estimator carries the global/label covariance, so a shortfall every item
@@ -429,12 +466,13 @@ class LearnerModel:
             if multiplicity == "none"
             else _bonferroni_z(credible_below, len(ranked))
         )
-        contrasts = _contrasts(ranked, relative_to)
+        contrasts = [(mu, sd, z) for mu, sd in _contrasts(ranked, relative_to)]
         if multiplicity == "calibrated":
-            null = _null_sds(ranked, relative_to)
-            if null is not None:
-                contrasts = [(mu, sd) for (mu, _), sd in zip(contrasts, null)]
-        credible = [m for m, (mu, sd) in zip(ranked, contrasts) if mu + z * sd < 0.0]
+            contrasts = [
+                (mu, sd, _skew_corrected_z(z, g))
+                for (mu, _, _), (sd, g) in zip(contrasts, _null_spreads(ranked, relative_to))
+            ]
+        credible = [m for m, (mu, sd, zi) in zip(ranked, contrasts) if mu + zi * sd < 0.0]
         if not credible:
             return Weakest(reason="no_credible_weakness")
         return Weakest(credible[:n])
