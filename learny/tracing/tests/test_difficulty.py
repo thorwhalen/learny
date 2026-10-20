@@ -294,3 +294,73 @@ class TestScaleAndConvergence:
         bank, _, log = _world(seed=23)
         with pytest.raises(KeyError, match="not in the log"):
             fit(log, items=bank, students=["s0", "nobody"])
+
+
+def _attempt_world(seed=3, *, students=30, per_student=40, n_items=40, decoy_weight=0.5):
+    """Item difficulty linear in ``length``; each attempt adds ``decoy_weight`` per decoy."""
+    rng = random.Random(seed)
+    bank = {f"q{i}": Item(f"q{i}", meta={"features": {"length": rng.gauss(0, 1)}}) for i in range(n_items)}
+    b = {q: 0.8 * it.meta["features"]["length"] + rng.gauss(0, RESID_SD) for q, it in bank.items()}
+    log = {}
+    for s in range(students):
+        theta = rng.gauss(0, 1)
+        rs = []
+        for _ in range(per_student):
+            q, decoys = rng.choice(sorted(bank)), rng.randint(0, 4)
+            p = expit(theta - b[q] - decoy_weight * decoys)
+            rs.append(Response(f"s{s}", q, rng.random() < p, meta={"features": {"n_decoys": decoys}}))
+        log[f"s{s}"] = rs
+    return bank, log
+
+
+class TestAttemptFeatures:
+    def test_recovers_the_attempt_weight_alongside_the_item_weight(self):
+        bank, log = _attempt_world()
+        model = fit(log, items=bank)
+        assert model.attempt_names == ("n_decoys",)
+        v = model.attempt_weights()["n_decoys"]
+        assert abs(v.mean - 0.5) < 2.5 * v.sd and v.mean > 2 * v.sd
+        w = model.weights()["length"]
+        assert abs(w.mean - 0.8) < 2.5 * w.sd
+
+    def test_predict_takes_an_attempt_and_defaults_to_the_average_one(self):
+        bank, log = _attempt_world()
+        model = fit(log, items=bank)
+        x = {"length": 0.0}
+        easy, hard = model.predict(x, attempt={"n_decoys": 0}), model.predict(x, attempt={"n_decoys": 4})
+        assert hard.mean > easy.mean
+        mid = model.predict(x, attempt={"n_decoys": model.attempt_center[0]})
+        assert model.predict(x).mean == pytest.approx(mid.mean)
+        with pytest.raises(KeyError, match="attempt features"):
+            model.predict(x, attempt={})
+
+    def test_round_trips_through_json(self):
+        bank, log = _attempt_world()
+        model = fit(log, items=bank)
+        back = FeatureDifficulty.from_dict(json.loads(json.dumps(model.to_dict())))
+        assert back == model
+
+    def test_ignoring_them_gives_the_item_only_fit(self):
+        bank, log = _attempt_world()
+        plain = {s: [replace(r, meta={}) for r in rs] for s, rs in log.items()}
+        assert fit(log, items=bank, attempt_features=None) == fit(plain, items=bank)
+
+    def test_an_attempt_without_them_is_refused(self):
+        bank, log = _attempt_world()
+        log["s0"][0] = replace(log["s0"][0], meta={})
+        with pytest.raises(ValueError, match="1 scored attempt"):
+            fit(log, items=bank)
+
+    def test_a_constant_attempt_feature_is_refused(self):
+        bank, log = _attempt_world()
+        same = {s: [replace(r, meta={"features": {"n_decoys": 2}}) for r in rs] for s, rs in log.items()}
+        with pytest.raises(ValueError, match="every fitted attempt"):
+            fit(same, items=bank)
+
+    def test_works_with_exact_and_location_anchors(self):
+        bank, log = _attempt_world()
+        anchored = {q: replace(it, difficulty=0.5) if i % 3 == 0 else it
+                    for i, (q, it) in enumerate(sorted(bank.items()))}
+        for anchor in ("location", "exact"):
+            v = fit(log, items=anchored, anchor=anchor).attempt_weights()["n_decoys"]
+            assert v.mean > 2 * v.sd, anchor
