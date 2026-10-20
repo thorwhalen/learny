@@ -218,3 +218,26 @@ def test_simulated_with_a_missing_record_flags_nothing():
     model = _student(random.Random(35), 3, 9)
     model.log["s"] = []
     assert not model.weakest("s", n=3, multiplicity="simulated", null_draws=50)
+
+
+def test_simulated_draws_are_common_random_numbers_across_calls():
+    """#45: a new answer extends each replay's random stream instead of reseeding it."""
+
+    class Recording(RaschEstimator):
+        def null_response(self, state, response, item, rng):
+            streams.append(rng.getstate())
+            return super().null_response(state, response, item, rng)
+
+    n, draws = 12, 10
+    runs = []
+    for n_responses in (n - 1, n):  # the same student, before and after one more answer
+        streams = []
+        model = _student(random.Random(36), 3, n_responses, weakness=-3.0,
+                         estimator=Recording())
+        model.weakest("s", multiplicity="simulated", null_draws=draws)
+        runs.append(streams)
+    shorter, longer = runs
+    assert len(shorter) == draws * (n - 1) and len(longer) == draws * n
+    # each draw's first n - 1 redraws start from the same random state as before
+    for d in range(draws):
+        assert longer[d * n : d * n + n - 1] == shorter[d * (n - 1) : (d + 1) * (n - 1)]
