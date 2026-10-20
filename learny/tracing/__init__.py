@@ -22,6 +22,7 @@ from learny.tracing.diagnostics import (
     ScoreCalibrationReport,
     calibration,
     compare_estimators,
+    fit_item_spreads,
     fit_threshold_spread,
     label_separation,
     prequential,
@@ -37,6 +38,7 @@ from learny.tracing.difficulty import (
 )
 from learny.tracing.estimators import (
     Estimator,
+    ItemSpreads,
     Mastery,
     PartialCreditEstimator,
     RaschEstimator,
@@ -74,6 +76,7 @@ __all__ = [
     "LabelWeights",
     # the seams
     "Estimator",
+    "ItemSpreads",
     "RaschEstimator",
     "PartialCreditEstimator",
     "ResponseLog",
@@ -92,6 +95,7 @@ __all__ = [
     # choosing settings from a log
     "compare_estimators",
     "Comparison",
+    "fit_item_spreads",
     "fit_threshold_spread",
     "prequential",
     # what item features say about difficulty, across students (an exported artifact)

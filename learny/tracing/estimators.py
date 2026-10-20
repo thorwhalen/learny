@@ -66,6 +66,7 @@ import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from numbers import Real
+from types import MappingProxyType
 from typing import Any, NamedTuple, Protocol, runtime_checkable
 
 from learny.tracing.records import Item, Outcome, Response
@@ -913,6 +914,65 @@ def spread_thresholds(spread: float) -> SpreadThresholds:
     True
     """
     return SpreadThresholds(spread)
+
+
+@dataclass(frozen=True)
+class ItemSpreads:
+    """Per-item threshold spreads from a table, ``fallback`` for the items it does not hold.
+
+    The ``thresholds`` seam's reader for the table
+    :func:`~learny.tracing.diagnostics.fit_item_spreads` exports: an item in ``spreads``
+    gets ``spread_thresholds(spreads[item.id])``, any other item ``fallback(item, m)``
+    (default :func:`binomial_thresholds`; usually the global spread the table was fitted
+    against). ``to_dict``/``from_dict`` carry the table, not the fallback, which is code.
+
+    >>> t = ItemSpreads({'sharp': 0.5}, fallback=spread_thresholds(2.0))
+    >>> [round(x, 3) for x in t(Item('sharp'), 2)], [round(x, 3) for x in t(Item('other'), 2)]
+    ([-0.347, 0.347], [-1.386, 1.386])
+    >>> ItemSpreads.from_dict(t.to_dict(), fallback=spread_thresholds(2.0)) == t
+    True
+    """
+
+    spreads: Mapping[str, float]
+    fallback: Thresholds = binomial_thresholds
+
+    #: The ``schema`` tag of :meth:`to_dict`, so a reader can tell a table it understands.
+    schema = "learny.item_spreads/1"
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.spreads, Mapping):
+            raise ValueError(f"spreads must be a mapping of item id to spread, got {self.spreads!r}")
+        table = {str(item_id): SpreadThresholds(c).spread for item_id, c in self.spreads.items()}
+        if len(table) != len(self.spreads):
+            raise ValueError("spreads has item ids that are equal as strings (such as 1 and '1')")
+        object.__setattr__(self, "spreads", MappingProxyType(table))
+
+    def __hash__(self) -> int:
+        return hash((frozenset(self.spreads.items()), self.fallback))
+
+    def __reduce__(self):  # a mappingproxy does not pickle: pickle the table as a dict
+        return (type(self), (dict(self.spreads), self.fallback))
+
+    def __call__(self, item: Item, max_score: int) -> Sequence[float]:
+        spread = self.spreads.get(item.id)
+        if spread is None:
+            return self.fallback(item, max_score)
+        return SpreadThresholds(spread)(item, max_score)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"schema": self.schema, "spreads": dict(self.spreads)}
+
+    @classmethod
+    def from_dict(
+        cls, data: Mapping[str, Any], *, fallback: Thresholds = binomial_thresholds
+    ) -> ItemSpreads:
+        if not isinstance(data, Mapping) or data.get("schema") != cls.schema:
+            raise ValueError(
+                f"not an item spreads table (schema {cls.schema!r}): {data!r:.200}"
+            )
+        if not isinstance(data.get("spreads"), Mapping):
+            raise ValueError(f"an item spreads table needs a 'spreads' mapping: {data!r:.200}")
+        return cls(data["spreads"], fallback=fallback)
 
 
 def _level_probabilities(s: float, taus: Sequence[float]) -> list[float]:

@@ -32,8 +32,10 @@ from typing import Any
 
 from learny.tracing.estimators import (
     Estimator,
+    ItemSpreads,
     PartialCreditEstimator,
     RaschEstimator,
+    _level_probabilities,
     spread_thresholds,
 )
 from learny.tracing.records import Item, Outcome, Response
@@ -647,9 +649,23 @@ def compare_estimators(
             ]
             for name in names
         ]
+    comparison = _one_se_choice(per, tolerance_se)
+    if comparison is None:
+        raise ValueError("the log has no scored responses to compare on")
+    return comparison
+
+
+def _one_se_choice(
+    per: Mapping[str, list[list[float]]], tolerance_se: float
+) -> Comparison | None:
+    """The one-standard-error choice among candidates' losses, per student; see :class:`Comparison`.
+
+    ``per`` maps each candidate, most preferred first, to its losses student by student,
+    every candidate scored on the same responses. ``None`` when there are none.
+    """
     n = sum(len(ls) for ls in next(iter(per.values())))
     if n == 0:
-        raise ValueError("the log has no scored responses to compare on")
+        return None
     means = {label: sum(map(sum, ls)) / n for label, ls in per.items()}
     best = min(means, key=means.get)
     counted = [k for k, ls in enumerate(per[best]) if ls]
@@ -668,9 +684,9 @@ def compare_estimators(
             var = sum((x - diff) ** 2 for x in d) / max(len(d) - 1, 1) / len(d)
         return math.sqrt(var)
 
-    se = {label: se_vs_best(label) for label in candidates}
+    se = {label: se_vs_best(label) for label in per}
     chosen = next(
-        label for label in candidates if means[label] - means[best] <= tolerance_se * se[label]
+        label for label in per if means[label] - means[best] <= tolerance_se * se[label]
     )
     return Comparison(n=n, n_students=len(counted), losses=means, se=se, best=best, chosen=chosen)
 
@@ -721,3 +737,86 @@ def fit_threshold_spread(
         log, items=items, candidates=candidates, students=students, tolerance_se=tolerance_se
     )
     return by_name[result.chosen], result
+
+
+#: Fewer scored responses than this on an item and :func:`fit_item_spreads` leaves it to
+#: the fallback without trying: a spread is not learned from a handful of scores.
+MIN_ITEM_RESPONSES = 20
+
+
+def fit_item_spreads(
+    log: Mapping[str, Iterable[Response]],
+    *,
+    items: Mapping[str, Item],
+    spreads: Iterable[float] = DEFAULT_SPREADS,
+    estimator: PartialCreditEstimator | None = None,
+    students: Iterable[str] | None = None,
+    min_responses: int = MIN_ITEM_RESPONSES,
+    tolerance_se: float = 1.0,
+) -> tuple[ItemSpreads, dict[str, Comparison]]:
+    """Per-item threshold spreads a population's log supports, as a table: step 2 of #32.
+
+    An offline fit across students (decision 8), like :func:`fit_threshold_spread` but one
+    choice per item. The log is replayed once, prequentially, under ``estimator`` (default
+    a plain ``PartialCreditEstimator``; usually one with the global spread
+    :func:`fit_threshold_spread` chose), and each scored response keeps the predictor that
+    estimator forecast it at. Each item with at least ``min_responses`` scored responses
+    then compares, on those forecasts, the estimator's own thresholds (named ``"base"``)
+    against ``spread_thresholds(c)`` for each ``c`` in ``spreads``, by score log loss
+    with the one-standard-error rule clustered by student (``tolerance_se``), preferring
+    the base and then spreads nearer 1 on a log scale. Only items whose choice is not the
+    base enter the table.
+
+    Returns ``(ItemSpreads(table, fallback=estimator.thresholds), comparisons)``, the
+    comparisons keyed by item id. Use the table as
+    ``replace(estimator, thresholds=table)``. Nothing is co-estimated online. The
+    students' predictors are the base estimator's, not refitted under each item's
+    spread: an approximation that keeps the fit to one replay.
+
+    >>> items = {'q': Item('q', difficulty=0.5)}
+    >>> log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2) for k in (1, 2, 1, 0)]}
+    >>> table, comparisons = fit_item_spreads(log, items=items)
+    >>> dict(table.spreads), comparisons   # four scores are too few to try
+    ({}, {})
+    """
+    if isinstance(min_responses, bool) or not isinstance(min_responses, int) \
+            or min_responses < 1:
+        raise ValueError(f"min_responses must be an int >= 1, got {min_responses!r}")
+    if not (isinstance(tolerance_se, (int, float)) and tolerance_se >= 0
+            and math.isfinite(tolerance_se)):
+        raise ValueError(f"tolerance_se must be a non-negative number, got {tolerance_se!r}")
+    base = estimator if estimator is not None else PartialCreditEstimator()
+    grid = {spread_thresholds(c).spread for c in spreads}  # validates each spread
+    ordered = sorted(grid, key=lambda c: (round(abs(math.log(c)), 12), c))
+    candidates = {"base": base.thresholds} | {
+        f"{c:.4g}": spread_thresholds(c) for c in ordered
+    }
+    # item -> student -> [(predictor, score, max_score, item)]
+    forecasts: dict[str, dict[str, list[tuple[float, int, int, Item]]]] = {}
+    for name in _names(log, students):
+        for response, item, state in _before_each(log[name], items=items, estimator=base):
+            if response.score is None or not response.outcome.is_scored:
+                continue
+            s = base._integrated_predictor(state, item, None)
+            forecasts.setdefault(item.id, {}).setdefault(name, []).append(
+                (s, response.score, response.max_score, item)
+            )
+
+    def loss(thresholds, s: float, k: int, m: int, item: Item) -> float:
+        probs = _level_probabilities(s, list(thresholds(item, m)))
+        return -math.log(min(max(probs[k], _EPS), 1.0))
+
+    table: dict[str, float] = {}
+    comparisons: dict[str, Comparison] = {}
+    for item_id, by_student in forecasts.items():
+        if sum(map(len, by_student.values())) < min_responses:
+            continue
+        per = {
+            label: [[loss(th, *f) for f in fs] for fs in by_student.values()]
+            for label, th in candidates.items()
+        }
+        comparison = _one_se_choice(per, tolerance_se)
+        comparisons[item_id] = comparison
+        if comparison.chosen != "base":
+            table[item_id] = candidates[comparison.chosen].spread
+    return ItemSpreads(table, fallback=base.thresholds), comparisons
