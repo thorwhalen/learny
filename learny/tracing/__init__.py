@@ -32,6 +32,7 @@ from learny.tracing.difficulty import (
     Estimate,
     FeatureDifficulty,
     fit_feature_difficulty,
+    attempt_features,
     item_features,
 )
 from learny.tracing.estimators import (
@@ -97,6 +98,7 @@ __all__ = [
     "fit_feature_difficulty",
     "FeatureDifficulty",
     "Estimate",
+    "attempt_features",
     "item_features",
     # helpers
     "restrict_labels",

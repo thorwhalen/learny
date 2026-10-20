@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import math
 import warnings
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from numbers import Real
 from typing import Any, Literal, NamedTuple
@@ -34,7 +34,13 @@ from typing import Any, Literal, NamedTuple
 from learny.tracing.estimators import expit, logit
 from learny.tracing.records import Item, Response
 
-__all__ = ["Estimate", "FeatureDifficulty", "fit_feature_difficulty", "item_features"]
+__all__ = [
+    "Estimate",
+    "FeatureDifficulty",
+    "attempt_features",
+    "fit_feature_difficulty",
+    "item_features",
+]
 
 Anchor = Literal["location", "exact", "none"]
 _ANCHORS = ("location", "exact", "none")
@@ -69,6 +75,20 @@ def item_features(item: Item) -> Mapping[str, float] | None:
     return item.meta.get("features")
 
 
+def attempt_features(response: Response) -> Mapping[str, float] | None:
+    """The default per-attempt feature source: ``response.meta['features']``, or ``None``.
+
+    These describe how one attempt was set up (``n_decoys``, a mix with vocals), so the
+    same item can be harder on one attempt than on another.
+
+    >>> attempt_features(Response('s', 'q', True, meta={'features': {'n_decoys': 3}}))
+    {'n_decoys': 3}
+    >>> attempt_features(Response('s', 'q', True)) is None
+    True
+    """
+    return response.meta.get("features")
+
+
 @dataclass(frozen=True)
 class FeatureDifficulty:
     """A fitted explanatory difficulty model; see :func:`fit_feature_difficulty`.
@@ -83,6 +103,12 @@ class FeatureDifficulty:
     as ``(mean, variance, *covariance with the coefficients)``; it carries the fitted
     students' data, so :meth:`apply` leaves it out unless asked. ``converged`` is false
     when an iteration cap was hit (a ``RuntimeWarning`` said so at fit time).
+
+    Per-attempt features (``attempt_names``, standardised over the fitted attempts by
+    ``attempt_center`` and ``attempt_scale``) add their weights after the item weights,
+    so ``coef`` and ``covariance`` are over ``(intercept, *weights, *attempt weights)``;
+    :meth:`attempt_weights` reports them. They have no residual: an attempt's setup
+    moves the difficulty of whatever item it is played with by its weights alone.
     """
 
     names: tuple[str, ...]
@@ -98,6 +124,9 @@ class FeatureDifficulty:
     n_students: int = 0
     n_responses: int = 0
     converged: bool = True
+    attempt_names: tuple[str, ...] = ()
+    attempt_center: tuple[float, ...] = ()
+    attempt_scale: tuple[float, ...] = ()
 
     def weights(self) -> dict[str, Estimate]:
         """Each feature's weight in logits of difficulty per unit of the feature.
@@ -113,14 +142,32 @@ class FeatureDifficulty:
             for f, name in enumerate(self.names)
         }
 
-    def _row(self, features: Mapping[str, float]) -> list[float]:
-        missing = [name for name in self.names if name not in features]
-        if missing:
-            raise KeyError(f"features {missing!r} are missing; the model needs {list(self.names)!r}")
-        values = [_number(features[name], name) for name in self.names]
-        return [1.0] + [(v - c) / s for v, c, s in zip(values, self.center, self.scale)]
+    def attempt_weights(self) -> dict[str, Estimate]:
+        """Each per-attempt feature's weight, as :meth:`weights` reports the item ones."""
+        first = 1 + len(self.names)
+        return {
+            name: Estimate(self.coef[first + f] / self.attempt_scale[f],
+                           math.sqrt(self.covariance[first + f][first + f]) / self.attempt_scale[f])
+            for f, name in enumerate(self.attempt_names)
+        }
 
-    def predict(self, features: Mapping[str, float], *, item_id: str | None = None) -> Estimate:
+    def _row(
+        self, features: Mapping[str, float], attempt: Mapping[str, float] | None = None
+    ) -> list[float]:
+        h = [1.0] + _standardised(features, self.names, self.center, self.scale)
+        if attempt is None:  # the average attempt: every standardised value at 0
+            return h + [0.0] * len(self.attempt_names)
+        return h + _standardised(
+            attempt, self.attempt_names, self.attempt_center, self.attempt_scale, what="attempt features"
+        )
+
+    def predict(
+        self,
+        features: Mapping[str, float],
+        *,
+        attempt: Mapping[str, float] | None = None,
+        item_id: str | None = None,
+    ) -> Estimate:
         """The difficulty, in logits, of an item with these features.
 
         For any item the residual is unknown, so its prior variance ``residual_var`` is
@@ -128,8 +175,11 @@ class FeatureDifficulty:
         to use that item's own fitted residual instead, with its posterior variance and
         its covariance with the coefficients. Features far outside the fitted range are
         extrapolated linearly, without warning.
+
+        ``attempt`` gives the per-attempt features of one way of playing the item (a new
+        song with 3 decoys); left ``None``, the attempt is the fitted attempts' average.
         """
-        h = self._row(features)
+        h = self._row(features, attempt)
         n = len(h)
         mean = sum(c * x for c, x in zip(self.coef, h))
         var = sum(h[a] * self.covariance[a][b] * h[b] for a in range(n) for b in range(n))
@@ -153,7 +203,8 @@ class FeatureDifficulty:
         """A copy of ``items`` with each item's ``difficulty`` predicted from features.
 
         Only items without a difficulty are filled unless ``overwrite=True``; an item
-        with no features is left as it is. The difficulty comes from the features alone
+        with no features is left as it is, and per-attempt features are taken at the
+        fitted attempts' average. The difficulty comes from the features alone
         unless ``use_residuals=True`` adds each fitted item's own residual. That residual
         is learned from the fitted students' answers, so feeding it back to estimate
         those same students counts their answers twice; with one or two learners it is
@@ -188,6 +239,9 @@ class FeatureDifficulty:
             "n_students": self.n_students,
             "n_responses": self.n_responses,
             "converged": self.converged,
+            "attempt_names": list(self.attempt_names),
+            "attempt_center": list(self.attempt_center),
+            "attempt_scale": list(self.attempt_scale),
         }
 
     @classmethod
@@ -209,6 +263,9 @@ class FeatureDifficulty:
             n_students=int(d.get("n_students", 0)),
             n_responses=int(d.get("n_responses", 0)),
             converged=bool(d.get("converged", True)),
+            attempt_names=tuple(d.get("attempt_names", ())),
+            attempt_center=tuple(d.get("attempt_center", ())),
+            attempt_scale=tuple(d.get("attempt_scale", ())),
         )
 
 
@@ -216,6 +273,31 @@ def _number(value: Any, name: str) -> float:
     if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value):
         raise ValueError(f"feature {name!r} must be a finite number, got {value!r}")
     return float(value)
+
+
+def _standardised(features, names, center, scale, *, what="features") -> list[float]:
+    missing = [name for name in names if name not in features]
+    if missing:
+        raise KeyError(f"{what} {missing!r} are missing; the model needs {list(names)!r}")
+    values = [_number(features[name], name) for name in names]
+    return [(v - c) / s for v, c, s in zip(values, center, scale)]
+
+
+def _center_and_scale(raw: list[list[float]], names, *, over: str):
+    """Each column's mean and sd; a column constant over the fitted rows is refused."""
+    center, scale = [], []
+    for f, name in enumerate(names):
+        col = [row[f] for row in raw]
+        mu = sum(col) / len(col)
+        sd = math.sqrt(sum((v - mu) ** 2 for v in col) / len(col))
+        if not sd > 1e-12 * (1.0 + abs(mu)):
+            raise ValueError(
+                f"feature {name!r} has the same value on every fitted {over}, so it cannot be "
+                f"told apart from the intercept; drop it or fit on more varied {over}s"
+            )
+        center.append(mu)
+        scale.append(sd)
+    return center, scale
 
 
 def _features_of(
@@ -303,6 +385,7 @@ def fit_feature_difficulty(
     *,
     items: Mapping[str, Item],
     features: Mapping[str, Mapping[str, float]] | None = None,
+    attempt_features: Callable[[Response], Mapping[str, float] | None] | None = attempt_features,
     students: Iterable[str] | None = None,
     anchor: Anchor = "location",
     ability_prior_var: float | None = None,
@@ -323,6 +406,15 @@ def fit_feature_difficulty(
     :func:`~learny.tracing.estimators.binomial_thresholds` gives a score; other step
     spacings are not modelled here); skips are not evidence about difficulty and are
     left out. Guessing is not modelled.
+
+    **Per-attempt features.** ``attempt_features`` reads, from each response, features
+    of how that attempt was set up (by default ``response.meta['features']``, see
+    :func:`attempt_features`; ``None`` ignores them). They enter the same linear
+    predictor, ``difficulty = intercept + w . x_item + v . x_attempt + residual_item``,
+    standardised over the fitted attempts and with the same weight prior, but with no
+    residual of their own. If any scored attempt has them, every one needs a finite
+    value for each, or the fit is refused. A given ``difficulty`` that anchors the scale
+    is the item's at the average attempt.
 
     **The scale.** Every answered item that already has a ``difficulty`` can anchor
     the fit to the bank's scale. ``anchor="location"`` (the default) fits on play alone
@@ -386,7 +478,7 @@ def fit_feature_difficulty(
             raise KeyError(f"students {absent[:5]!r} are not in the log")
     else:
         student_names = log.students() if hasattr(log, "students") else list(log)
-    rows: list[tuple[int, int, int, int]] = []
+    rows: list[tuple[int, int, int, int, Mapping[str, float]]] = []
     item_index: dict[str, int] = {}
     no_bank, no_features = set(), set()
     feats: list[Mapping[str, float]] = []
@@ -408,7 +500,8 @@ def fit_feature_difficulty(
                 feats.append(x)
             k, m = (r.score, r.max_score) if r.score is not None else (int(r.correct), 1)
             p = student_index.setdefault(name, len(student_index))
-            rows.append((p, item_index[r.item], k, m))
+            z = (attempt_features(r) if attempt_features is not None else None) or {}
+            rows.append((p, item_index[r.item], k, m, z))
     for missing, what in ((no_bank, "not in items"), (no_features, "without features")):
         if missing:
             shown = sorted(missing)[:5]
@@ -426,23 +519,29 @@ def fit_feature_difficulty(
             f"{len(incomplete)} item(s) lack a value for some feature, e.g. "
             f"{incomplete[:5]!r}; every item needs all of {list(names)!r}"
         )
+    attempt_names = tuple(sorted({n for *_, z in rows for n in z}))
+    lacking = sum(any(n not in z for n in attempt_names) for *_, z in rows)
+    if lacking:
+        raise ValueError(
+            f"{lacking} scored attempt(s) lack a value for some per-attempt feature; every "
+            f"attempt needs all of {list(attempt_names)!r} (attempt_features=None ignores them)"
+        )
 
     # -- standardise the features over the fitted items -------------------------------
-    n_items, n_feat = len(item_index), len(names)
+    n_items, n_feat, n_att = len(item_index), len(names), len(attempt_names)
     raw = [[_number(x[n], n) for n in names] for x in feats]
-    center, scale = [], []
-    for f, name in enumerate(names):
-        col = [row[f] for row in raw]
-        mu = sum(col) / n_items
-        sd = math.sqrt(sum((v - mu) ** 2 for v in col) / n_items)
-        if not sd > 1e-12 * (1.0 + abs(mu)):
-            raise ValueError(
-                f"feature {name!r} has the same value on every fitted item, so it cannot be "
-                "told apart from the intercept; drop it or fit on more varied items"
-            )
-        center.append(mu)
-        scale.append(sd)
-    h_of = [[1.0] + [(row[f] - center[f]) / scale[f] for f in range(n_feat)] for row in raw]
+    center, scale = _center_and_scale(raw, names, over="item")
+    # item rows over every coefficient, zero on the attempt weights (an item's own part)
+    h_of = [[1.0] + [(row[f] - center[f]) / scale[f] for f in range(n_feat)] + [0.0] * n_att
+            for row in raw]
+    attempt_center, attempt_scale = [], []
+    if n_att:
+        raw_z = [[_number(z[n], n) for n in attempt_names] for *_, z in rows]
+        attempt_center, attempt_scale = _center_and_scale(raw_z, attempt_names, over="attempt")
+        rows = [(*row[:4], [(v - c) / s for v, c, s in zip(zr, attempt_center, attempt_scale)])
+                for row, zr in zip(rows, raw_z)]
+    else:
+        rows = [(*row[:4], []) for row in rows]
     if anchor not in _ANCHORS:
         raise ValueError(f"anchor must be one of {_ANCHORS}, got {anchor!r}")
     given = {i: items[key].difficulty for key, i in item_index.items()
@@ -457,7 +556,7 @@ def fit_feature_difficulty(
         )
     published = {i: logit(d) for i, d in given.items() if 0.0 < d < 1.0}
     known = published if anchor == "exact" else {}
-    if all(k == m for _, _, k, m in rows) or all(k == 0 for _, _, k, _ in rows):
+    if all(k == m for _, _, k, m, _ in rows) or all(k == 0 for _, _, k, _, _ in rows):
         warnings.warn(
             "every answer in the log is right (or every one wrong): difficulty is not "
             "identified by play, so the fit is the priors'",
@@ -466,12 +565,13 @@ def fit_feature_difficulty(
         )
 
     # -- MAP by Newton, the free items' residuals eliminated by Schur complement ------
-    n_stud, n_coef = len(student_index), 1 + n_feat
-    g_dim = n_stud + n_coef  # (abilities, intercept, weights); residuals apart
-    coef_prior = [1.0 / intercept_prior_var] + [1.0 / weight_prior_var] * n_feat
-    by_item: dict[int, list[tuple[int, int, int]]] = {}
-    for p, i, k, m in rows:
-        by_item.setdefault(i, []).append((p, k, m))
+    n_stud, n_coef = len(student_index), 1 + n_feat + n_att
+    first_att = n_stud + 1 + n_feat
+    g_dim = n_stud + n_coef  # (abilities, intercept, weights, attempt weights); residuals apart
+    coef_prior = [1.0 / intercept_prior_var] + [1.0 / weight_prior_var] * (n_feat + n_att)
+    by_item: dict[int, list[tuple[int, int, int, list[float]]]] = {}
+    for p, i, k, m, z in rows:
+        by_item.setdefault(i, []).append((p, k, m, z))
     theta = [0.0] * g_dim
     resid = [0.0] * n_items
     newton_converged = em_converged = True
@@ -503,12 +603,13 @@ def fit_feature_difficulty(
                             hess[n_stud + c][n_stud + c2] += h[c] * h[c2] / tau2
                     coords = []
                 else:
-                    coords = [(n_stud + c, -h[c]) for c in range(n_coef)]
+                    coords = [(n_stud + c, -h[c]) for c in range(1 + n_feat)]
                     grad_e[i], d_e[i], cols[i] = -resid[i] / tau2, 1.0 / tau2, {}
-                for p, k, m in by_item.get(i, ()):
-                    q = expit(theta[p] - b_i)
+                for p, k, m, z in by_item.get(i, ()):
+                    b_r = b_i + sum(theta[first_att + j] * v for j, v in enumerate(z))
+                    q = expit(theta[p] - b_r)
                     r, w = k - m * q, m * q * (1.0 - q)
-                    g = [(p, 1.0)] + coords
+                    g = [(p, 1.0)] + coords + [(first_att + j, -v) for j, v in enumerate(z)]
                     for a, ga in g:
                         grad[a] += r * ga
                         for b, gb in g:
@@ -622,4 +723,7 @@ def fit_feature_difficulty(
         n_students=n_stud,
         n_responses=len(rows),
         converged=converged,
+        attempt_names=attempt_names,
+        attempt_center=tuple(attempt_center),
+        attempt_scale=tuple(attempt_scale),
     )
