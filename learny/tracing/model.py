@@ -535,9 +535,20 @@ class LearnerModel:
         when its own is below the ``alpha`` quantile of those minima, so the chance that
         *any* label of a student with no real weakness is flagged is ``alpha``, for this
         record's design.
+
+        It is a Monte Carlo test: the own statistic counts as one more draw, so the cut is
+        the ``floor(alpha * (draws + 1))``-th smallest minimum, and ``alpha`` can only be
+        reached when ``draws >= 1 / alpha - 1`` (a smaller ``null_draws`` is refused,
+        rather than flagging at a rate of ``1 / (draws + 1)`` above ``alpha``).
         """
         if not (isinstance(draws, int) and not isinstance(draws, bool) and draws >= 1):
             raise ValueError(f"null_draws must be a positive integer, got {draws!r}")
+        cut = math.floor(alpha * (draws + 1)) - 1
+        if cut < 0:
+            raise ValueError(
+                f"null_draws={draws} cannot reach a false-flag rate of {alpha:.3g} "
+                f"(credible_below sets it); use null_draws >= {math.ceil(1 / alpha) - 1}"
+            )
         redraw = getattr(self.estimator, "null_response", None)
         if redraw is None:
             raise TypeError(
@@ -559,7 +570,7 @@ class LearnerModel:
             stats = [mu / sd for mu, sd in _contrasts(masteries, relative_to) if sd > 0]
             minima.append(min(stats) if stats else math.inf)
         minima.sort()
-        return minima[int(alpha * draws)]
+        return minima[cut]
 
     # -- when to believe it --------------------------------------------------------
 

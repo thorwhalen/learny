@@ -186,6 +186,16 @@ class TestSimulatedGate:
         with pytest.raises(ValueError, match="null_draws"):
             model.weakest("s", multiplicity="simulated", null_draws=bad)
 
+    def test_too_few_draws_for_the_alpha_is_refused(self):
+        """alpha * (null_draws + 1) < 1 could only flag at 1/(draws+1) > alpha: refuse."""
+        model = _student(random.Random(34), 3, 9)
+        # credible_below=3 -> alpha ~0.00135, which needs about 740 draws
+        with pytest.raises(ValueError, match="null_draws >= 740"):
+            model.weakest("s", multiplicity="simulated", credible_below=3, null_draws=200)
+        assert model.weakest(
+            "s", multiplicity="simulated", credible_below=3, null_draws=740
+        ) is not None
+
     def test_a_redraw_keeps_skips_and_the_shape_of_scores(self):
         from learny.tracing import PartialCreditEstimator
 
