@@ -495,3 +495,85 @@ class TestThresholdSpread:
         skips = {"a": [Response("a", "q0", "skipped")]}
         with pytest.raises(ValueError, match="no scored responses"):
             compare_estimators(skips, items=items, candidates={"d": PartialCreditEstimator()})
+
+
+class TestItemSpreads:
+    """Per-item threshold spreads from a population, as an exported table (#40)."""
+
+    @staticmethod
+    def _log(true, *, students=20, per=30, m=4, seed=0):
+        import random
+
+        from learny.tracing.estimators import _level_probabilities, spread_thresholds
+
+        rng = random.Random(seed)
+        ids = list(true)
+        items = {i: Item(i, labels=(f"l{j % 3}",), difficulty=0.2 + 0.6 * rng.random())
+                 for j, i in enumerate(ids)}
+        log = {}
+        for s in range(students):
+            theta = rng.gauss(0, 1)
+            rs = []
+            for n in range(per):
+                it = items[ids[n % len(ids)]]
+                probs = _level_probabilities(
+                    theta - math.log(it.difficulty / (1 - it.difficulty)),
+                    spread_thresholds(true[it.id])(it, m),
+                )
+                k = rng.choices(range(m + 1), weights=probs)[0]
+                rs.append(Response(f"s{s}", it.id, "correct" if k == m else "wrong",
+                                   at=n * 3600.0, score=k, max_score=m))
+            log[f"s{s}"] = rs
+        return items, log
+
+    def test_sharper_and_wider_items_are_told_apart(self):
+        from learny.tracing import fit_item_spreads
+
+        true = {f"sharp{j}": 0.4 for j in range(3)} | {f"wide{j}": 2.5 for j in range(3)}
+        items, log = self._log(true)
+        table, comparisons = fit_item_spreads(log, items=items)
+        assert set(comparisons) == set(true)
+        assert all(table.spreads[i] < 1 for i in true if i.startswith("sharp"))
+        assert all(table.spreads[i] > 1 for i in true if i.startswith("wide"))
+
+    def test_the_table_beats_one_spread_on_a_fresh_log(self):
+        from learny.tracing import compare_estimators, fit_item_spreads
+
+        true = {f"sharp{j}": 0.4 for j in range(3)} | {f"wide{j}": 2.5 for j in range(3)}
+        items, log = self._log(true)
+        table, _ = fit_item_spreads(log, items=items)
+        _, fresh = self._log(true, seed=1)
+        c = compare_estimators(fresh, items=items, candidates={
+            "global": PartialCreditEstimator(),
+            "per-item": PartialCreditEstimator(thresholds=table)})
+        assert c.chosen == "per-item"
+
+    def test_items_with_few_scores_fall_back(self):
+        from learny.tracing import ItemSpreads, fit_item_spreads, spread_thresholds
+
+        items, log = self._log({"q": 2.5}, students=2, per=5)
+        base = PartialCreditEstimator(thresholds=spread_thresholds(1.5))
+        table, comparisons = fit_item_spreads(log, items=items, estimator=base)
+        assert comparisons == {} and table == ItemSpreads({}, fallback=base.thresholds)
+        assert table(items["q"], 2) == spread_thresholds(1.5)(items["q"], 2)
+
+    def test_the_table_round_trips_and_pickles(self):
+        import pickle
+
+        from learny.tracing import ItemSpreads
+
+        table = ItemSpreads({"q": 2.0})
+        assert ItemSpreads.from_dict(json.loads(json.dumps(table.to_dict()))) == table
+        est = PartialCreditEstimator(thresholds=table)
+        assert pickle.loads(pickle.dumps(est)) == est
+        with pytest.raises(ValueError, match="not an item spreads table"):
+            ItemSpreads.from_dict({"spreads": {}})
+        with pytest.raises(ValueError, match="positive"):
+            ItemSpreads({"q": -1.0})
+
+    def test_min_responses_is_validated(self):
+        from learny.tracing import fit_item_spreads
+
+        items, log = self._log({"q": 1.0}, students=1, per=2)
+        with pytest.raises(ValueError, match="min_responses"):
+            fit_item_spreads(log, items=items, min_responses=0)

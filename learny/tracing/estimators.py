@@ -915,6 +915,54 @@ def spread_thresholds(spread: float) -> SpreadThresholds:
     return SpreadThresholds(spread)
 
 
+@dataclass(frozen=True)
+class ItemSpreads:
+    """Per-item threshold spreads from a table, ``fallback`` for the items it does not hold.
+
+    The ``thresholds`` seam's reader for the table
+    :func:`~learny.tracing.diagnostics.fit_item_spreads` exports: an item in ``spreads``
+    gets ``spread_thresholds(spreads[item.id])``, any other item ``fallback(item, m)``
+    (default :func:`binomial_thresholds`; usually the global spread the table was fitted
+    against). ``to_dict``/``from_dict`` carry the table, not the fallback, which is code.
+
+    >>> t = ItemSpreads({'sharp': 0.5}, fallback=spread_thresholds(2.0))
+    >>> [round(x, 3) for x in t(Item('sharp'), 2)], [round(x, 3) for x in t(Item('other'), 2)]
+    ([-0.347, 0.347], [-1.386, 1.386])
+    >>> ItemSpreads.from_dict(t.to_dict(), fallback=spread_thresholds(2.0)) == t
+    True
+    """
+
+    spreads: Mapping[str, float]
+    fallback: Thresholds = binomial_thresholds
+
+    #: The ``schema`` tag of :meth:`to_dict`, so a reader can tell a table it understands.
+    schema = "learny.item_spreads/1"
+
+    def __post_init__(self) -> None:
+        table = {str(item_id): SpreadThresholds(c).spread for item_id, c in self.spreads.items()}
+        object.__setattr__(self, "spreads", table)
+
+    def __call__(self, item: Item, max_score: int) -> Sequence[float]:
+        spread = self.spreads.get(item.id)
+        if spread is None:
+            return self.fallback(item, max_score)
+        return SpreadThresholds(spread)(item, max_score)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"schema": self.schema, "spreads": dict(self.spreads)}
+
+    @classmethod
+    def from_dict(
+        cls, data: Mapping[str, Any], *, fallback: Thresholds = binomial_thresholds
+    ) -> ItemSpreads:
+        if data.get("schema") != cls.schema:
+            raise ValueError(
+                f"not an item spreads table: schema {data.get('schema')!r}, "
+                f"expected {cls.schema!r}"
+            )
+        return cls(data["spreads"], fallback=fallback)
+
+
 def _level_probabilities(s: float, taus: Sequence[float]) -> list[float]:
     """``P(X = k)`` for ``k = 0..len(taus)`` under the Partial Credit Model at ``s``."""
     eta = [0.0]
