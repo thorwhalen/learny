@@ -18,6 +18,7 @@ and every part can be replaced without touching the others:
 |---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`DEFAULT_RELATIVE_TO`](#learny.tracing.model.DEFAULT_RELATIVE_TO)      | the precision-weighted mean of the student's *other* labels, so whatever part of a shortfall every label shares cancels out.                                                      |
 | [`DEFAULT_MULTIPLICITY`](#learny.tracing.model.DEFAULT_MULTIPLICITY)     | How the bound accounts for testing several labels at once.                                                                                                                        |
+| [`DEFAULT_NULL_DRAWS`](#learny.tracing.model.DEFAULT_NULL_DRAWS)       | How many times `weakest(multiplicity="simulated")` replays a student's record under "no label deviation".                                                                         |
 
 ### Classes
 
@@ -45,6 +46,12 @@ which a shrunk posterior mean stays well inside (#22). `"bonferroni"` does the s
 on the posterior sd: a bound rather than a calibration, far below its target with
 little evidence, so it costs power at cold start. `"none"` applies
 `credible_below` to each label separately, as the original gate did.
+
+### learny.tracing.model.DEFAULT_NULL_DRAWS *= 200*
+
+How many times `weakest(multiplicity="simulated")` replays a student’s record under
+“no label deviation”. The critical value is the `1 - Phi(z)` quantile of the
+smallest label statistic over the draws: 200 puts about 32 draws below it at `z=1`.
 
 ### learny.tracing.model.DEFAULT_RELATIVE_TO *= 'labels'*
 
@@ -174,7 +181,7 @@ Check `.distinguishable` before acting on an ordering from [`weakest()`](#learny
 * **Return type:**
   [`LabelSeparation`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
 
-#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='calibrated')
+#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='calibrated', null_draws=200)
 
 The labels this student is credibly weakest on — what to practise next.
 
@@ -209,6 +216,16 @@ Three keywords set the gate:
   part of a label’s spread it shares with the others is counted, not removed).
   A label stored before null spreads were tracked is measured by its posterior
   spread until it is answered again.
+  `"simulated"` replays the student’s own record `null_draws` times with the
+  answers redrawn as if no label deviated (`estimator.null_response`), and
+  takes as critical value the `1 - Phi(z)` quantile of the most extreme label
+  over the draws (a parametric-bootstrap maxT test, Westfall and Young 1993). It
+  counts this record’s discreteness, skew, forgetting and the dependence between
+  labels exactly, so it keeps the false-flag rate on target where the moment
+  corrections of `"calibrated"` are cautious: few answers per label, items the
+  student nearly always gets right, or nearly always wrong (#35). It costs
+  `null_draws` replays of the record per call, and is deterministic for a given
+  student and record.
 * `relative_to` — `"labels"` (default) as above; `"global"` measures each
   label’s deviation against zero, the student’s global skill. The default
   estimator carries the global/label covariance, so a shortfall every item
@@ -239,7 +256,11 @@ Raises `ValueError` for a negative `credible_below` (which would admit labels
 credibly *above* their comparator) or an unknown `relative_to` /
 `multiplicity`, and `TypeError` when the gate is on but
 the estimator’s [`Mastery`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery) values carry no
-`deviation` — rather than silently returning nothing.
+`deviation` — rather than silently returning nothing. With
+`multiplicity="simulated"` it also raises `TypeError` when the estimator has
+no `null_response`, and `ValueError` for a `null_draws` that is not a
+positive integer or is too few for the false-flag rate `credible_below` sets
+(it needs `null_draws >= 1 / alpha - 1`); the other modes ignore `null_draws`.
 
 ```pycon
 >>> items = {f'q{i}': Item(f'q{i}', labels=('area' if i % 2 else 'sums',))

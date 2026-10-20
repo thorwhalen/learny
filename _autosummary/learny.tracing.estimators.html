@@ -701,6 +701,17 @@ overshoots on a surprising score out of many levels, whose gradient is bounded b
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.estimators.PartialCreditEstimator.null_response">
+<span class="sig-name descname"><span class="pre">null_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#PartialCreditEstimator.null_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.PartialCreditEstimator.null_response" title="Link to this definition">#</a></dt>
+<dd><p>A score redrawn over its levels at the global skill; see the base class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Response" title="learny.tracing.records.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="learny.tracing.estimators.PartialCreditEstimator.score_probabilities">
 <span class="sig-name descname"><span class="pre">score_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_score</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#PartialCreditEstimator.score_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.PartialCreditEstimator.score_probabilities" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">P(score</span> <span class="pre">=</span> <span class="pre">k)</span></code> for <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">0..max_score</span></code>, over the posterior.</p>
@@ -831,6 +842,21 @@ observations from drifting away from what the student’s whole record says.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="#learny.tracing.estimators.Mastery" title="learny.tracing.estimators.Mastery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mastery</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.estimators.RaschEstimator.null_response">
+<span class="sig-name descname"><span class="pre">null_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#RaschEstimator.null_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.estimators.RaschEstimator.null_response" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">response</span></code> drawn again as if the student had no label deviation.</p>
+<p>The answer is redrawn at the student’s global skill (the posterior mean) against
+the item’s difficulty, with guessing; a skip is kept as it was. This is what
+<code class="docutils literal notranslate"><span class="pre">weakest(multiplicity=&quot;simulated&quot;)</span></code> replays a student’s own record with, to
+find how far its labels wander by chance. <code class="docutils literal notranslate"><span class="pre">rng</span></code> is a <code class="docutils literal notranslate"><span class="pre">random.Random</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Response" title="learny.tracing.records.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1149,6 +1175,7 @@ picks <code class="docutils literal notranslate"><span class="pre">spread</span>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator.expected_score"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.expected_score()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator.mode_steps"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.mode_steps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator.null_response"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.null_response()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator.score_probabilities"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.score_probabilities()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.PartialCreditEstimator.thresholds"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.thresholds()</span></code></a></li>
 </ul>
@@ -1162,6 +1189,7 @@ picks <code class="docutils literal notranslate"><span class="pre">spread</span>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.RaschEstimator.init"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.init()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.RaschEstimator.label_prior_var"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.label_prior_var</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.RaschEstimator.mastery"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.mastery()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.RaschEstimator.null_response"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.null_response()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.RaschEstimator.observe"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.observe()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.RaschEstimator.predict"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.predict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.estimators.RaschEstimator.prior_var"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.prior_var</span></code></a></li>

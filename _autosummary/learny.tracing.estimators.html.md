@@ -254,6 +254,13 @@ overshoots on a surprising score out of many levels, whose gradient is bounded b
 `max_score` rather than by 1; iterating to the mode (a Laplace step) does not.
 `1` restores the plain one-step update.
 
+#### null_response(state, response, item, rng)
+
+A score redrawn over its levels at the global skill; see the base class.
+
+* **Return type:**
+  [`Response`](learny.tracing.records.html.md#learny.tracing.records.Response)
+
 #### score_probabilities(state, item, max_score, , at=None)
 
 `P(score = k)` for `k = 0..max_score`, over the posterior.
@@ -364,6 +371,18 @@ Per-label mastery: the student’s global skill adjusted by each label.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](#learny.tracing.estimators.Mastery)]
+
+#### null_response(state, response, item, rng)
+
+`response` drawn again as if the student had no label deviation.
+
+The answer is redrawn at the student’s global skill (the posterior mean) against
+the item’s difficulty, with guessing; a skip is kept as it was. This is what
+`weakest(multiplicity="simulated")` replays a student’s own record with, to
+find how far its labels wander by chance. `rng` is a `random.Random`.
+
+* **Return type:**
+  [`Response`](learny.tracing.records.html.md#learny.tracing.records.Response)
 
 #### observe(state, response, item)
 

@@ -11,6 +11,7 @@ learny.tracing.model
       DEFAULT_CREDIBLE_BELOW
       DEFAULT_RELATIVE_TO
       DEFAULT_MULTIPLICITY
+      DEFAULT_NULL_DRAWS
    
    .. rubric:: Classes
 

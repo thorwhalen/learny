@@ -1,4 +1,4 @@
-> built 2026-10-20 10:59 UTC from 606d0fa (main) · learny 0.0.1. Details: build_info.json
+> built 2026-10-20 14:06 UTC from de3e7a0 (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -85,7 +85,7 @@ model.calibration()                          # prequential: are the probabilitie
 model.score_calibration()                    # the same for star / partial-credit scores
 ```
 
-`weakest()` flags a label only when it is credibly below the student’s *other* labels, with the bound corrected for how many labels are tested at once and calibrated to how far a label’s estimate wanders by chance. So a student with no real weakness is told to practise something about one time in six at most, however many labels the bank has, and a student who is weak everywhere is not told every label is a weakness. **This is a change of default:** earlier versions compared each label with the student’s global skill using a per-label bound, which flagged at least one label for most students with no weakness at all. That gate is still one call away: `model.weakest('ada', relative_to='global', multiplicity='none')`. Evidence on a single label is never a relative weakness under the default; pass `relative_to='global'` when unlabelled items are what the label should be compared with. The calibration matters most at cold start: with 3 labels and 18 responses a real 2-logit weakness is found 40% of the time (the uncalibrated Bonferroni bound, `multiplicity='bonferroni'`, found it 1% of the time; the per-label `multiplicity='none'`, 27%).
+`weakest()` flags a label only when it is credibly below the student’s *other* labels, with the bound corrected for how many labels are tested at once and calibrated to how far a label’s estimate wanders by chance. So a student with no real weakness is told to practise something about one time in six at most, however many labels the bank has, and a student who is weak everywhere is not told every label is a weakness. **This is a change of default:** earlier versions compared each label with the student’s global skill using a per-label bound, which flagged at least one label for most students with no weakness at all. That gate is still one call away: `model.weakest('ada', relative_to='global', multiplicity='none')`. Evidence on a single label is never a relative weakness under the default; pass `relative_to='global'` when unlabelled items are what the label should be compared with. With very few answers per label on items a student nearly always gets right, `multiplicity='simulated'` replays the student’s own record with the answers redrawn under “no weakness” and calibrates on that, which finds a real weakness up to about 0.28 of the time where the default finds it 0.03 (3 labels, 9 answers, items failed 5% of the time; about 0.24 against 0.07 at 20 labels × 100 answers, where it costs about 0.4 s per call); its false-flag rate measured 0.04–0.18. The calibration matters most at cold start: with 3 labels and 18 responses a real 2-logit weakness is found 40% of the time (the uncalibrated Bonferroni bound, `multiplicity='bonferroni'`, found it 1% of the time; the per-label `multiplicity='none'`, 27%).
 
 If every item carries many labels at once, the labels cannot be told apart however much data there is. `restrict_labels(items, keep=...)` projects the bank onto one facet; the library never collapses a taxonomy on its own.
 
@@ -1071,6 +1071,13 @@ overshoots on a surprising score out of many levels, whose gradient is bounded b
 `max_score` rather than by 1; iterating to the mode (a Laplace step) does not.
 `1` restores the plain one-step update.
 
+#### null_response(state, response, item, rng)
+
+A score redrawn over its levels at the global skill; see the base class.
+
+* **Return type:**
+  [`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response)
+
 #### score_probabilities(state, item, max_score, , at=None)
 
 `P(score = k)` for `k = 0..max_score`, over the posterior.
@@ -1181,6 +1188,18 @@ Per-label mastery: the student’s global skill adjusted by each label.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
+
+#### null_response(state, response, item, rng)
+
+`response` drawn again as if the student had no label deviation.
+
+The answer is redrawn at the student’s global skill (the posterior mean) against
+the item’s difficulty, with guessing; a skip is kept as it was. This is what
+`weakest(multiplicity="simulated")` replays a student’s own record with, to
+find how far its labels wander by chance. `rng` is a `random.Random`.
+
+* **Return type:**
+  [`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response)
 
 #### observe(state, response, item)
 
@@ -1901,7 +1920,7 @@ Check `.distinguishable` before acting on an ordering from [`weakest()`](_autosu
 * **Return type:**
   [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
 
-#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='calibrated')
+#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='calibrated', null_draws=200)
 
 The labels this student is credibly weakest on — what to practise next.
 
@@ -1936,6 +1955,16 @@ Three keywords set the gate:
   part of a label’s spread it shares with the others is counted, not removed).
   A label stored before null spreads were tracked is measured by its posterior
   spread until it is answered again.
+  `"simulated"` replays the student’s own record `null_draws` times with the
+  answers redrawn as if no label deviated (`estimator.null_response`), and
+  takes as critical value the `1 - Phi(z)` quantile of the most extreme label
+  over the draws (a parametric-bootstrap maxT test, Westfall and Young 1993). It
+  counts this record’s discreteness, skew, forgetting and the dependence between
+  labels exactly, so it keeps the false-flag rate on target where the moment
+  corrections of `"calibrated"` are cautious: few answers per label, items the
+  student nearly always gets right, or nearly always wrong (#35). It costs
+  `null_draws` replays of the record per call, and is deterministic for a given
+  student and record.
 * `relative_to` — `"labels"` (default) as above; `"global"` measures each
   label’s deviation against zero, the student’s global skill. The default
   estimator carries the global/label covariance, so a shortfall every item
@@ -1966,7 +1995,11 @@ Raises `ValueError` for a negative `credible_below` (which would admit labels
 credibly *above* their comparator) or an unknown `relative_to` /
 `multiplicity`, and `TypeError` when the gate is on but
 the estimator’s [`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery) values carry no
-`deviation` — rather than silently returning nothing.
+`deviation` — rather than silently returning nothing. With
+`multiplicity="simulated"` it also raises `TypeError` when the estimator has
+no `null_response`, and `ValueError` for a `null_draws` that is not a
+positive integer or is too few for the false-flag rate `credible_below` sets
+(it needs `null_draws >= 1 / alpha - 1`); the other modes ignore `null_draws`.
 
 ```pycon
 >>> items = {f'q{i}': Item(f'q{i}', labels=('area' if i % 2 else 'sums',))
@@ -2144,6 +2177,13 @@ overshoots on a surprising score out of many levels, whose gradient is bounded b
 `max_score` rather than by 1; iterating to the mode (a Laplace step) does not.
 `1` restores the plain one-step update.
 
+#### null_response(state, response, item, rng)
+
+A score redrawn over its levels at the global skill; see the base class.
+
+* **Return type:**
+  [`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response)
+
 #### score_probabilities(state, item, max_score, , at=None)
 
 `P(score = k)` for `k = 0..max_score`, over the posterior.
@@ -2254,6 +2294,18 @@ Per-label mastery: the student’s global skill adjusted by each label.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
+
+#### null_response(state, response, item, rng)
+
+`response` drawn again as if the student had no label deviation.
+
+The answer is redrawn at the student’s global skill (the posterior mean) against
+the item’s difficulty, with guessing; a skip is kept as it was. This is what
+`weakest(multiplicity="simulated")` replays a student’s own record with, to
+find how far its labels wander by chance. `rng` is a `random.Random`.
+
+* **Return type:**
+  [`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response)
 
 #### observe(state, response, item)
 
@@ -3053,6 +3105,7 @@ and every part can be replaced without touching the others:
 |---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`DEFAULT_RELATIVE_TO`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.DEFAULT_RELATIVE_TO)      | the precision-weighted mean of the student's *other* labels, so whatever part of a shortfall every label shares cancels out.                                                      |
 | [`DEFAULT_MULTIPLICITY`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.DEFAULT_MULTIPLICITY)     | How the bound accounts for testing several labels at once.                                                                                                                        |
+| [`DEFAULT_NULL_DRAWS`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.DEFAULT_NULL_DRAWS)       | How many times `weakest(multiplicity="simulated")` replays a student's record under "no label deviation".                                                                         |
 
 ### Classes
 
@@ -3080,6 +3133,12 @@ which a shrunk posterior mean stays well inside (#22). `"bonferroni"` does the s
 on the posterior sd: a bound rather than a calibration, far below its target with
 little evidence, so it costs power at cold start. `"none"` applies
 `credible_below` to each label separately, as the original gate did.
+
+### learny.tracing.model.DEFAULT_NULL_DRAWS *= 200*
+
+How many times `weakest(multiplicity="simulated")` replays a student’s record under
+“no label deviation”. The critical value is the `1 - Phi(z)` quantile of the
+smallest label statistic over the draws: 200 puts about 32 draws below it at `z=1`.
 
 ### learny.tracing.model.DEFAULT_RELATIVE_TO *= 'labels'*
 
@@ -3209,7 +3268,7 @@ Check `.distinguishable` before acting on an ordering from [`weakest()`](_autosu
 * **Return type:**
   [`LabelSeparation`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.LabelSeparation)
 
-#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='calibrated')
+#### weakest(student, n=5, , credible_below=1.0, relative_to='labels', multiplicity='calibrated', null_draws=200)
 
 The labels this student is credibly weakest on — what to practise next.
 
@@ -3244,6 +3303,16 @@ Three keywords set the gate:
   part of a label’s spread it shares with the others is counted, not removed).
   A label stored before null spreads were tracked is measured by its posterior
   spread until it is answered again.
+  `"simulated"` replays the student’s own record `null_draws` times with the
+  answers redrawn as if no label deviated (`estimator.null_response`), and
+  takes as critical value the `1 - Phi(z)` quantile of the most extreme label
+  over the draws (a parametric-bootstrap maxT test, Westfall and Young 1993). It
+  counts this record’s discreteness, skew, forgetting and the dependence between
+  labels exactly, so it keeps the false-flag rate on target where the moment
+  corrections of `"calibrated"` are cautious: few answers per label, items the
+  student nearly always gets right, or nearly always wrong (#35). It costs
+  `null_draws` replays of the record per call, and is deterministic for a given
+  student and record.
 * `relative_to` — `"labels"` (default) as above; `"global"` measures each
   label’s deviation against zero, the student’s global skill. The default
   estimator carries the global/label covariance, so a shortfall every item
@@ -3274,7 +3343,11 @@ Raises `ValueError` for a negative `credible_below` (which would admit labels
 credibly *above* their comparator) or an unknown `relative_to` /
 `multiplicity`, and `TypeError` when the gate is on but
 the estimator’s [`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery) values carry no
-`deviation` — rather than silently returning nothing.
+`deviation` — rather than silently returning nothing. With
+`multiplicity="simulated"` it also raises `TypeError` when the estimator has
+no `null_response`, and `ValueError` for a `null_draws` that is not a
+positive integer or is too few for the false-flag rate `credible_below` sets
+(it needs `null_draws >= 1 / alpha - 1`); the other modes ignore `null_draws`.
 
 ```pycon
 >>> items = {f'q{i}': Item(f'q{i}', labels=('area' if i % 2 else 'sums',))
@@ -3632,7 +3705,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-10-20 10:59 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/606d0faf959fa81d5b8489a2245a20d5bea19556"><code>606d0fa</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-20 14:06 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/de3e7a004915672f6a5c2b2fc22e821a529df6bf"><code>de3e7a0</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -3641,7 +3714,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/606d0faf959fa81d5b8489a2245a20d5bea19556"><code>606d0faf959fa81d5b8489a2245a20d5bea19556</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/de3e7a004915672f6a5c2b2fc22e821a529df6bf"><code>de3e7a004915672f6a5c2b2fc22e821a529df6bf</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -3652,15 +3725,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39411492469">39411492469</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39435880568">39435880568</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>606d0faf959fa81d5b8489a2245a20d5bea19556</code> (in the history of the built commit) |
+| Event commit | <code>de3e7a004915672f6a5c2b2fc22e821a529df6bf</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.19  |
+| epythet  | 0.2.20  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -3685,8 +3758,8 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout 606d0faf959fa81d5b8489a2245a20d5bea19556
-pip install "epythet==0.2.19"
+git checkout de3e7a004915672f6a5c2b2fc22e821a529df6bf
+pip install "epythet==0.2.20"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

@@ -1085,7 +1085,7 @@ state that live recording produced.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="learny.tracing.LearnerModel.weakest">
-<span class="sig-name descname"><span class="pre">weakest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">credible_below</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'labels'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'calibrated'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.weakest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LearnerModel.weakest" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">weakest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">credible_below</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'labels'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplicity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'calibrated'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">null_draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/model.html#LearnerModel.weakest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.LearnerModel.weakest" title="Link to this definition">#</a></dt>
 <dd><p>The labels this student is credibly weakest on — what to practise next.</p>
 <p>By default a label is returned only when it is credibly below the student’s
 <em>other</em> labels: the upper bound <code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">+</span> <span class="pre">z</span> <span class="pre">*</span> <span class="pre">sd</span></code> of its contrast <code class="docutils literal notranslate"><span class="pre">c</span></code> — its
@@ -1116,7 +1116,17 @@ hundred responses and no real weakness flags something more often than not.
 Under <code class="docutils literal notranslate"><span class="pre">relative_to=&quot;global&quot;</span></code> the calibrated spread is more cautious (the
 part of a label’s spread it shares with the others is counted, not removed).
 A label stored before null spreads were tracked is measured by its posterior
-spread until it is answered again.</p></li>
+spread until it is answered again.
+<code class="docutils literal notranslate"><span class="pre">&quot;simulated&quot;</span></code> replays the student’s own record <code class="docutils literal notranslate"><span class="pre">null_draws</span></code> times with the
+answers redrawn as if no label deviated (<code class="docutils literal notranslate"><span class="pre">estimator.null_response</span></code>), and
+takes as critical value the <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">Phi(z)</span></code> quantile of the most extreme label
+over the draws (a parametric-bootstrap maxT test, Westfall and Young 1993). It
+counts this record’s discreteness, skew, forgetting and the dependence between
+labels exactly, so it keeps the false-flag rate on target where the moment
+corrections of <code class="docutils literal notranslate"><span class="pre">&quot;calibrated&quot;</span></code> are cautious: few answers per label, items the
+student nearly always gets right, or nearly always wrong (#35). It costs
+<code class="docutils literal notranslate"><span class="pre">null_draws</span></code> replays of the record per call, and is deterministic for a given
+student and record.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">relative_to</span></code> — <code class="docutils literal notranslate"><span class="pre">&quot;labels&quot;</span></code> (default) as above; <code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code> measures each
 label’s deviation against zero, the student’s global skill. The default
 estimator carries the global/label covariance, so a shortfall every item
@@ -1145,7 +1155,11 @@ weakness, not “nothing to practise”: practise at the student’s overall lev
 credibly <em>above</em> their comparator) or an unknown <code class="docutils literal notranslate"><span class="pre">relative_to</span></code> /
 <code class="docutils literal notranslate"><span class="pre">multiplicity</span></code>, and <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> when the gate is on but
 the estimator’s <a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.Mastery" title="learny.tracing.estimators.Mastery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mastery</span></code></a> values carry no
-<code class="docutils literal notranslate"><span class="pre">deviation</span></code> — rather than silently returning nothing.</p>
+<code class="docutils literal notranslate"><span class="pre">deviation</span></code> — rather than silently returning nothing. With
+<code class="docutils literal notranslate"><span class="pre">multiplicity=&quot;simulated&quot;</span></code> it also raises <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> when the estimator has
+no <code class="docutils literal notranslate"><span class="pre">null_response</span></code>, and <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> for a <code class="docutils literal notranslate"><span class="pre">null_draws</span></code> that is not a
+positive integer or is too few for the false-flag rate <code class="docutils literal notranslate"><span class="pre">credible_below</span></code> sets
+(it needs <code class="docutils literal notranslate"><span class="pre">null_draws</span> <span class="pre">&gt;=</span> <span class="pre">1</span> <span class="pre">/</span> <span class="pre">alpha</span> <span class="pre">-</span> <span class="pre">1</span></code>); the other modes ignore <code class="docutils literal notranslate"><span class="pre">null_draws</span></code>.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">items</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="n">Item</span><span class="p">(</span><span class="sa">f</span><span class="s1">'q</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">(</span><span class="s1">'area'</span> <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">2</span> <span class="k">else</span> <span class="s1">'sums'</span><span class="p">,))</span>
 <span class="gp">... </span>         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">40</span><span class="p">)}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">LearnerModel</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="p">{},</span> <span class="n">estimates</span><span class="o">=</span><span class="p">{})</span>
@@ -1342,6 +1356,17 @@ overshoots on a surprising score out of many levels, whose gradient is bounded b
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.PartialCreditEstimator.null_response">
+<span class="sig-name descname"><span class="pre">null_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#PartialCreditEstimator.null_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.PartialCreditEstimator.null_response" title="Link to this definition">#</a></dt>
+<dd><p>A score redrawn over its levels at the global skill; see the base class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Response" title="learny.tracing.records.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="learny.tracing.PartialCreditEstimator.score_probabilities">
 <span class="sig-name descname"><span class="pre">score_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_score</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">at</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#PartialCreditEstimator.score_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.PartialCreditEstimator.score_probabilities" title="Link to this definition">#</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">P(score</span> <span class="pre">=</span> <span class="pre">k)</span></code> for <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">0..max_score</span></code>, over the posterior.</p>
@@ -1472,6 +1497,21 @@ observations from drifting away from what the student’s whole record says.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.Mastery" title="learny.tracing.estimators.Mastery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mastery</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.tracing.RaschEstimator.null_response">
+<span class="sig-name descname"><span class="pre">null_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/estimators.html#RaschEstimator.null_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.RaschEstimator.null_response" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">response</span></code> drawn again as if the student had no label deviation.</p>
+<p>The answer is redrawn at the student’s global skill (the posterior mean) against
+the item’s difficulty, with guessing; a skip is kept as it was. This is what
+<code class="docutils literal notranslate"><span class="pre">weakest(multiplicity=&quot;simulated&quot;)</span></code> replays a student’s own record with, to
+find how far its labels wander by chance. <code class="docutils literal notranslate"><span class="pre">rng</span></code> is a <code class="docutils literal notranslate"><span class="pre">random.Random</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Response" title="learny.tracing.records.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2474,6 +2514,7 @@ picks <code class="docutils literal notranslate"><span class="pre">spread</span>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.PartialCreditEstimator"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.PartialCreditEstimator.expected_score"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.expected_score()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.PartialCreditEstimator.mode_steps"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.mode_steps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.PartialCreditEstimator.null_response"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.null_response()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.PartialCreditEstimator.score_probabilities"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.score_probabilities()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.PartialCreditEstimator.thresholds"><code class="docutils literal notranslate"><span class="pre">PartialCreditEstimator.thresholds()</span></code></a></li>
 </ul>
@@ -2487,6 +2528,7 @@ picks <code class="docutils literal notranslate"><span class="pre">spread</span>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.RaschEstimator.init"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.init()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.RaschEstimator.label_prior_var"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.label_prior_var</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.RaschEstimator.mastery"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.mastery()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.RaschEstimator.null_response"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.null_response()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.RaschEstimator.observe"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.observe()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.RaschEstimator.predict"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.predict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.RaschEstimator.prior_var"><code class="docutils literal notranslate"><span class="pre">RaschEstimator.prior_var</span></code></a></li>
