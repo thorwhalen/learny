@@ -27,9 +27,10 @@ that enters the learner model through the existing `items=` seam
 
 ### Functions
 
-| [`fit_feature_difficulty`](#learny.tracing.difficulty.fit_feature_difficulty)(log, \*, items[, ...])   | Fit which item features predict difficulty, from a log of play.   |
-|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
-| [`item_features`](#learny.tracing.difficulty.item_features)(item)                             | The default feature source: `item.meta['features']`, or `None`.   |
+| [`attempt_features`](#learny.tracing.difficulty.attempt_features)(response)                    | The default per-attempt feature source: `response.meta['features']`, or `None`.   |
+|------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| [`fit_feature_difficulty`](#learny.tracing.difficulty.fit_feature_difficulty)(log, \*, items[, ...]) | Fit which item features predict difficulty, from a log of play.                   |
+| [`item_features`](#learny.tracing.difficulty.item_features)(item)                           | The default feature source: `item.meta['features']`, or `None`.                   |
 
 ### Classes
 
@@ -51,7 +52,7 @@ Alias for field number 0
 
 Alias for field number 1
 
-### *class* learny.tracing.difficulty.FeatureDifficulty(names, center, scale, coef, covariance, residual_var, ability_mean=0.0, ability_var=1.0, residuals=dict(), anchors=0, n_students=0, n_responses=0, converged=True)
+### *class* learny.tracing.difficulty.FeatureDifficulty(names, center, scale, coef, covariance, residual_var, ability_mean=0.0, ability_var=1.0, residuals=dict(), anchors=0, n_students=0, n_responses=0, converged=True, attempt_names=(), attempt_center=(), attempt_scale=())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -68,12 +69,19 @@ as `(mean, variance, *covariance with the coefficients)`; it carries the fitted
 students’ data, so [`apply()`](#learny.tracing.difficulty.FeatureDifficulty.apply) leaves it out unless asked. `converged` is false
 when an iteration cap was hit (a `RuntimeWarning` said so at fit time).
 
+Per-attempt features (`attempt_names`, standardised over the fitted attempts by
+`attempt_center` and `attempt_scale`) add their weights after the item weights,
+so `coef` and `covariance` are over `(intercept, *weights, *attempt weights)`;
+[`attempt_weights()`](#learny.tracing.difficulty.FeatureDifficulty.attempt_weights) reports them. They have no residual: an attempt’s setup
+moves the difficulty of whatever item it is played with by its weights alone.
+
 #### apply(items, , features=None, overwrite=False, use_residuals=False)
 
 A copy of `items` with each item’s `difficulty` predicted from features.
 
 Only items without a difficulty are filled unless `overwrite=True`; an item
-with no features is left as it is. The difficulty comes from the features alone
+with no features is left as it is, and per-attempt features are taken at the
+fitted attempts’ average. The difficulty comes from the features alone
 unless `use_residuals=True` adds each fitted item’s own residual. That residual
 is learned from the fitted students’ answers, so feeding it back to estimate
 those same students counts their answers twice; with one or two learners it is
@@ -83,6 +91,13 @@ mostly their own results (#18 review). The result is an item bank for the
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Item`](learny.tracing.records.html.md#learny.tracing.records.Item)]
 
+#### attempt_weights()
+
+Each per-attempt feature’s weight, as [`weights()`](#learny.tracing.difficulty.FeatureDifficulty.weights) reports the item ones.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Estimate`](#learny.tracing.difficulty.Estimate)]
+
 #### *classmethod* from_dict(d)
 
 Inverse of [`to_dict()`](#learny.tracing.difficulty.FeatureDifficulty.to_dict); refuses an artifact of another schema.
@@ -90,7 +105,7 @@ Inverse of [`to_dict()`](#learny.tracing.difficulty.FeatureDifficulty.to_dict); 
 * **Return type:**
   [`FeatureDifficulty`](#learny.tracing.difficulty.FeatureDifficulty)
 
-#### predict(features, , item_id=None)
+#### predict(features, , attempt=None, item_id=None)
 
 The difficulty, in logits, of an item with these features.
 
@@ -99,6 +114,9 @@ added to the features’ part. Pass `item_id` of an item the model was fitted on
 to use that item’s own fitted residual instead, with its posterior variance and
 its covariance with the coefficients. Features far outside the fitted range are
 extrapolated linearly, without warning.
+
+`attempt` gives the per-attempt features of one way of playing the item (a new
+song with 3 decoys); left `None`, the attempt is the fitted attempts’ average.
 
 * **Return type:**
   [`Estimate`](#learny.tracing.difficulty.Estimate)
@@ -122,7 +140,24 @@ weight between them, each with a wide sd.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Estimate`](#learny.tracing.difficulty.Estimate)]
 
-### learny.tracing.difficulty.fit_feature_difficulty(log, , items, features=None, students=None, anchor='location', ability_prior_var=None, residual_var=None, weight_prior_var=1.0, intercept_prior_var=4.0, max_iter=100, max_em_iter=200, tol=1e-09)
+### learny.tracing.difficulty.attempt_features(response)
+
+The default per-attempt feature source: `response.meta['features']`, or `None`.
+
+These describe how one attempt was set up (`n_decoys`, a mix with vocals), so the
+same item can be harder on one attempt than on another.
+
+```pycon
+>>> attempt_features(Response('s', 'q', True, meta={'features': {'n_decoys': 3}}))
+{'n_decoys': 3}
+>>> attempt_features(Response('s', 'q', True)) is None
+True
+```
+
+* **Return type:**
+  [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)] | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+### learny.tracing.difficulty.fit_feature_difficulty(log, \*, items, features=None, attempt_features=<function attempt_features>, students=None, anchor='location', ability_prior_var=None, residual_var=None, weight_prior_var=1.0, intercept_prior_var=4.0, max_iter=100, max_em_iter=200, tol=1e-09)
 
 Fit which item features predict difficulty, from a log of play.
 
@@ -134,6 +169,15 @@ guessed. A right/wrong response counts as one trial, a score `k` out of
 [`binomial_thresholds()`](learny.tracing.estimators.html.md#learny.tracing.estimators.binomial_thresholds) gives a score; other step
 spacings are not modelled here); skips are not evidence about difficulty and are
 left out. Guessing is not modelled.
+
+**Per-attempt features.** `attempt_features` reads, from each response, features
+of how that attempt was set up (by default `response.meta['features']`, see
+[`attempt_features()`](#learny.tracing.difficulty.attempt_features); `None` ignores them). They enter the same linear
+predictor, `difficulty = intercept + w . x_item + v . x_attempt + residual_item`,
+standardised over the fitted attempts and with the same weight prior, but with no
+residual of their own. If any scored attempt has them, every one needs a finite
+value for each, or the fit is refused. A given `difficulty` that anchors the scale
+is the item’s at the average attempt.
 
 **The scale.** Every answered item that already has a `difficulty` can anchor
 the fit to the bank’s scale. `anchor="location"` (the default) fits on play alone

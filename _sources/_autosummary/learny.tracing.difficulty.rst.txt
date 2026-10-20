@@ -8,6 +8,7 @@ learny.tracing.difficulty
 
    .. autosummary::
    
+      attempt_features
       fit_feature_difficulty
       item_features
    
