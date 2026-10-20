@@ -511,6 +511,16 @@ class RaschEstimator:
             return float(learned["b"])
         return 0.0 if item.difficulty is None else logit(item.difficulty)
 
+    def _null_difficulty(self, item: Item) -> float:
+        """The difficulty a null redraw is made at: the one each replay starts from.
+
+        A replay of ``weakest(multiplicity="simulated")`` starts from :meth:`init`, so
+        with ``update_difficulty`` it relearns every difficulty from the prior (the
+        item's own ``difficulty``). Redrawing at the difficulties the student's state
+        ended with instead made the null too cautious and cost power (#46, #48).
+        """
+        return self._difficulty(self.init(), item)
+
     def _shares(
         self, item: Item, skills: Mapping[str, Skill]
     ) -> dict[str, float]:
@@ -855,11 +865,15 @@ class RaschEstimator:
         the item's difficulty, with guessing; a skip is kept as it was. This is what
         ``weakest(multiplicity="simulated")`` replays a student's own record with, to
         find how far its labels wander by chance. ``rng`` is a ``random.Random``.
+
+        The difficulty is the one the replay starts from (see :meth:`_null_difficulty`):
+        with ``update_difficulty`` that is the item's prior ``difficulty``, not the one
+        learned in ``state["items"]``.
         """
         if not response.outcome.is_scored:
             return response
         item = item if item is not None else Item(response.item)
-        q = expit(self.skill(state).mu - self._difficulty(state, item))
+        q = expit(self.skill(state).mu - self._null_difficulty(item))
         p = self.guess + (1.0 - self.guess) * q
         drawn = Outcome.CORRECT if rng.random() < p else Outcome.WRONG
         return replace(response, outcome=drawn, score=None, max_score=None)
@@ -1160,7 +1174,7 @@ class PartialCreditEstimator(RaschEstimator):
             return super().null_response(state, response, item, rng)
         item = item if item is not None else Item(response.item)
         m = response.max_score
-        s = self.skill(state).mu - self._difficulty(state, item)
+        s = self.skill(state).mu - self._null_difficulty(item)
         k = rng.choices(range(m + 1), weights=_level_probabilities(s, self._taus(item, m)))[0]
         return replace(response, outcome=Outcome.CORRECT if k == m else Outcome.WRONG, score=k)
 
