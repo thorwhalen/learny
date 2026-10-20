@@ -211,3 +211,10 @@ class TestSimulatedGate:
         plain = Response("s", "q", "correct", at=3.0, meta={"x": 1})
         again = RaschEstimator().null_response(state, plain, item, rng)
         assert (again.at, again.meta, again.score) == (3.0, {"x": 1}, None)
+
+
+def test_simulated_with_a_missing_record_flags_nothing():
+    """A state whose log was lost has no null to replay: nothing is credibly weak."""
+    model = _student(random.Random(35), 3, 9)
+    model.log["s"] = []
+    assert not model.weakest("s", n=3, multiplicity="simulated", null_draws=50)

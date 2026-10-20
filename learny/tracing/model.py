@@ -443,7 +443,11 @@ class LearnerModel:
         credibly *above* their comparator) or an unknown ``relative_to`` /
         ``multiplicity``, and ``TypeError`` when the gate is on but
         the estimator's :class:`~learny.tracing.estimators.Mastery` values carry no
-        ``deviation`` — rather than silently returning nothing.
+        ``deviation`` — rather than silently returning nothing. With
+        ``multiplicity="simulated"`` it also raises ``TypeError`` when the estimator has
+        no ``null_response``, and ``ValueError`` for a ``null_draws`` that is not a
+        positive integer or is too few for the false-flag rate ``credible_below`` sets
+        (it needs ``null_draws >= 1 / alpha - 1``); the other modes ignore ``null_draws``.
 
         >>> items = {f'q{i}': Item(f'q{i}', labels=('area' if i % 2 else 'sums',))
         ...          for i in range(40)}
@@ -570,7 +574,9 @@ class LearnerModel:
             stats = [mu / sd for mu, sd in _contrasts(masteries, relative_to) if sd > 0]
             minima.append(min(stats) if stats else math.inf)
         minima.sort()
-        return minima[cut]
+        # No replay gave a contrast (the log lacks the record the estimates came from):
+        # there is no null to compare with, so nothing is credibly weak.
+        return minima[cut] if math.isfinite(minima[cut]) else -math.inf
 
     # -- when to believe it --------------------------------------------------------
 
