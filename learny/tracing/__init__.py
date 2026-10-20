@@ -53,6 +53,7 @@ from learny.tracing.estimators import (
 from learny.tracing.model import (
     DEFAULT_CREDIBLE_BELOW,
     DEFAULT_MULTIPLICITY,
+    DEFAULT_NULL_DRAWS,
     DEFAULT_RELATIVE_TO,
     LearnerModel,
     Weakest,
@@ -67,6 +68,7 @@ __all__ = [
     "DEFAULT_CREDIBLE_BELOW",
     "DEFAULT_RELATIVE_TO",
     "DEFAULT_MULTIPLICITY",
+    "DEFAULT_NULL_DRAWS",
     # the vocabulary
     "Item",
     "Outcome",

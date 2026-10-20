@@ -15,6 +15,7 @@ and every part can be replaced without touching the others:
 from __future__ import annotations
 
 import math
+import random
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import replace
 from statistics import NormalDist
@@ -40,6 +41,7 @@ __all__ = [
     "DEFAULT_CREDIBLE_BELOW",
     "DEFAULT_RELATIVE_TO",
     "DEFAULT_MULTIPLICITY",
+    "DEFAULT_NULL_DRAWS",
 ]
 
 #: How many posterior standard deviations below its comparator a label must be before
@@ -72,7 +74,7 @@ DEFAULT_MULTIPLICITY = "calibrated"
 
 WeakestReason = Literal["no_evidence", "no_credible_weakness"]
 RelativeTo = Literal["labels", "global"]
-Multiplicity = Literal["calibrated", "bonferroni", "none"]
+Multiplicity = Literal["calibrated", "simulated", "bonferroni", "none"]
 
 #: Fewest rare outcomes a label's null must rest on before its moments describe its
 #: tail. A compound-Poisson fit to a label's null cumulants, ``nv`` and ``nk3``, puts
@@ -82,7 +84,12 @@ Multiplicity = Literal["calibrated", "bonferroni", "none"]
 #: by its posterior spread instead (#22, #35).
 _MIN_RARE_EVENTS = 1.0
 _RELATIVE_TO = ("labels", "global")
-_MULTIPLICITY = ("calibrated", "bonferroni", "none")
+_MULTIPLICITY = ("calibrated", "simulated", "bonferroni", "none")
+
+#: How many times ``weakest(multiplicity="simulated")`` replays a student's record under
+#: "no label deviation". The critical value is the ``1 - Phi(z)`` quantile of the
+#: smallest label statistic over the draws: 200 puts about 32 draws below it at ``z=1``.
+DEFAULT_NULL_DRAWS = 200
 
 
 def _bonferroni_z(z: float, m: int) -> float:
@@ -360,6 +367,7 @@ class LearnerModel:
         credible_below: float | None = DEFAULT_CREDIBLE_BELOW,
         relative_to: RelativeTo = DEFAULT_RELATIVE_TO,
         multiplicity: Multiplicity = DEFAULT_MULTIPLICITY,
+        null_draws: int = DEFAULT_NULL_DRAWS,
     ) -> Weakest:
         """The labels this student is credibly weakest on — what to practise next.
 
@@ -394,6 +402,16 @@ class LearnerModel:
           part of a label's spread it shares with the others is counted, not removed).
           A label stored before null spreads were tracked is measured by its posterior
           spread until it is answered again.
+          ``"simulated"`` replays the student's own record ``null_draws`` times with the
+          answers redrawn as if no label deviated (``estimator.null_response``), and
+          takes as critical value the ``1 - Phi(z)`` quantile of the most extreme label
+          over the draws (a parametric-bootstrap maxT test, Westfall and Young 1993). It
+          counts this record's discreteness, skew, forgetting and the dependence between
+          labels exactly, so it keeps the false-flag rate on target where the moment
+          corrections of ``"calibrated"`` are cautious: few answers per label, items the
+          student nearly always gets right, or nearly always wrong (#35). It costs
+          ``null_draws`` replays of the record per call, and is deterministic for a given
+          student and record.
         * ``relative_to`` — ``"labels"`` (default) as above; ``"global"`` measures each
           label's deviation against zero, the student's global skill. The default
           estimator carries the global/label covariance, so a shortfall every item
@@ -425,7 +443,11 @@ class LearnerModel:
         credibly *above* their comparator) or an unknown ``relative_to`` /
         ``multiplicity``, and ``TypeError`` when the gate is on but
         the estimator's :class:`~learny.tracing.estimators.Mastery` values carry no
-        ``deviation`` — rather than silently returning nothing.
+        ``deviation`` — rather than silently returning nothing. With
+        ``multiplicity="simulated"`` it also raises ``TypeError`` when the estimator has
+        no ``null_response``, and ``ValueError`` for a ``null_draws`` that is not a
+        positive integer or is too few for the false-flag rate ``credible_below`` sets
+        (it needs ``null_draws >= 1 / alpha - 1``); the other modes ignore ``null_draws``.
 
         >>> items = {f'q{i}': Item(f'q{i}', labels=('area' if i % 2 else 'sums',))
         ...          for i in range(40)}
@@ -479,6 +501,16 @@ class LearnerModel:
             if multiplicity == "none"
             else _bonferroni_z(credible_below, len(ranked))
         )
+        if multiplicity == "simulated":
+            limit = self._simulated_limit(
+                student, ranked, relative_to=relative_to,
+                alpha=NormalDist().cdf(-credible_below), draws=null_draws,
+            )
+            credible = [
+                m for m, (mu, sd) in zip(ranked, _contrasts(ranked, relative_to))
+                if sd > 0 and mu / sd < limit
+            ]
+            return Weakest(credible[:n]) if credible else Weakest(reason="no_credible_weakness")
         contrasts = [(mu, sd, z) for mu, sd in _contrasts(ranked, relative_to)]
         if multiplicity == "calibrated":
             contrasts = [
@@ -489,6 +521,62 @@ class LearnerModel:
         if not credible:
             return Weakest(reason="no_credible_weakness")
         return Weakest(credible[:n])
+
+    def _simulated_limit(
+        self,
+        student: str,
+        ranked: Sequence[Mastery],
+        *,
+        relative_to: RelativeTo,
+        alpha: float,
+        draws: int,
+    ) -> float:
+        """The critical standardised contrast for ``weakest(multiplicity="simulated")``.
+
+        Each draw replays this student's record with every answer redrawn at the
+        student's global skill (no label deviation), and keeps the smallest
+        ``contrast / sd`` over the labels the student has evidence on. A label is flagged
+        when its own is below the ``alpha`` quantile of those minima, so the chance that
+        *any* label of a student with no real weakness is flagged is ``alpha``, for this
+        record's design.
+
+        It is a Monte Carlo test: the own statistic counts as one more draw, so the cut is
+        the ``floor(alpha * (draws + 1))``-th smallest minimum, and ``alpha`` can only be
+        reached when ``draws >= 1 / alpha - 1`` (a smaller ``null_draws`` is refused,
+        rather than flagging at a rate of ``1 / (draws + 1)`` above ``alpha``).
+        """
+        if not (isinstance(draws, int) and not isinstance(draws, bool) and draws >= 1):
+            raise ValueError(f"null_draws must be a positive integer, got {draws!r}")
+        cut = math.floor(alpha * (draws + 1)) - 1
+        if cut < 0:
+            raise ValueError(
+                f"null_draws={draws} cannot reach a false-flag rate of {alpha:.3g} "
+                f"(credible_below sets it); use null_draws >= {math.ceil(1 / alpha) - 1}"
+            )
+        redraw = getattr(self.estimator, "null_response", None)
+        if redraw is None:
+            raise TypeError(
+                f"weakest(multiplicity='simulated') needs the estimator to redraw a "
+                f"response with no label deviation, and {type(self.estimator).__name__} "
+                "has no null_response(); use multiplicity='calibrated' instead"
+            )
+        state = self._state(student)
+        record = self._responses(student)
+        labels = {m.label for m in ranked}
+        rng = random.Random(f"learny.weakest:{student}:{len(record)}")
+        minima = []
+        for _ in range(draws):
+            sim = self.estimator.init()
+            for response in record:
+                item = self.items.get(response.item)
+                sim = self.estimator.observe(sim, redraw(state, response, item, rng), item)
+            masteries = [m for m in self.estimator.mastery(sim).values() if m.label in labels]
+            stats = [mu / sd for mu, sd in _contrasts(masteries, relative_to) if sd > 0]
+            minima.append(min(stats) if stats else math.inf)
+        minima.sort()
+        # No replay gave a contrast (the log lacks the record the estimates came from):
+        # there is no null to compare with, so nothing is credibly weak.
+        return minima[cut] if math.isfinite(minima[cut]) else -math.inf
 
     # -- when to believe it --------------------------------------------------------
 
