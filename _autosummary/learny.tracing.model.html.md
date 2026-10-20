@@ -225,7 +225,9 @@ Three keywords set the gate:
   corrections of `"calibrated"` are cautious: few answers per label, items the
   student nearly always gets right, or nearly always wrong (#35). It costs
   `null_draws` replays of the record per call, and is deterministic for a given
-  student and record.
+  student and record; the draws are common random numbers across calls (a new
+  answer extends each replay rather than reseeding it), so the cut moves only as
+  much as the record does.
 * `relative_to` — `"labels"` (default) as above; `"global"` measures each
   label’s deviation against zero, the student’s global skill. The default
   estimator carries the global/label covariance, so a shortfall every item

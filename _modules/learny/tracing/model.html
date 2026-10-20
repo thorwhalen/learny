@@ -1144,7 +1144,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">          corrections of ``"calibrated"`` are cautious: few answers per label, items the</span>
 <span class="sd">          student nearly always gets right, or nearly always wrong (#35). It costs</span>
 <span class="sd">          ``null_draws`` replays of the record per call, and is deterministic for a given</span>
-<span class="sd">          student and record.</span>
+<span class="sd">          student and record; the draws are common random numbers across calls (a new</span>
+<span class="sd">          answer extends each replay rather than reseeding it), so the cut moves only as</span>
+<span class="sd">          much as the record does.</span>
 <span class="sd">        * ``relative_to`` — ``"labels"`` (default) as above; ``"global"`` measures each</span>
 <span class="sd">          label's deviation against zero, the student's global skill. The default</span>
 <span class="sd">          estimator carries the global/label covariance, so a shortfall every item</span>
@@ -1297,9 +1299,12 @@ window.runMermaid = runMermaid;</script>
         <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">(</span><span class="n">student</span><span class="p">)</span>
         <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_responses</span><span class="p">(</span><span class="n">student</span><span class="p">)</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">ranked</span><span class="p">}</span>
-        <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="sa">f</span><span class="s2">"learny.weakest:</span><span class="si">{</span><span class="n">student</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="n">minima</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draws</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">draw</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draws</span><span class="p">):</span>
+            <span class="c1"># One stream per draw, seeded independently of the record's length: a new</span>
+            <span class="c1"># answer extends each replay instead of reshuffling every draw, so a label</span>
+            <span class="c1"># near the cut does not flip from Monte Carlo noise alone (#45).</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="sa">f</span><span class="s2">"learny.weakest:</span><span class="si">{</span><span class="n">student</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">draw</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="n">sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">response</span> <span class="ow">in</span> <span class="n">record</span><span class="p">:</span>
                 <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
