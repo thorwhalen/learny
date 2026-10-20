@@ -1,4 +1,4 @@
-> built 2026-10-20 19:25 UTC from 0d5fe52 (main) · learny 0.0.1. Details: build_info.json
+> built 2026-10-20 19:58 UTC from 8d7c537 (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -1198,6 +1198,10 @@ the item’s difficulty, with guessing; a skip is kept as it was. This is what
 `weakest(multiplicity="simulated")` replays a student’s own record with, to
 find how far its labels wander by chance. `rng` is a `random.Random`.
 
+The difficulty is the one the replay starts from (see `_null_difficulty()`):
+with `update_difficulty` that is the item’s prior `difficulty`, not the one
+learned in `state["items"]`.
+
 * **Return type:**
   [`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response)
 
@@ -2305,6 +2309,10 @@ The answer is redrawn at the student’s global skill (the posterior mean) again
 the item’s difficulty, with guessing; a skip is kept as it was. This is what
 `weakest(multiplicity="simulated")` replays a student’s own record with, to
 find how far its labels wander by chance. `rng` is a `random.Random`.
+
+The difficulty is the one the replay starts from (see `_null_difficulty()`):
+with `update_difficulty` that is the item’s prior `difficulty`, not the one
+learned in `state["items"]`.
 
 * **Return type:**
   [`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response)
@@ -3709,7 +3717,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-10-20 19:25 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/0d5fe52793eafd66b132b65ac14709c891068c63"><code>0d5fe52</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-20 19:58 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff"><code>8d7c537</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -3718,7 +3726,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/0d5fe52793eafd66b132b65ac14709c891068c63"><code>0d5fe52793eafd66b132b65ac14709c891068c63</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff"><code>8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -3729,9 +3737,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39482930772">39482930772</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39487692283">39487692283</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>0d5fe52793eafd66b132b65ac14709c891068c63</code> (in the history of the built commit) |
+| Event commit | <code>8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -3762,7 +3770,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout 0d5fe52793eafd66b132b65ac14709c891068c63
+git checkout 8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

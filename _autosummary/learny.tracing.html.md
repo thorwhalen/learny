@@ -888,6 +888,10 @@ the item’s difficulty, with guessing; a skip is kept as it was. This is what
 `weakest(multiplicity="simulated")` replays a student’s own record with, to
 find how far its labels wander by chance. `rng` is a `random.Random`.
 
+The difficulty is the one the replay starts from (see `_null_difficulty()`):
+with `update_difficulty` that is the item’s prior `difficulty`, not the one
+learned in `state["items"]`.
+
 * **Return type:**
   [`Response`](learny.tracing.records.html.md#learny.tracing.records.Response)
 

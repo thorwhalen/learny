@@ -1511,6 +1511,9 @@ observations from drifting away from what the student’s whole record says.</p>
 the item’s difficulty, with guessing; a skip is kept as it was. This is what
 <code class="docutils literal notranslate"><span class="pre">weakest(multiplicity=&quot;simulated&quot;)</span></code> replays a student’s own record with, to
 find how far its labels wander by chance. <code class="docutils literal notranslate"><span class="pre">rng</span></code> is a <code class="docutils literal notranslate"><span class="pre">random.Random</span></code>.</p>
+<p>The difficulty is the one the replay starts from (see <code class="xref py py-meth docutils literal notranslate"><span class="pre">_null_difficulty()</span></code>):
+with <code class="docutils literal notranslate"><span class="pre">update_difficulty</span></code> that is the item’s prior <code class="docutils literal notranslate"><span class="pre">difficulty</span></code>, not the one
+learned in <code class="docutils literal notranslate"><span class="pre">state[&quot;items&quot;]</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Response" title="learny.tracing.records.Response"><code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></a></span></p>
