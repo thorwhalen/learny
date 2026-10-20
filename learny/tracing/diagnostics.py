@@ -776,7 +776,7 @@ def fit_item_spreads(
     >>> items = {'q': Item('q', difficulty=0.5)}
     >>> log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2) for k in (1, 2, 1, 0)]}
     >>> table, comparisons = fit_item_spreads(log, items=items)
-    >>> table.spreads, comparisons   # four scores are too few to try
+    >>> dict(table.spreads), comparisons   # four scores are too few to try
     ({}, {})
     """
     if isinstance(min_responses, bool) or not isinstance(min_responses, int) \

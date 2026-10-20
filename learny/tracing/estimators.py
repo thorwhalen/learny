@@ -66,6 +66,7 @@ import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from numbers import Real
+from types import MappingProxyType
 from typing import Any, NamedTuple, Protocol, runtime_checkable
 
 from learny.tracing.records import Item, Outcome, Response
@@ -939,8 +940,18 @@ class ItemSpreads:
     schema = "learny.item_spreads/1"
 
     def __post_init__(self) -> None:
+        if not isinstance(self.spreads, Mapping):
+            raise ValueError(f"spreads must be a mapping of item id to spread, got {self.spreads!r}")
         table = {str(item_id): SpreadThresholds(c).spread for item_id, c in self.spreads.items()}
-        object.__setattr__(self, "spreads", table)
+        if len(table) != len(self.spreads):
+            raise ValueError("spreads has item ids that are equal as strings (such as 1 and '1')")
+        object.__setattr__(self, "spreads", MappingProxyType(table))
+
+    def __hash__(self) -> int:
+        return hash((frozenset(self.spreads.items()), self.fallback))
+
+    def __reduce__(self):  # a mappingproxy does not pickle: pickle the table as a dict
+        return (type(self), (dict(self.spreads), self.fallback))
 
     def __call__(self, item: Item, max_score: int) -> Sequence[float]:
         spread = self.spreads.get(item.id)
@@ -955,11 +966,12 @@ class ItemSpreads:
     def from_dict(
         cls, data: Mapping[str, Any], *, fallback: Thresholds = binomial_thresholds
     ) -> ItemSpreads:
-        if data.get("schema") != cls.schema:
+        if not isinstance(data, Mapping) or data.get("schema") != cls.schema:
             raise ValueError(
-                f"not an item spreads table: schema {data.get('schema')!r}, "
-                f"expected {cls.schema!r}"
+                f"not an item spreads table (schema {cls.schema!r}): {data!r:.200}"
             )
+        if not isinstance(data.get("spreads"), Mapping):
+            raise ValueError(f"an item spreads table needs a 'spreads' mapping: {data!r:.200}")
         return cls(data["spreads"], fallback=fallback)
 
 

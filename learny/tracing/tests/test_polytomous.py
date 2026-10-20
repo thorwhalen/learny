@@ -570,6 +570,14 @@ class TestItemSpreads:
             ItemSpreads.from_dict({"spreads": {}})
         with pytest.raises(ValueError, match="positive"):
             ItemSpreads({"q": -1.0})
+        assert hash(table) == hash(ItemSpreads({"q": 2.0}))
+        with pytest.raises(TypeError):
+            table.spreads["q"] = 5.0
+        for bad in ({"schema": ItemSpreads.schema}, {"schema": ItemSpreads.schema, "spreads": [1]}, [1]):
+            with pytest.raises(ValueError, match="item spreads table"):
+                ItemSpreads.from_dict(bad)
+        with pytest.raises(ValueError, match="equal as strings"):
+            ItemSpreads({1: 2.0, "1": 3.0})
 
     def test_min_responses_is_validated(self):
         from learny.tracing import fit_item_spreads
