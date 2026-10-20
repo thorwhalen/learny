@@ -780,6 +780,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Real</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MappingProxyType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing.records</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Outcome</span><span class="p">,</span> <span class="n">Response</span>
@@ -1692,6 +1693,68 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    True</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">SpreadThresholds</span><span class="p">(</span><span class="n">spread</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ItemSpreads">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.html#learny.tracing.ItemSpreads">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ItemSpreads</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Per-item threshold spreads from a table, ``fallback`` for the items it does not hold.</span>
+
+<span class="sd">    The ``thresholds`` seam's reader for the table</span>
+<span class="sd">    :func:`~learny.tracing.diagnostics.fit_item_spreads` exports: an item in ``spreads``</span>
+<span class="sd">    gets ``spread_thresholds(spreads[item.id])``, any other item ``fallback(item, m)``</span>
+<span class="sd">    (default :func:`binomial_thresholds`; usually the global spread the table was fitted</span>
+<span class="sd">    against). ``to_dict``/``from_dict`` carry the table, not the fallback, which is code.</span>
+
+<span class="sd">    &gt;&gt;&gt; t = ItemSpreads({'sharp': 0.5}, fallback=spread_thresholds(2.0))</span>
+<span class="sd">    &gt;&gt;&gt; [round(x, 3) for x in t(Item('sharp'), 2)], [round(x, 3) for x in t(Item('other'), 2)]</span>
+<span class="sd">    ([-0.347, 0.347], [-1.386, 1.386])</span>
+<span class="sd">    &gt;&gt;&gt; ItemSpreads.from_dict(t.to_dict(), fallback=spread_thresholds(2.0)) == t</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+
+    <span class="n">spreads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">fallback</span><span class="p">:</span> <span class="n">Thresholds</span> <span class="o">=</span> <span class="n">binomial_thresholds</span>
+
+    <span class="c1">#: The ``schema`` tag of :meth:`to_dict`, so a reader can tell a table it understands.</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="s2">"learny.item_spreads/1"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spreads</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"spreads must be a mapping of item id to spread, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">spreads</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">item_id</span><span class="p">):</span> <span class="n">SpreadThresholds</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">spread</span> <span class="k">for</span> <span class="n">item_id</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spreads</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spreads</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"spreads has item ids that are equal as strings (such as 1 and '1')"</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"spreads"</span><span class="p">,</span> <span class="n">MappingProxyType</span><span class="p">(</span><span class="n">table</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spreads</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span> <span class="bp">self</span><span class="o">.</span><span class="n">fallback</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># a mappingproxy does not pickle: pickle the table as a dict</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spreads</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">fallback</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">Item</span><span class="p">,</span> <span class="n">max_score</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">spread</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spreads</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">spread</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fallback</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">max_score</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">SpreadThresholds</span><span class="p">(</span><span class="n">spread</span><span class="p">)(</span><span class="n">item</span><span class="p">,</span> <span class="n">max_score</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"schema"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="s2">"spreads"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spreads</span><span class="p">)}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">fallback</span><span class="p">:</span> <span class="n">Thresholds</span> <span class="o">=</span> <span class="n">binomial_thresholds</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ItemSpreads</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schema"</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">schema</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"not an item spreads table (schema </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">schema</span><span class="si">!r}</span><span class="s2">): </span><span class="si">{</span><span class="n">data</span><span class="si">!r:</span><span class="s2">.200</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"spreads"</span><span class="p">),</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"an item spreads table needs a 'spreads' mapping: </span><span class="si">{</span><span class="n">data</span><span class="si">!r:</span><span class="s2">.200</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"spreads"</span><span class="p">],</span> <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">)</span></div>
 
 
 

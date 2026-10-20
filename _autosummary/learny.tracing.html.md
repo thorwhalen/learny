@@ -19,27 +19,28 @@ True
 
 ### Functions
 
-| [`estimate_store`](#learny.tracing.estimate_store)(\*[, rootdir])                  | Per-student mastery estimates, keyed by student.                                                                               |
-|-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| [`response_log`](#learny.tracing.response_log)(\*[, rootdir])                    | The default response log, under `~/.local/share/learny/responses/`.                                                            |
-| [`data_dir`](#learny.tracing.data_dir)([kind, app_name])                     | The per-kind data directory, created on demand.                                                                                |
-| [`label_separation`](#learny.tracing.label_separation)(state, \*[, estimator, ...])  | Separation of one student's label deviations, from their estimator state.                                                      |
-| [`calibration`](#learny.tracing.calibration)(log, \*, items, estimator[, ...])  | Prequential calibration of `estimator` over the students in `log`.                                                             |
-| [`score_calibration`](#learny.tracing.score_calibration)(log, \*, items, estimator)   | Prequential calibration of `estimator`'s score forecasts over `log`.                                                           |
-| [`reads_scores`](#learny.tracing.reads_scores)(estimator)                        | Whether `estimator` forecasts ordered scores: it has `score_probabilities`.                                                    |
-| [`compare_estimators`](#learny.tracing.compare_estimators)(log, \*, items, candidates) | Replay `log` prequentially under each candidate and pick one; see [`Comparison`](#learny.tracing.Comparison). |
-| [`fit_threshold_spread`](#learny.tracing.fit_threshold_spread)(log, \*, items[, ...])    | The threshold spread a log supports for [`PartialCreditEstimator`](#learny.tracing.PartialCreditEstimator).               |
-| [`prequential`](#learny.tracing.prequential)(responses, \*, items, estimator)   | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                                  |
-| [`fit_feature_difficulty`](#learny.tracing.fit_feature_difficulty)(log, \*, items[, ...])  | Fit which item features predict difficulty, from a log of play.                                                                |
-| [`attempt_features`](#learny.tracing.attempt_features)(response)                     | The default per-attempt feature source: `response.meta['features']`, or `None`.                                                |
-| [`item_features`](#learny.tracing.item_features)(item)                            | The default feature source: `item.meta['features']`, or `None`.                                                                |
-| [`restrict_labels`](#learny.tracing.restrict_labels)(items, \*, keep[, ...])        | Project an item bank onto a subset of its labels — one facet, say.                                                             |
-| [`difficulty_from_rank`](#learny.tracing.difficulty_from_rank)(rank, n_ranks)            | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                               |
-| [`binomial_thresholds`](#learny.tracing.binomial_thresholds)(item, max_score)           | Thresholds under which a score out of `m` is `m` steps taken at one rate.                                                      |
-| [`spread_thresholds`](#learny.tracing.spread_thresholds)(spread)                      | Binomial thresholds stretched by `spread`: `tau_k = spread * log(k / (m - k + 1))`.                                            |
-| [`mark_not_reached`](#learny.tracing.mark_not_reached)(responses)                    | Flag the trailing run of blanks in one sitting as *not reached*.                                                               |
-| [`expit`](#learny.tracing.expit)(x)                                       | The logistic function, overflow-safe at the tails.                                                                             |
-| [`logit`](#learny.tracing.logit)(p, \*[, eps])                            | Inverse of [`expit()`](#learny.tracing.expit), clamped away from 0 and 1 so it stays finite.             |
+| [`estimate_store`](#learny.tracing.estimate_store)(\*[, rootdir])                    | Per-student mastery estimates, keyed by student.                                                                               |
+|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| [`response_log`](#learny.tracing.response_log)(\*[, rootdir])                      | The default response log, under `~/.local/share/learny/responses/`.                                                            |
+| [`data_dir`](#learny.tracing.data_dir)([kind, app_name])                       | The per-kind data directory, created on demand.                                                                                |
+| [`label_separation`](#learny.tracing.label_separation)(state, \*[, estimator, ...])    | Separation of one student's label deviations, from their estimator state.                                                      |
+| [`calibration`](#learny.tracing.calibration)(log, \*, items, estimator[, ...])    | Prequential calibration of `estimator` over the students in `log`.                                                             |
+| [`score_calibration`](#learny.tracing.score_calibration)(log, \*, items, estimator)     | Prequential calibration of `estimator`'s score forecasts over `log`.                                                           |
+| [`reads_scores`](#learny.tracing.reads_scores)(estimator)                          | Whether `estimator` forecasts ordered scores: it has `score_probabilities`.                                                    |
+| [`compare_estimators`](#learny.tracing.compare_estimators)(log, \*, items, candidates)   | Replay `log` prequentially under each candidate and pick one; see [`Comparison`](#learny.tracing.Comparison). |
+| [`fit_item_spreads`](#learny.tracing.fit_item_spreads)(log, \*, items[, spreads, ...]) | Per-item threshold spreads a population's log supports, as a table: step 2 of #32.                                             |
+| [`fit_threshold_spread`](#learny.tracing.fit_threshold_spread)(log, \*, items[, ...])      | The threshold spread a log supports for [`PartialCreditEstimator`](#learny.tracing.PartialCreditEstimator).               |
+| [`prequential`](#learny.tracing.prequential)(responses, \*, items, estimator)     | Yield `(response, p)` where `p` was predicted *before* the response was seen.                                                  |
+| [`fit_feature_difficulty`](#learny.tracing.fit_feature_difficulty)(log, \*, items[, ...])    | Fit which item features predict difficulty, from a log of play.                                                                |
+| [`attempt_features`](#learny.tracing.attempt_features)(response)                       | The default per-attempt feature source: `response.meta['features']`, or `None`.                                                |
+| [`item_features`](#learny.tracing.item_features)(item)                              | The default feature source: `item.meta['features']`, or `None`.                                                                |
+| [`restrict_labels`](#learny.tracing.restrict_labels)(items, \*, keep[, ...])          | Project an item bank onto a subset of its labels — one facet, say.                                                             |
+| [`difficulty_from_rank`](#learny.tracing.difficulty_from_rank)(rank, n_ranks)              | Map an ordinal difficulty band (1-based, 1 = easiest) to a proportion in (0, 1).                                               |
+| [`binomial_thresholds`](#learny.tracing.binomial_thresholds)(item, max_score)             | Thresholds under which a score out of `m` is `m` steps taken at one rate.                                                      |
+| [`spread_thresholds`](#learny.tracing.spread_thresholds)(spread)                        | Binomial thresholds stretched by `spread`: `tau_k = spread * log(k / (m - k + 1))`.                                            |
+| [`mark_not_reached`](#learny.tracing.mark_not_reached)(responses)                      | Flag the trailing run of blanks in one sitting as *not reached*.                                                               |
+| [`expit`](#learny.tracing.expit)(x)                                         | The logistic function, overflow-safe at the tails.                                                                             |
+| [`logit`](#learny.tracing.logit)(p, \*[, eps])                              | Inverse of [`expit()`](#learny.tracing.expit), clamped away from 0 and 1 so it stays finite.             |
 
 ### Classes
 
@@ -52,6 +53,7 @@ True
 | [`Mastery`](#learny.tracing.Mastery)(label, skill[, prior_var, ...])           | What the model believes about one student and one label.                                                              |
 | [`Skill`](#learny.tracing.Skill)(mu, var[, n, t])                            | A Gaussian belief about one skill, on the logit scale.                                                                |
 | [`Estimator`](#learny.tracing.Estimator)(\*args, \*\*kwargs)                     | The seam.                                                                                                             |
+| [`ItemSpreads`](#learny.tracing.ItemSpreads)(spreads[, fallback])                  | Per-item threshold spreads from a table, `fallback` for the items it does not hold.                                   |
 | [`RaschEstimator`](#learny.tracing.RaschEstimator)([prior_var, label_prior_var, ...]) | Online Rasch with a Gaussian posterior.                                                                               |
 | [`PartialCreditEstimator`](#learny.tracing.PartialCreditEstimator)([prior_var, ...])          | Masters' Partial Credit Model on the Rasch predictor: reads an ordered score.                                         |
 | [`ResponseLog`](#learny.tracing.ResponseLog)(\*[, rootdir])                        | The append-only record of every response.                                                                             |
@@ -286,6 +288,54 @@ Leave it `None` when nothing observed is available.
 #### *property* weights *: [dict](https://docs.python.org/3/builtins/stdtypes.html#dict)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [float](https://docs.python.org/3/builtins/functions.html#float)]*
 
 Labels as a `{label: weight}` mapping, whichever form they were given in.
+
+### *class* learny.tracing.ItemSpreads(spreads, fallback=<function binomial_thresholds>)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Per-item threshold spreads from a table, `fallback` for the items it does not hold.
+
+The `thresholds` seam’s reader for the table
+`fit_item_spreads()` exports: an item in `spreads`
+gets `spread_thresholds(spreads[item.id])`, any other item `fallback(item, m)`
+(default [`binomial_thresholds()`](#learny.tracing.binomial_thresholds); usually the global spread the table was fitted
+against). `to_dict`/`from_dict` carry the table, not the fallback, which is code.
+
+```pycon
+>>> t = ItemSpreads({'sharp': 0.5}, fallback=spread_thresholds(2.0))
+>>> [round(x, 3) for x in t(Item('sharp'), 2)], [round(x, 3) for x in t(Item('other'), 2)]
+([-0.347, 0.347], [-1.386, 1.386])
+>>> ItemSpreads.from_dict(t.to_dict(), fallback=spread_thresholds(2.0)) == t
+True
+```
+
+#### fallback(max_score)
+
+Thresholds under which a score out of `m` is `m` steps taken at one rate.
+
+`tau_k = log(k / (m - k + 1))`. With these, the Partial Credit Model’s distribution
+of the score is binomial with step rate `expit(skill - difficulty)`, so the expected
+*fraction* of the maximum equals the right/wrong model’s probability of a correct
+answer, and an item’s `difficulty` means the same thing however it is scored. That
+is why it is the default: it is the one choice that keeps an externally calibrated
+difficulty meaningful with no new parameters (with `guess=0`: a score is never a
+guess). It is not a claim that the steps really are independent, and it makes a score
+out of `m` carry up to `m` times the evidence of one right/wrong answer; thresholds
+spread wider apart carry less.
+
+```pycon
+>>> binomial_thresholds(Item('q'), 1)  # one step: the right/wrong model
+[0.0]
+>>> [round(t, 3) for t in binomial_thresholds(Item('q'), 4)]
+[-1.386, -0.405, 0.405, 1.386]
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
+#### schema *= 'learny.item_spreads/1'*
+
+The `schema` tag of `to_dict()`, so a reader can tell a table it understands.
 
 ### *class* learny.tracing.LabelSeparation(n_labels, observed_sd, rmse, threshold=2.0)
 
@@ -1292,6 +1342,38 @@ True
 
 * **Return type:**
   [`FeatureDifficulty`](learny.tracing.difficulty.html.md#learny.tracing.difficulty.FeatureDifficulty)
+
+### learny.tracing.fit_item_spreads(log, , items, spreads=(1.0, 0.75, 1.3333333333333333, 0.5, 2.0, 0.3333333333333333, 3.0), estimator=None, students=None, min_responses=20, tolerance_se=1.0)
+
+Per-item threshold spreads a population’s log supports, as a table: step 2 of #32.
+
+An offline fit across students (decision 8), like [`fit_threshold_spread()`](#learny.tracing.fit_threshold_spread) but one
+choice per item. The log is replayed once, prequentially, under `estimator` (default
+a plain `PartialCreditEstimator`; usually one with the global spread
+[`fit_threshold_spread()`](#learny.tracing.fit_threshold_spread) chose), and each scored response keeps the predictor that
+estimator forecast it at. Each item with at least `min_responses` scored responses
+then compares, on those forecasts, the estimator’s own thresholds (named `"base"`)
+against `spread_thresholds(c)` for each `c` in `spreads`, by score log loss
+with the one-standard-error rule clustered by student (`tolerance_se`), preferring
+the base and then spreads nearer 1 on a log scale. Only items whose choice is not the
+base enter the table.
+
+Returns `(ItemSpreads(table, fallback=estimator.thresholds), comparisons)`, the
+comparisons keyed by item id. Use the table as
+`replace(estimator, thresholds=table)`. Nothing is co-estimated online. The
+students’ predictors are the base estimator’s, not refitted under each item’s
+spread: an approximation that keeps the fit to one replay.
+
+```pycon
+>>> items = {'q': Item('q', difficulty=0.5)}
+>>> log = {'a': [Response('a', 'q', 'correct', score=k, max_score=2) for k in (1, 2, 1, 0)]}
+>>> table, comparisons = fit_item_spreads(log, items=items)
+>>> dict(table.spreads), comparisons   # four scores are too few to try
+({}, {})
+```
+
+* **Return type:**
+  [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`ItemSpreads`](#learny.tracing.ItemSpreads), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Comparison`](learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.Comparison)]]
 
 ### learny.tracing.fit_threshold_spread(log, , items, spreads=(1.0, 0.75, 1.3333333333333333, 0.5, 2.0, 0.3333333333333333, 3.0), estimator=None, students=None, tolerance_se=1.0)
 

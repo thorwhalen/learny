@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-20T10:13:43Z",
+  "built_at": "2026-10-20T10:59:47Z",
   "package": {
     "name": "learny",
     "version": "0.0.1",
@@ -9,28 +9,28 @@
   },
   "git": {
     "available": true,
-    "commit": "1c27984f4b576a592b45cf8d76ee5efccd398b9a",
-    "short_commit": "1c27984",
+    "commit": "606d0faf959fa81d5b8489a2245a20d5bea19556",
+    "short_commit": "606d0fa",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/learny",
-    "commit_url": "https://github.com/thorwhalen/learny/commit/1c27984f4b576a592b45cf8d76ee5efccd398b9a",
+    "commit_url": "https://github.com/thorwhalen/learny/commit/606d0faf959fa81d5b8489a2245a20d5bea19556",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/learny",
-    "sha": "1c27984f4b576a592b45cf8d76ee5efccd398b9a",
+    "sha": "606d0faf959fa81d5b8489a2245a20d5bea19556",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "39406142456",
-    "run_url": "https://github.com/thorwhalen/learny/actions/runs/39406142456",
+    "run_id": "39411492469",
+    "run_url": "https://github.com/thorwhalen/learny/actions/runs/39411492469",
     "server_url": "https://github.com"
   },
   "tools": {
-    "epythet": "0.2.18",
+    "epythet": "0.2.19",
     "sphinx": "9.1.1",
     "docutils": "0.22.4",
     "python": "3.12.15"
@@ -56,7 +56,7 @@
   },
   "site": {
     "modules_documented": 8,
-    "objects_documented": 210
+    "objects_documented": 215
   },
   "pypi": {
     "checked": true,
@@ -64,7 +64,7 @@
     "relation": "unknown",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/learny && cd learny\ngit checkout 1c27984f4b576a592b45cf8d76ee5efccd398b9a\npip install \"epythet==0.2.18\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/learny && cd learny\ngit checkout 606d0faf959fa81d5b8489a2245a20d5bea19556\npip install \"epythet==0.2.19\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,

@@ -16,6 +16,7 @@ learny.tracing
       score_calibration
       reads_scores
       compare_estimators
+      fit_item_spreads
       fit_threshold_spread
       prequential
       fit_feature_difficulty
@@ -41,6 +42,7 @@ learny.tracing
       Mastery
       Skill
       Estimator
+      ItemSpreads
       RaschEstimator
       PartialCreditEstimator
       ResponseLog
