@@ -411,7 +411,9 @@ class LearnerModel:
           corrections of ``"calibrated"`` are cautious: few answers per label, items the
           student nearly always gets right, or nearly always wrong (#35). It costs
           ``null_draws`` replays of the record per call, and is deterministic for a given
-          student and record.
+          student and record; the draws are common random numbers across calls (a new
+          answer extends each replay rather than reseeding it), so the cut moves only as
+          much as the record does.
         * ``relative_to`` — ``"labels"`` (default) as above; ``"global"`` measures each
           label's deviation against zero, the student's global skill. The default
           estimator carries the global/label covariance, so a shortfall every item
@@ -563,9 +565,12 @@ class LearnerModel:
         state = self._state(student)
         record = self._responses(student)
         labels = {m.label for m in ranked}
-        rng = random.Random(f"learny.weakest:{student}:{len(record)}")
         minima = []
-        for _ in range(draws):
+        for draw in range(draws):
+            # One stream per draw, seeded independently of the record's length: a new
+            # answer extends each replay instead of reshuffling every draw, so a label
+            # near the cut does not flip from Monte Carlo noise alone (#45).
+            rng = random.Random(f"learny.weakest:{student}:{draw}")
             sim = self.estimator.init()
             for response in record:
                 item = self.items.get(response.item)
