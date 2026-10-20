@@ -9,12 +9,15 @@ how much that costs, on the synthetic students of
 about 0.159) and the rate it finds a real weakness of ``-2`` logits on ``l0``, across:
 
 * ``fixed`` -- ``update_difficulty=False`` (the default estimator), as the reference;
-* ``current`` -- ``update_difficulty=True`` as shipped (the mismatch);
+* ``current`` -- ``update_difficulty=True`` as shipped before #48 (the mismatch);
 * ``prior_redraw`` -- the redraw uses the prior difficulties the replay starts from;
 * ``seeded_replay`` -- each replay starts from the learned difficulties the redraw uses.
 
 The last two are the two ways to remove the mismatch. Every variant sees the same
 students (common random numbers). Synthetic data only.
+
+Since #48 the shipped ``RaschEstimator(update_difficulty=True)`` is ``prior_redraw``;
+``current`` keeps the old redraw through :class:`LearnedRedraw`.
 
 Usage::
 
@@ -48,6 +51,17 @@ WEAKNESS = -2.0
 VARIANTS = ("fixed", "current", "prior_redraw", "seeded_replay")
 
 
+class LearnedRedraw(RaschEstimator):
+    """Redraws at the difficulties the state ended with: the behaviour before #48."""
+
+    def null_response(self, state, response, item, rng):
+        self._ended_with = state
+        return super().null_response(state, response, item, rng)
+
+    def _null_difficulty(self, item):
+        return self._difficulty(self._ended_with, item)
+
+
 class PriorRedraw(RaschEstimator):
     """Redraws at the prior difficulties, the ones each replay starts from."""
 
@@ -74,7 +88,7 @@ def _estimator(variant: str) -> RaschEstimator:
     if variant == "fixed":
         return RaschEstimator()
     if variant == "current":
-        return RaschEstimator(update_difficulty=True)
+        return LearnedRedraw(update_difficulty=True)
     if variant == "prior_redraw":
         return PriorRedraw(update_difficulty=True)
     return SeededReplay(update_difficulty=True)

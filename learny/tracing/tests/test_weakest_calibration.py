@@ -241,3 +241,57 @@ def test_simulated_draws_are_common_random_numbers_across_calls():
     # each draw's first n - 1 redraws start from the same random state as before
     for d in range(draws):
         assert longer[d * n : d * n + n - 1] == shorter[d * (n - 1) : (d + 1) * (n - 1)]
+
+
+class TestSimulatedGateWithUpdateDifficulty:
+    """#48: with ``update_difficulty=True`` the null is redrawn at the prior difficulty,
+    the one each replay starts from, not the one the student's state ended with."""
+
+    class LearnedRedraw(RaschEstimator):
+        """The behaviour before #48: redraw at the learned difficulties."""
+
+        def _null_difficulty(self, item):
+            return self._difficulty(self._ended_with, item)
+
+        def null_response(self, state, response, item, rng):
+            self._ended_with = state
+            return super().null_response(state, response, item, rng)
+
+    def test_the_redraw_ignores_learned_difficulties(self):
+        from learny.tracing import PartialCreditEstimator
+
+        rng = random.Random(40)
+        item = Item("q", labels=("a",), difficulty=0.5)
+        plain = Response("s", "q", "correct")
+        scored = Response("s", "q", "wrong", score=1, max_score=2)
+        pce = PartialCreditEstimator(update_difficulty=True)
+        state = {**pce.init(), "items": {"q": {"b": 6.0, "n": 50}}}  # learned: very hard
+        for est in (RaschEstimator(update_difficulty=True), pce):
+            right = sum(est.null_response(state, plain, item, rng).outcome is Outcome.CORRECT
+                        for _ in range(200))
+            assert 60 < right < 140  # about even odds, as at the prior difficulty
+        top = sum(pce.null_response(state, scored, item, rng).score == 2 for _ in range(200))
+        assert top > 20  # P(2 of 2) is 0.25 at the prior, about 0 at b = 6
+
+    STUDENTS = 60
+
+    def _rates(self, estimator, *, weakness, seed):
+        rng = random.Random(seed)
+        hits = 0
+        for _ in range(self.STUDENTS):
+            model = _student(rng, 3, 18, weakness=weakness, estimator=estimator)
+            flagged = {m.label for m in model.weakest("s", n=3, multiplicity="simulated",
+                                                      null_draws=100)}
+            hits += ("l0" in flagged) if weakness else bool(flagged)
+        return hits / self.STUDENTS
+
+    def test_false_flags_near_target_and_power_recovered(self):
+        """At 3 labels and 18 answers, measured with 300 students in
+        docs/research/weakest-update-difficulty-mismatch.md: false flags 0.21 (0.09 before),
+        power 0.40 (0.26 before)."""
+        now, before = RaschEstimator(update_difficulty=True), self.LearnedRedraw(
+            update_difficulty=True)
+        false = self._rates(now, weakness=0.0, seed=41)
+        assert false <= 0.16 + 0.12  # target 1 - Phi(1), 2.5 MC sd at 60 students
+        assert self._rates(now, weakness=-2.0, seed=42) > self._rates(
+            before, weakness=-2.0, seed=42)

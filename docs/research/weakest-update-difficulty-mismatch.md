@@ -4,7 +4,7 @@ Measured 2026-10-20 for [#46](https://github.com/thorwhalen/learny/issues/46). S
 
 ## The question
 
-With `RaschEstimator(update_difficulty=True)`, the simulated null redraws every answer at the difficulties the student's state *ended* with, while each replay starts from `init()` and relearns them from the prior on the redrawn answers. Does that mismatch move the false-flag rate off its target (`1 - Phi(1)`, about 0.159, at the default `credible_below=1`)?
+Before [#48](https://github.com/thorwhalen/learny/issues/48), with `RaschEstimator(update_difficulty=True)`, the simulated null redraws every answer at the difficulties the student's state *ended* with, while each replay starts from `init()` and relearns them from the prior on the redrawn answers. Does that mismatch move the false-flag rate off its target (`1 - Phi(1)`, about 0.159, at the default `credible_below=1`)?
 
 ## What was compared
 
@@ -39,3 +39,5 @@ On the cells of `learny/tracing/tests/test_weakest_calibration.py`, with the sam
 ## Recommendation
 
 Change nothing in the direction of safety (the shipped behaviour never over-flags). If the power lost with `update_difficulty=True` matters, make `null_response` redraw at the prior difficulty (the item's own `difficulty`, ignoring `state["items"]`) when the estimator co-estimates difficulty, which is `prior_redraw` above. That change is tracked separately so this measurement lands on its own.
+
+**Done in [#48](https://github.com/thorwhalen/learny/issues/48):** `null_response` now redraws at the difficulty each replay starts from, which with `update_difficulty=True` is the prior. The shipped behaviour is `prior_redraw` above; the script reproduces the old one as `current`. `test_weakest_calibration.py` checks it at `update_difficulty=True` (`TestSimulatedGateWithUpdateDifficulty`).
