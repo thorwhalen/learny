@@ -27,11 +27,23 @@ vocabulary games that used to live in the package are now plain data/a web app u
   has predicted so far, so it can say "I'm guessing" instead of guessing silently.
 - `tests/` — `test_model.py`, `test_records_and_stores.py`, `test_diagnostics.py`.
 
+## Module map (`learny/`, outside `tracing`)
+
+- `scheduling.py` — which item next: a `Strategy` registry (`make_strategy(key)`:
+  uniform_random, leitner, sm2, confusion_weighted (default), fsrs_lite, weakest),
+  each replaying a learner's `Response`s; `next_selection` returns target + options.
+  Moved from kodokan's `learning.py`.
+- `distractors.py` — which wrong options: `confusion_weights` (recency-weighted,
+  from `meta['chosen']`, discounted by `credit_of`), `merge_similarity`,
+  `pick_distractors`. Baselines (uniform_random, leitner, sm2) default to
+  `learner_confusions=False`, as in kodokan.
+- `_sampling.py` — shared `days_since`, `weighted_sample`. Tests: `learny/tests/`.
+
 ## Tests & lint (verified)
 
 ```bash
 uv venv .venv && uv pip install -e . pytest ruff
-.venv/bin/pytest -v --tb=short --doctest-modules --ignore=games   # 323 passed
+.venv/bin/pytest -v --tb=short --doctest-modules --ignore=games   # 363 passed
 .venv/bin/ruff check .
 ```
 Or `wads ci-local` for the full gate (Python 3.10+3.12, Windows included, doctests

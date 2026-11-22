@@ -42,6 +42,9 @@ __all__ = [
     "META_SPEC",
     "META_SESSION",
     "META_NOT_REACHED",
+    "META_TIMED_OUT",
+    "META_CREDIT",
+    "credit_of",
     "guess_of",
     "confusions",
 ]
@@ -296,6 +299,13 @@ META_GUESS = "guess"
 META_SPEC = "spec"
 #: The id of the sitting this response belongs to.
 META_SESSION = "session"
+#: True when the round's clock ran out while it was on screen: the learner saw the item
+#: and did not answer in time (unlike ``not_reached``, an item never shown at all).
+META_TIMED_OUT = "timed_out"
+#: Partial credit in ``[0, 1]`` a wrong pick earned for being close (a near-homophone, a
+#: look-alike). For schedulers and distractor weighting only: the learner model reads the
+#: ordered ``score``, not this. Defaults to ``score / max_score`` (see :func:`credit_of`).
+META_CREDIT = "credit"
 
 #: Set by :func:`~learny.tracing.estimators.mark_not_reached` on a blank the clock ran
 #: out before: not evidence about the student. Any game may write it, not only choice games.
@@ -312,6 +322,8 @@ CHOICE_META_KEYS = (
     META_GUESS,
     META_SPEC,
     META_SESSION,
+    META_TIMED_OUT,
+    META_CREDIT,
 )
 
 #: Patterns whose chance rate is one over the number of options shown: one correct
@@ -360,6 +372,22 @@ def guess_of(
     if meta.get(META_PATTERN) in GUESS_IS_ONE_OVER_K and shown:
         return 1.0 / len(shown)
     return default
+
+
+def credit_of(response: Response) -> float:
+    """The share of full credit ``response`` earned: ``meta['credit']``, else
+    ``score / max_score``, else 1 if right and 0 if not.
+
+    >>> credit_of(Response('ada', 'tsu', 'wrong', meta={'credit': 0.3}))
+    0.3
+    >>> credit_of(Response('ada', 'tsu', 'wrong', score=1, max_score=4)), credit_of(Response('ada', 'tsu', 'correct'))
+    (0.25, 1.0)
+    """
+    if META_CREDIT in response.meta:
+        return float(response.meta[META_CREDIT])
+    if response.score is not None:
+        return response.score / response.max_score
+    return 1.0 if response.correct else 0.0
 
 
 def confusions(responses: Iterable[Response]) -> Counter[tuple[str, str]]:

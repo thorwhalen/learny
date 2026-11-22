@@ -154,7 +154,7 @@ Three rules for the records, from the evidence above:
 
 1. **Log the options shown and the wrong choice**, not just right or wrong. Confusions (シ chosen for ツ) are the signal for distractor selection and for `restrict_labels`.
 2. **Log latency and flag guess-like play.** Baker's work on gaming the system finds fast guessing associated with less learning when the learner lacks the knowledge, but not harmful on steps they already know [9]. A fast wrong answer on a symbol the model thinks is weak is evidence of guessing, not of ignorance; downweight it. Timers and overflow make this worse by rewarding any answer.
-3. **Select items through the model, not the game.** The pattern asks for `n` items; the scheduler (`weakest`, or S1) chooses them. That is the seam between this note and `learny.tracing`.
+3. **Select items through the model, not the game.** The pattern asks for `n` items; the scheduler (`weakest`, or S1) chooses them. That is the seam between this note and `learny.tracing`. The strategies live in `learny.scheduling` (`make_strategy`), the distractor choice in `learny.distractors`.
 
 ## 6. A phase ladder for symbols
 
