@@ -113,9 +113,12 @@ Per-label mastery for one student, weakest first when sorted by skill.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
 
-#### predict(student, item)
+#### predict(student, item, , guess=None)
 
 Probability that `student` answers `item` correctly.
+
+`guess` is the chance rate of the round (`1/k` for k options; see
+[`guess_of()`](learny.tracing.records.html.md#learny.tracing.records.guess_of)), defaulting to the estimator’s own.
 
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)

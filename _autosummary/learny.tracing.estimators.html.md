@@ -350,7 +350,10 @@ the mean would say “the skill got worse”, which is a guess.
 
 Probability of getting an item right by guessing. For 5-option multiple choice,
 0.2. Left at 0 by default because it is a property of the assessment, not of the
-model, and a wrong value here quietly biases everything.
+model, and a wrong value here quietly biases everything. A response that carries
+its own rate in `meta` (see [`guess_of()`](learny.tracing.records.html.md#learny.tracing.records.guess_of): an explicit
+`guess`, or `pattern='M1'` with the options `shown`) is updated at that rate
+instead, so one log can mix rounds of 2 and 4 options.
 
 #### init()
 
@@ -407,9 +410,12 @@ as it was (see `_Frame`).
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
-#### predict(state, item, , at=None)
+#### predict(state, item, , at=None, guess=None)
 
 Probability of a correct answer, integrating over the posterior.
+
+`guess` is the chance rate of the round being predicted (`1/k` for k options),
+defaulting to the estimator’s `guess`.
 
 With no evidence the prediction sits near the item’s own base rate, but pulled
 toward a coin flip — because the model is being honest that it knows nothing about
@@ -431,6 +437,8 @@ Shrink the prior and it converges on the base rate, as it should:
 >>> sure = RaschEstimator(prior_var=1e-6)
 >>> round(sure.predict(sure.init(), Item('q', difficulty=0.75)), 3)
 0.25
+>>> round(sure.predict(sure.init(), Item('q', difficulty=0.75), guess=0.5), 3)
+0.625
 ```
 
 * **Return type:**

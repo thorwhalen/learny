@@ -1,4 +1,4 @@
-> built 2026-10-20 19:58 UTC from 8d7c537 (main) · learny 0.0.1. Details: build_info.json
+> built 2026-11-22 11:35 UTC from d0797ad (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -1167,7 +1167,10 @@ the mean would say “the skill got worse”, which is a guess.
 
 Probability of getting an item right by guessing. For 5-option multiple choice,
 0.2. Left at 0 by default because it is a property of the assessment, not of the
-model, and a wrong value here quietly biases everything.
+model, and a wrong value here quietly biases everything. A response that carries
+its own rate in `meta` (see [`guess_of()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.guess_of): an explicit
+`guess`, or `pattern='M1'` with the options `shown`) is updated at that rate
+instead, so one log can mix rounds of 2 and 4 options.
 
 #### init()
 
@@ -1224,9 +1227,12 @@ as it was (see `_Frame`).
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
-#### predict(state, item, , at=None)
+#### predict(state, item, , at=None, guess=None)
 
 Probability of a correct answer, integrating over the posterior.
+
+`guess` is the chance rate of the round being predicted (`1/k` for k options),
+defaulting to the estimator’s `guess`.
 
 With no evidence the prediction sits near the item’s own base rate, but pulled
 toward a coin flip — because the model is being honest that it knows nothing about
@@ -1248,6 +1254,8 @@ Shrink the prior and it converges on the base rate, as it should:
 >>> sure = RaschEstimator(prior_var=1e-6)
 >>> round(sure.predict(sure.init(), Item('q', difficulty=0.75)), 3)
 0.25
+>>> round(sure.predict(sure.init(), Item('q', difficulty=0.75), guess=0.5), 3)
+0.625
 ```
 
 * **Return type:**
@@ -1441,8 +1449,10 @@ True
 
 ### Functions
 
-| [`estimate_store`](_autosummary/learny.tracing.html.md#learny.tracing.estimate_store)(\*[, rootdir])                    | Per-student mastery estimates, keyed by student.                                                                               |
+| [`guess_of`](_autosummary/learny.tracing.html.md#learny.tracing.guess_of)(response, \*[, default])                | The chance of answering `response`'s item right by guessing, from its meta.                                                    |
 |---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| [`confusions`](_autosummary/learny.tracing.html.md#learny.tracing.confusions)(responses)                            | How often each item was answered with each wrong option: `(item, chosen) -> n`.                                                |
+| [`estimate_store`](_autosummary/learny.tracing.html.md#learny.tracing.estimate_store)(\*[, rootdir])                    | Per-student mastery estimates, keyed by student.                                                                               |
 | [`response_log`](_autosummary/learny.tracing.html.md#learny.tracing.response_log)(\*[, rootdir])                      | The default response log, under `~/.local/share/learny/responses/`.                                                            |
 | [`data_dir`](_autosummary/learny.tracing.html.md#learny.tracing.data_dir)([kind, app_name])                       | The per-kind data directory, created on demand.                                                                                |
 | [`label_separation`](_autosummary/learny.tracing.html.md#learny.tracing.label_separation)(state, \*[, estimator, ...])    | Separation of one student's label deviations, from their estimator state.                                                      |
@@ -1856,9 +1866,12 @@ Per-label mastery for one student, weakest first when sorted by skill.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
 
-#### predict(student, item)
+#### predict(student, item, , guess=None)
 
 Probability that `student` answers `item` correctly.
+
+`guess` is the chance rate of the round (`1/k` for k options; see
+[`guess_of()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.guess_of)), defaulting to the estimator’s own.
 
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
@@ -2279,7 +2292,10 @@ the mean would say “the skill got worse”, which is a guess.
 
 Probability of getting an item right by guessing. For 5-option multiple choice,
 0.2. Left at 0 by default because it is a property of the assessment, not of the
-model, and a wrong value here quietly biases everything.
+model, and a wrong value here quietly biases everything. A response that carries
+its own rate in `meta` (see [`guess_of()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.guess_of): an explicit
+`guess`, or `pattern='M1'` with the options `shown`) is updated at that rate
+instead, so one log can mix rounds of 2 and 4 options.
 
 #### init()
 
@@ -2336,9 +2352,12 @@ as it was (see `_Frame`).
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
 
-#### predict(state, item, , at=None)
+#### predict(state, item, , at=None, guess=None)
 
 Probability of a correct answer, integrating over the posterior.
+
+`guess` is the chance rate of the round being predicted (`1/k` for k options),
+defaulting to the estimator’s `guess`.
 
 With no evidence the prediction sits near the item’s own base rate, but pulled
 toward a coin flip — because the model is being honest that it knows nothing about
@@ -2360,6 +2379,8 @@ Shrink the prior and it converges on the base rate, as it should:
 >>> sure = RaschEstimator(prior_var=1e-6)
 >>> round(sure.predict(sure.init(), Item('q', difficulty=0.75)), 3)
 0.25
+>>> round(sure.predict(sure.init(), Item('q', difficulty=0.75), guess=0.5), 3)
+0.625
 ```
 
 * **Return type:**
@@ -2420,6 +2441,20 @@ False
 Traceback (most recent call last):
     ...
 ValueError: Response 'q': a skipped response has no score (got score=0)
+```
+
+**A choice game** (the learner picks among options shown) writes its facts into
+`meta` under the names in `CHOICE_META_KEYS`: `shown` (option ids in display
+order), `chosen` (the pick), `rt_ms` (response time), `prompt` and `answer`
+(the sides shown and asked for), `pattern` (`'M1'`…), `guess`, `spec` and
+`session`. [`guess_of()`](_autosummary/learny.tracing.html.md#learny.tracing.guess_of) reads the guess rate from them and [`confusions()`](_autosummary/learny.tracing.html.md#learny.tracing.confusions)
+the wrong picks. Other keys are allowed and kept as they are.
+
+```pycon
+>>> r = Response("ada", "ni", "wrong", meta={"shown": ["ni", "wo", "ta"], "chosen": "wo",
+...              "rt_ms": 1840, "pattern": "M1"})
+>>> guess_of(r), Response.from_dict(r.to_dict()) == r
+(0.3333333333333333, True)
 ```
 
 #### *property* correct *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
@@ -2664,6 +2699,30 @@ plain arg-min. This is the tool for refitting any estimator setting on a log
 * **Return type:**
   [`Comparison`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.Comparison)
 
+### learny.tracing.confusions(responses)
+
+How often each item was answered with each wrong option: `(item, chosen) -> n`.
+
+Read from wrong responses that recorded `meta['chosen']`; everything else is
+skipped. This is what a distractor policy feeds on (offer the learner the options
+they actually mistake for this item) and what tells two labels apart. Pass one
+student’s responses for their confusions, everyone’s for the population’s.
+
+```pycon
+>>> log = [
+...     Response('ada', 'tsu', 'wrong', meta={'chosen': 'shi'}),
+...     Response('ada', 'tsu', 'wrong', meta={'chosen': 'shi'}),
+...     Response('ada', 'tsu', 'correct', meta={'chosen': 'tsu'}),
+...     Response('ada', 'so', 'wrong', meta={'chosen': 'n'}),
+...     Response('ada', 'so', 'wrong'),            # no pick recorded: not counted
+... ]
+>>> confusions(log)
+Counter({('tsu', 'shi'): 2, ('so', 'n'): 1})
+```
+
+* **Return type:**
+  [`Counter`](https://docs.python.org/3/library/collections.html#collections.Counter)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
 ### learny.tracing.data_dir(kind='', , app_name='learny')
 
 The per-kind data directory, created on demand.
@@ -2863,6 +2922,37 @@ than a missed one.
 
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`Comparison`](_autosummary/learny.tracing.diagnostics.html.md#learny.tracing.diagnostics.Comparison)]
+
+### learny.tracing.guess_of(response, , default=None)
+
+The chance of answering `response`’s item right by guessing, from its meta.
+
+An explicit `meta['guess']` wins. Otherwise, for a pattern in
+`GUESS_IS_ONE_OVER_K`, it is one over the number of options shown. Otherwise
+`default`, which is where a model-wide `guess=` comes in. The guess rate is a
+property of the game that produced the response, so a log mixing 2-option and
+4-option rounds carries the right rate on each one. `response` may also be just a
+`meta` mapping, to get the rate of a round before it is played.
+
+```pycon
+>>> guess_of(Response('ada', 'ni', 'correct', meta={'pattern': 'M1', 'shown': ['ni', 'wo', 'ta', 'hao']}))
+0.25
+>>> guess_of(Response('ada', 'ni', 'wrong', meta={'guess': 0.5, 'pattern': 'M1', 'shown': ['ni', 'wo', 'ta']}))
+0.5
+>>> guess_of(Response('ada', 'ni', 'correct'), default=0.2)  # nothing in meta
+0.2
+>>> guess_of({'pattern': 'M1', 'shown': ['ni', 'wo']})  # a round about to be played
+0.5
+>>> guess_of(Response('ada', 'ni', 'correct', meta={'pattern': 'P1'})) is None  # typed: no k
+True
+>>> guess_of(Response('ada', 'ni', 'correct', meta={'guess': 1.0}))
+Traceback (most recent call last):
+    ...
+ValueError: Response 'ni': meta['guess'] must be a number in [0, 1), got 1.0
+```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### learny.tracing.item_features(item)
 
@@ -3210,9 +3300,12 @@ Per-label mastery for one student, weakest first when sorted by skill.
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mastery`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.Mastery)]
 
-#### predict(student, item)
+#### predict(student, item, , guess=None)
 
 Probability that `student` answers `item` correctly.
+
+`guess` is the chance rate of the round (`1/k` for k options; see
+[`guess_of()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.guess_of)), defaulting to the estimator’s own.
 
 * **Return type:**
   [`float`](https://docs.python.org/3/builtins/functions.html#float)
@@ -3407,6 +3500,9 @@ mutates the result owns keeping `reason` meaningful.
 
 Core data types for learner modelling: items, outcomes, and responses.
 
+Also the names of what a choice game records in a response’s `meta`
+([`CHOICE_META_KEYS`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.CHOICE_META_KEYS)), with [`guess_of()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.guess_of) and [`confusions()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.confusions) to read them.
+
 These are the vocabulary every other module in [`learny.tracing`](_autosummary/learny.tracing.html.md#module-learny.tracing) speaks. They are
 deliberately small and serialisable: a [`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response) is what gets appended to the
 append-only log that is the system’s single source of truth, so its shape is a
@@ -3420,13 +3516,27 @@ the log records what happened.
 
 ### Module Attributes
 
-| [`LabelWeights`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.LabelWeights)   | A mapping from label to the weight that label carries for an item.   |
-|-----------------------------------------------------------------|----------------------------------------------------------------------|
+| [`LabelWeights`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.LabelWeights)        | A mapping from label to the weight that label carries for an item.                                                                                                                         |
+|----------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`META_SHOWN`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_SHOWN)          | Option ids in display order, the correct one included.                                                                                                                                     |
+| [`META_CHOSEN`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_CHOSEN)         | The option id the learner picked; absent on a skip.                                                                                                                                        |
+| [`META_RT_MS`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_RT_MS)          | Response time, in milliseconds.                                                                                                                                                            |
+| [`META_PROMPT`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_PROMPT)         | The side(s) of the item shown as the prompt (`'fr.text'`, `['zh.hanzi']`...).                                                                                                              |
+| [`META_ANSWER`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_ANSWER)         | The side(s) the options were shown in, i.e. what was asked for.                                                                                                                            |
+| [`META_PATTERN`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_PATTERN)        | `'M1'` (pick the match among k), `'M2'`, `'P1'`...                                                                                                                                         |
+| [`META_GUESS`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_GUESS)          | The probability of a correct answer by chance, when the game knows it.                                                                                                                     |
+| [`META_SPEC`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_SPEC)           | The game settings this response was played under (an id, or the spec itself).                                                                                                              |
+| [`META_SESSION`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_SESSION)        | The id of the sitting this response belongs to.                                                                                                                                            |
+| [`META_NOT_REACHED`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_NOT_REACHED)    | Set by [`mark_not_reached()`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.mark_not_reached) on a blank the clock ran out before: not evidence about the student. |
+| [`CHOICE_META_KEYS`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.CHOICE_META_KEYS)    | Every meta key a choice game writes, in the order above.                                                                                                                                   |
+| [`GUESS_IS_ONE_OVER_K`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.GUESS_IS_ONE_OVER_K) | one correct option among k (M1), one correct target among k (M4).                                                                                                                          |
 
 ### Functions
 
-| [`restrict_labels`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.restrict_labels)(items, \*, keep[, ...])   | Project an item bank onto a subset of its labels — one facet, say.   |
-|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| [`restrict_labels`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.restrict_labels)(items, \*, keep[, ...])   | Project an item bank onto a subset of its labels — one facet, say.              |
+|--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [`guess_of`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.guess_of)(response, \*[, default])         | The chance of answering `response`'s item right by guessing, from its meta.     |
+| [`confusions`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.confusions)(responses)                     | How often each item was answered with each wrong option: `(item, chosen) -> n`. |
 
 ### Classes
 
@@ -3434,6 +3544,18 @@ the log records what happened.
 |----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
 | [`Item`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty. |
 | [`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response)(student, item, outcome[, at, meta, ...]) | One student meeting one item, once.                                         |
+
+### learny.tracing.records.CHOICE_META_KEYS *= ('shown', 'chosen', 'rt_ms', 'prompt', 'answer', 'pattern', 'guess', 'spec', 'session')*
+
+Every meta key a choice game writes, in the order above.
+
+### learny.tracing.records.GUESS_IS_ONE_OVER_K *= frozenset({'M1', 'M4'})*
+
+one correct
+option among k (M1), one correct target among k (M4).
+
+* **Type:**
+  Patterns whose chance rate is one over the number of options shown
 
 ### *class* learny.tracing.records.Item(id, labels=(), difficulty=None, meta=dict())
 
@@ -3467,6 +3589,51 @@ inter-rater reliability, for instance — so that a noisily-assigned label moves
 mastery estimate less than a reliably-assigned one.
 
 alias of [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
+### learny.tracing.records.META_ANSWER *= 'answer'*
+
+The side(s) the options were shown in, i.e. what was asked for.
+
+### learny.tracing.records.META_CHOSEN *= 'chosen'*
+
+The option id the learner picked; absent on a skip.
+
+### learny.tracing.records.META_GUESS *= 'guess'*
+
+The probability of a correct answer by chance, when the game knows it.
+
+### learny.tracing.records.META_NOT_REACHED *= 'not_reached'*
+
+Set by [`mark_not_reached()`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.mark_not_reached) on a blank the clock ran
+out before: not evidence about the student. Any game may write it, not only choice games.
+
+### learny.tracing.records.META_PATTERN *= 'pattern'*
+
+`'M1'` (pick the match among k), `'M2'`, `'P1'`…
+
+* **Type:**
+  The pattern id
+
+### learny.tracing.records.META_PROMPT *= 'prompt'*
+
+The side(s) of the item shown as the prompt (`'fr.text'`, `['zh.hanzi']`…).
+
+### learny.tracing.records.META_RT_MS *= 'rt_ms'*
+
+Response time, in milliseconds.
+
+### learny.tracing.records.META_SESSION *= 'session'*
+
+The id of the sitting this response belongs to.
+
+### learny.tracing.records.META_SHOWN *= 'shown'*
+
+Option ids in display order, the correct one included. An option id is the id of the
+item it shows, so a wrong pick names the item it was mistaken for.
+
+### learny.tracing.records.META_SPEC *= 'spec'*
+
+The game settings this response was played under (an id, or the spec itself).
 
 ### *class* learny.tracing.records.Outcome(\*values)
 
@@ -3536,6 +3703,20 @@ Traceback (most recent call last):
 ValueError: Response 'q': a skipped response has no score (got score=0)
 ```
 
+**A choice game** (the learner picks among options shown) writes its facts into
+`meta` under the names in [`CHOICE_META_KEYS`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.CHOICE_META_KEYS): `shown` (option ids in display
+order), `chosen` (the pick), `rt_ms` (response time), `prompt` and `answer`
+(the sides shown and asked for), `pattern` (`'M1'`…), `guess`, `spec` and
+`session`. [`guess_of()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.guess_of) reads the guess rate from them and [`confusions()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.confusions)
+the wrong picks. Other keys are allowed and kept as they are.
+
+```pycon
+>>> r = Response("ada", "ni", "wrong", meta={"shown": ["ni", "wo", "ta"], "chosen": "wo",
+...              "rt_ms": 1840, "pattern": "M1"})
+>>> guess_of(r), Response.from_dict(r.to_dict()) == r
+(0.3333333333333333, True)
+```
+
 #### *property* correct *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
 True only for an outright correct answer; a skip is not a correct answer.
@@ -3564,6 +3745,61 @@ is written exactly as it was before scores existed.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
+### learny.tracing.records.confusions(responses)
+
+How often each item was answered with each wrong option: `(item, chosen) -> n`.
+
+Read from wrong responses that recorded `meta['chosen']`; everything else is
+skipped. This is what a distractor policy feeds on (offer the learner the options
+they actually mistake for this item) and what tells two labels apart. Pass one
+student’s responses for their confusions, everyone’s for the population’s.
+
+```pycon
+>>> log = [
+...     Response('ada', 'tsu', 'wrong', meta={'chosen': 'shi'}),
+...     Response('ada', 'tsu', 'wrong', meta={'chosen': 'shi'}),
+...     Response('ada', 'tsu', 'correct', meta={'chosen': 'tsu'}),
+...     Response('ada', 'so', 'wrong', meta={'chosen': 'n'}),
+...     Response('ada', 'so', 'wrong'),            # no pick recorded: not counted
+... ]
+>>> confusions(log)
+Counter({('tsu', 'shi'): 2, ('so', 'n'): 1})
+```
+
+* **Return type:**
+  [`Counter`](https://docs.python.org/3/library/collections.html#collections.Counter)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
+### learny.tracing.records.guess_of(response, , default=None)
+
+The chance of answering `response`’s item right by guessing, from its meta.
+
+An explicit `meta['guess']` wins. Otherwise, for a pattern in
+[`GUESS_IS_ONE_OVER_K`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.GUESS_IS_ONE_OVER_K), it is one over the number of options shown. Otherwise
+`default`, which is where a model-wide `guess=` comes in. The guess rate is a
+property of the game that produced the response, so a log mixing 2-option and
+4-option rounds carries the right rate on each one. `response` may also be just a
+`meta` mapping, to get the rate of a round before it is played.
+
+```pycon
+>>> guess_of(Response('ada', 'ni', 'correct', meta={'pattern': 'M1', 'shown': ['ni', 'wo', 'ta', 'hao']}))
+0.25
+>>> guess_of(Response('ada', 'ni', 'wrong', meta={'guess': 0.5, 'pattern': 'M1', 'shown': ['ni', 'wo', 'ta']}))
+0.5
+>>> guess_of(Response('ada', 'ni', 'correct'), default=0.2)  # nothing in meta
+0.2
+>>> guess_of({'pattern': 'M1', 'shown': ['ni', 'wo']})  # a round about to be played
+0.5
+>>> guess_of(Response('ada', 'ni', 'correct', meta={'pattern': 'P1'})) is None  # typed: no k
+True
+>>> guess_of(Response('ada', 'ni', 'correct', meta={'guess': 1.0}))
+Traceback (most recent call last):
+    ...
+ValueError: Response 'ni': meta['guess'] must be a number in [0, 1), got 1.0
+```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### learny.tracing.records.restrict_labels(items, , keep, drop_unlabelled=False)
 
@@ -3717,7 +3953,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-10-20 19:58 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff"><code>8d7c537</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-22 11:35 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/d0797adf9ad99891dc3bc1f54dc336055bef57a0"><code>d0797ad</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -3726,7 +3962,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff"><code>8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/d0797adf9ad99891dc3bc1f54dc336055bef57a0"><code>d0797adf9ad99891dc3bc1f54dc336055bef57a0</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -3737,18 +3973,18 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/39487692283">39487692283</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/45017850829">45017850829</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff</code> (in the history of the built commit) |
+| Event commit | <code>d0797adf9ad99891dc3bc1f54dc336055bef57a0</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.22  |
+| epythet  | 0.2.23  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
-| Python   | 3.12.15 |
+| Python   | 3.12.16 |
 
 ## Configuration as resolved
 
@@ -3770,8 +4006,8 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout 8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff
-pip install "epythet==0.2.22"
+git checkout d0797adf9ad99891dc3bc1f54dc336055bef57a0
+pip install "epythet==0.2.23"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

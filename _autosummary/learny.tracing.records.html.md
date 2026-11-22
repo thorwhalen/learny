@@ -2,6 +2,9 @@
 
 Core data types for learner modelling: items, outcomes, and responses.
 
+Also the names of what a choice game records in a response’s `meta`
+([`CHOICE_META_KEYS`](#learny.tracing.records.CHOICE_META_KEYS)), with [`guess_of()`](#learny.tracing.records.guess_of) and [`confusions()`](#learny.tracing.records.confusions) to read them.
+
 These are the vocabulary every other module in [`learny.tracing`](learny.tracing.html.md#module-learny.tracing) speaks. They are
 deliberately small and serialisable: a [`Response`](#learny.tracing.records.Response) is what gets appended to the
 append-only log that is the system’s single source of truth, so its shape is a
@@ -15,13 +18,27 @@ the log records what happened.
 
 ### Module Attributes
 
-| [`LabelWeights`](#learny.tracing.records.LabelWeights)   | A mapping from label to the weight that label carries for an item.   |
-|-----------------------------------------------------------------|----------------------------------------------------------------------|
+| [`LabelWeights`](#learny.tracing.records.LabelWeights)        | A mapping from label to the weight that label carries for an item.                                                                                                                         |
+|----------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`META_SHOWN`](#learny.tracing.records.META_SHOWN)          | Option ids in display order, the correct one included.                                                                                                                                     |
+| [`META_CHOSEN`](#learny.tracing.records.META_CHOSEN)         | The option id the learner picked; absent on a skip.                                                                                                                                        |
+| [`META_RT_MS`](#learny.tracing.records.META_RT_MS)          | Response time, in milliseconds.                                                                                                                                                            |
+| [`META_PROMPT`](#learny.tracing.records.META_PROMPT)         | The side(s) of the item shown as the prompt (`'fr.text'`, `['zh.hanzi']`...).                                                                                                              |
+| [`META_ANSWER`](#learny.tracing.records.META_ANSWER)         | The side(s) the options were shown in, i.e. what was asked for.                                                                                                                            |
+| [`META_PATTERN`](#learny.tracing.records.META_PATTERN)        | `'M1'` (pick the match among k), `'M2'`, `'P1'`...                                                                                                                                         |
+| [`META_GUESS`](#learny.tracing.records.META_GUESS)          | The probability of a correct answer by chance, when the game knows it.                                                                                                                     |
+| [`META_SPEC`](#learny.tracing.records.META_SPEC)           | The game settings this response was played under (an id, or the spec itself).                                                                                                              |
+| [`META_SESSION`](#learny.tracing.records.META_SESSION)        | The id of the sitting this response belongs to.                                                                                                                                            |
+| [`META_NOT_REACHED`](#learny.tracing.records.META_NOT_REACHED)    | Set by [`mark_not_reached()`](learny.tracing.estimators.html.md#learny.tracing.estimators.mark_not_reached) on a blank the clock ran out before: not evidence about the student. |
+| [`CHOICE_META_KEYS`](#learny.tracing.records.CHOICE_META_KEYS)    | Every meta key a choice game writes, in the order above.                                                                                                                                   |
+| [`GUESS_IS_ONE_OVER_K`](#learny.tracing.records.GUESS_IS_ONE_OVER_K) | one correct option among k (M1), one correct target among k (M4).                                                                                                                          |
 
 ### Functions
 
-| [`restrict_labels`](#learny.tracing.records.restrict_labels)(items, \*, keep[, ...])   | Project an item bank onto a subset of its labels — one facet, say.   |
-|--------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| [`restrict_labels`](#learny.tracing.records.restrict_labels)(items, \*, keep[, ...])   | Project an item bank onto a subset of its labels — one facet, say.              |
+|--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| [`guess_of`](#learny.tracing.records.guess_of)(response, \*[, default])         | The chance of answering `response`'s item right by guessing, from its meta.     |
+| [`confusions`](#learny.tracing.records.confusions)(responses)                     | How often each item was answered with each wrong option: `(item, chosen) -> n`. |
 
 ### Classes
 
@@ -29,6 +46,18 @@ the log records what happened.
 |----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
 | [`Item`](#learny.tracing.records.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty. |
 | [`Response`](#learny.tracing.records.Response)(student, item, outcome[, at, meta, ...]) | One student meeting one item, once.                                         |
+
+### learny.tracing.records.CHOICE_META_KEYS *= ('shown', 'chosen', 'rt_ms', 'prompt', 'answer', 'pattern', 'guess', 'spec', 'session')*
+
+Every meta key a choice game writes, in the order above.
+
+### learny.tracing.records.GUESS_IS_ONE_OVER_K *= frozenset({'M1', 'M4'})*
+
+one correct
+option among k (M1), one correct target among k (M4).
+
+* **Type:**
+  Patterns whose chance rate is one over the number of options shown
 
 ### *class* learny.tracing.records.Item(id, labels=(), difficulty=None, meta=dict())
 
@@ -62,6 +91,51 @@ inter-rater reliability, for instance — so that a noisily-assigned label moves
 mastery estimate less than a reliably-assigned one.
 
 alias of [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]
+
+### learny.tracing.records.META_ANSWER *= 'answer'*
+
+The side(s) the options were shown in, i.e. what was asked for.
+
+### learny.tracing.records.META_CHOSEN *= 'chosen'*
+
+The option id the learner picked; absent on a skip.
+
+### learny.tracing.records.META_GUESS *= 'guess'*
+
+The probability of a correct answer by chance, when the game knows it.
+
+### learny.tracing.records.META_NOT_REACHED *= 'not_reached'*
+
+Set by [`mark_not_reached()`](learny.tracing.estimators.html.md#learny.tracing.estimators.mark_not_reached) on a blank the clock ran
+out before: not evidence about the student. Any game may write it, not only choice games.
+
+### learny.tracing.records.META_PATTERN *= 'pattern'*
+
+`'M1'` (pick the match among k), `'M2'`, `'P1'`…
+
+* **Type:**
+  The pattern id
+
+### learny.tracing.records.META_PROMPT *= 'prompt'*
+
+The side(s) of the item shown as the prompt (`'fr.text'`, `['zh.hanzi']`…).
+
+### learny.tracing.records.META_RT_MS *= 'rt_ms'*
+
+Response time, in milliseconds.
+
+### learny.tracing.records.META_SESSION *= 'session'*
+
+The id of the sitting this response belongs to.
+
+### learny.tracing.records.META_SHOWN *= 'shown'*
+
+Option ids in display order, the correct one included. An option id is the id of the
+item it shows, so a wrong pick names the item it was mistaken for.
+
+### learny.tracing.records.META_SPEC *= 'spec'*
+
+The game settings this response was played under (an id, or the spec itself).
 
 ### *class* learny.tracing.records.Outcome(\*values)
 
@@ -131,6 +205,20 @@ Traceback (most recent call last):
 ValueError: Response 'q': a skipped response has no score (got score=0)
 ```
 
+**A choice game** (the learner picks among options shown) writes its facts into
+`meta` under the names in [`CHOICE_META_KEYS`](#learny.tracing.records.CHOICE_META_KEYS): `shown` (option ids in display
+order), `chosen` (the pick), `rt_ms` (response time), `prompt` and `answer`
+(the sides shown and asked for), `pattern` (`'M1'`…), `guess`, `spec` and
+`session`. [`guess_of()`](#learny.tracing.records.guess_of) reads the guess rate from them and [`confusions()`](#learny.tracing.records.confusions)
+the wrong picks. Other keys are allowed and kept as they are.
+
+```pycon
+>>> r = Response("ada", "ni", "wrong", meta={"shown": ["ni", "wo", "ta"], "chosen": "wo",
+...              "rt_ms": 1840, "pattern": "M1"})
+>>> guess_of(r), Response.from_dict(r.to_dict()) == r
+(0.3333333333333333, True)
+```
+
 #### *property* correct *: [bool](https://docs.python.org/3/builtins/functions.html#bool)*
 
 True only for an outright correct answer; a skip is not a correct answer.
@@ -159,6 +247,61 @@ is written exactly as it was before scores existed.
 
 * **Return type:**
   [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]
+
+### learny.tracing.records.confusions(responses)
+
+How often each item was answered with each wrong option: `(item, chosen) -> n`.
+
+Read from wrong responses that recorded `meta['chosen']`; everything else is
+skipped. This is what a distractor policy feeds on (offer the learner the options
+they actually mistake for this item) and what tells two labels apart. Pass one
+student’s responses for their confusions, everyone’s for the population’s.
+
+```pycon
+>>> log = [
+...     Response('ada', 'tsu', 'wrong', meta={'chosen': 'shi'}),
+...     Response('ada', 'tsu', 'wrong', meta={'chosen': 'shi'}),
+...     Response('ada', 'tsu', 'correct', meta={'chosen': 'tsu'}),
+...     Response('ada', 'so', 'wrong', meta={'chosen': 'n'}),
+...     Response('ada', 'so', 'wrong'),            # no pick recorded: not counted
+... ]
+>>> confusions(log)
+Counter({('tsu', 'shi'): 2, ('so', 'n'): 1})
+```
+
+* **Return type:**
+  [`Counter`](https://docs.python.org/3/library/collections.html#collections.Counter)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
+### learny.tracing.records.guess_of(response, , default=None)
+
+The chance of answering `response`’s item right by guessing, from its meta.
+
+An explicit `meta['guess']` wins. Otherwise, for a pattern in
+[`GUESS_IS_ONE_OVER_K`](#learny.tracing.records.GUESS_IS_ONE_OVER_K), it is one over the number of options shown. Otherwise
+`default`, which is where a model-wide `guess=` comes in. The guess rate is a
+property of the game that produced the response, so a log mixing 2-option and
+4-option rounds carries the right rate on each one. `response` may also be just a
+`meta` mapping, to get the rate of a round before it is played.
+
+```pycon
+>>> guess_of(Response('ada', 'ni', 'correct', meta={'pattern': 'M1', 'shown': ['ni', 'wo', 'ta', 'hao']}))
+0.25
+>>> guess_of(Response('ada', 'ni', 'wrong', meta={'guess': 0.5, 'pattern': 'M1', 'shown': ['ni', 'wo', 'ta']}))
+0.5
+>>> guess_of(Response('ada', 'ni', 'correct'), default=0.2)  # nothing in meta
+0.2
+>>> guess_of({'pattern': 'M1', 'shown': ['ni', 'wo']})  # a round about to be played
+0.5
+>>> guess_of(Response('ada', 'ni', 'correct', meta={'pattern': 'P1'})) is None  # typed: no k
+True
+>>> guess_of(Response('ada', 'ni', 'correct', meta={'guess': 1.0}))
+Traceback (most recent call last):
+    ...
+ValueError: Response 'ni': meta['guess'] must be a number in [0, 1), got 1.0
+```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float) | [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
 ### learny.tracing.records.restrict_labels(items, , keep, drop_unlabelled=False)
 

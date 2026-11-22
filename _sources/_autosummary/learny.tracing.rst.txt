@@ -8,6 +8,8 @@ learny.tracing
 
    .. autosummary::
    
+      guess_of
+      confusions
       estimate_store
       response_log
       data_dir

@@ -9,12 +9,26 @@ learny.tracing.records
    .. autosummary::
    
       LabelWeights
+      META_SHOWN
+      META_CHOSEN
+      META_RT_MS
+      META_PROMPT
+      META_ANSWER
+      META_PATTERN
+      META_GUESS
+      META_SPEC
+      META_SESSION
+      META_NOT_REACHED
+      CHOICE_META_KEYS
+      GUESS_IS_ONE_OVER_K
    
    .. rubric:: Functions
 
    .. autosummary::
    
       restrict_labels
+      guess_of
+      confusions
    
    .. rubric:: Classes
 

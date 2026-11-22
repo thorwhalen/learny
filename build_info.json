@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-20T19:58:37Z",
+  "built_at": "2026-11-22T11:35:48Z",
   "package": {
     "name": "learny",
     "version": "0.0.1",
@@ -9,31 +9,31 @@
   },
   "git": {
     "available": true,
-    "commit": "8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff",
-    "short_commit": "8d7c537",
+    "commit": "d0797adf9ad99891dc3bc1f54dc336055bef57a0",
+    "short_commit": "d0797ad",
     "branch": "main",
     "tags": [],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/learny",
-    "commit_url": "https://github.com/thorwhalen/learny/commit/8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff",
+    "commit_url": "https://github.com/thorwhalen/learny/commit/d0797adf9ad99891dc3bc1f54dc336055bef57a0",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/learny",
-    "sha": "8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff",
+    "sha": "d0797adf9ad99891dc3bc1f54dc336055bef57a0",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "39487692283",
-    "run_url": "https://github.com/thorwhalen/learny/actions/runs/39487692283",
+    "run_id": "45017850829",
+    "run_url": "https://github.com/thorwhalen/learny/actions/runs/45017850829",
     "server_url": "https://github.com"
   },
   "tools": {
-    "epythet": "0.2.22",
+    "epythet": "0.2.23",
     "sphinx": "9.1.1",
     "docutils": "0.22.4",
-    "python": "3.12.15"
+    "python": "3.12.16"
   },
   "config": {
     "theme": "auto",
@@ -56,7 +56,7 @@
   },
   "site": {
     "modules_documented": 8,
-    "objects_documented": 220
+    "objects_documented": 236
   },
   "pypi": {
     "checked": true,
@@ -64,7 +64,7 @@
     "relation": "unknown",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/learny && cd learny\ngit checkout 8d7c537000d0b32725083a3ef1a9f5a4ef9c76ff\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/learny && cd learny\ngit checkout d0797adf9ad99891dc3bc1f54dc336055bef57a0\npip install \"epythet==0.2.23\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,
