@@ -38,7 +38,7 @@ from learny.tracing.estimators import (
     _level_probabilities,
     spread_thresholds,
 )
-from learny.tracing.records import Item, Outcome, Response
+from learny.tracing.records import Item, Outcome, Response, guess_of
 
 __all__ = [
     "LabelSeparation",
@@ -227,7 +227,20 @@ def prequential(
     [0.5, 0.6]
     """
     for response, item, state in _before_each(responses, items=items, estimator=estimator):
-        yield response, estimator.predict(state, item)
+        yield response, _predict_for(estimator, state, item, response)
+
+
+def _predict_for(
+    estimator: Estimator, state: Mapping[str, Any], item: Item, response: Response
+) -> float:
+    """``predict()`` at the response's own guess rate when it carries one (see
+    :func:`~learny.tracing.records.guess_of`), so a forecast is judged at the rate the
+    update learned from. Only then is ``guess=`` passed, so an estimator without it still
+    works on a log that does not record one."""
+    g = guess_of(response)
+    if g is None:
+        return estimator.predict(state, item)
+    return estimator.predict(state, item, guess=g)
 
 
 def _before_each(
@@ -577,7 +590,7 @@ def _forecast_loss(
     if response.score is not None and reads_scores(estimator):
         probs = estimator.score_probabilities(state, item, response.max_score)
         return -math.log(min(max(probs[response.score], _EPS), 1.0))
-    p = min(max(estimator.predict(state, item), _EPS), 1.0 - _EPS)
+    p = min(max(_predict_for(estimator, state, item, response), _EPS), 1.0 - _EPS)
     return -math.log(p if response.outcome is Outcome.CORRECT else 1.0 - p)
 
 

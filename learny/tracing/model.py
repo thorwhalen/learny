@@ -350,10 +350,16 @@ class LearnerModel:
 
     # -- asking ------------------------------------------------------------------
 
-    def predict(self, student: str, item: str | Item) -> float:
-        """Probability that ``student`` answers ``item`` correctly."""
+    def predict(self, student: str, item: str | Item, *, guess: float | None = None) -> float:
+        """Probability that ``student`` answers ``item`` correctly.
+
+        ``guess`` is the chance rate of the round (``1/k`` for k options; see
+        :func:`~learny.tracing.records.guess_of`), defaulting to the estimator's own.
+        """
         item_obj = item if isinstance(item, Item) else self.items.get(item, Item(item))
-        return self.estimator.predict(self._state(student), item_obj)
+        if guess is None:
+            return self.estimator.predict(self._state(student), item_obj)
+        return self.estimator.predict(self._state(student), item_obj, guess=guess)
 
     def mastery(self, student: str) -> dict[str, Mastery]:
         """Per-label mastery for one student, weakest first when sorted by skill."""

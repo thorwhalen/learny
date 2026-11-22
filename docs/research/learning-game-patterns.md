@@ -148,6 +148,8 @@ So the defaults that follow from this are design choices, not findings: start wi
 | P1 | near 0 | yes | strongest evidence |
 | A3 | as the underlying pattern | the point | speed profile |
 
+The names of these facts in `Response.meta` are fixed in `learny.tracing.records` (`CHOICE_META_KEYS`: `shown`, `chosen`, `rt_ms`, `prompt`, `answer`, `pattern`, `guess`, `spec`, `session`); `guess_of` reads a response's guess rate from them (1/k for M1 and M4) and `RaschEstimator` updates each response at its own rate, and `confusions` counts the wrong picks.
+
 Three rules for the records, from the evidence above:
 
 1. **Log the options shown and the wrong choice**, not just right or wrong. Confusions (シ chosen for ツ) are the signal for distractor selection and for `restrict_labels`.

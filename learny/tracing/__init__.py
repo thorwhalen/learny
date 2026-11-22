@@ -58,7 +58,16 @@ from learny.tracing.model import (
     LearnerModel,
     Weakest,
 )
-from learny.tracing.records import Item, LabelWeights, Outcome, Response, restrict_labels
+from learny.tracing.records import (
+    CHOICE_META_KEYS,
+    Item,
+    LabelWeights,
+    Outcome,
+    Response,
+    confusions,
+    guess_of,
+    restrict_labels,
+)
 from learny.tracing.stores import ResponseLog, data_dir, estimate_store, response_log
 
 __all__ = [
@@ -76,6 +85,10 @@ __all__ = [
     "Mastery",
     "Skill",
     "LabelWeights",
+    # what a choice game records, and reading it back
+    "CHOICE_META_KEYS",
+    "guess_of",
+    "confusions",
     # the seams
     "Estimator",
     "ItemSpreads",

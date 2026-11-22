@@ -133,3 +133,65 @@ class TestStoreDefaults:
         assert "ada" in list(store)
         del store["ada"]
         assert "ada" not in list(store)
+
+
+# -- choice-game meta: guess rate per response, confusions (#51) ---------------------
+
+
+def test_per_response_guess_discounts_a_lucky_right_answer():
+    """A right pick among 2 options says less than a right pick among 8."""
+    from learny.tracing import RaschEstimator, Item, Response
+
+    est = RaschEstimator()
+    item = Item("ni", difficulty=0.5)
+
+    def skill_after(k):
+        shown = [f"o{i}" for i in range(k)]
+        r = Response("ada", "ni", "correct", meta={"pattern": "M1", "shown": shown})
+        return est.skill(est.observe(est.init(), r, item)).mu
+
+    plain = est.skill(est.observe(est.init(), Response("ada", "ni", "correct"), item)).mu
+    assert 0 < skill_after(2) < skill_after(8) < plain  # no meta: the model-wide guess=0
+
+
+def test_model_wide_guess_still_applies_without_meta():
+    from learny.tracing import RaschEstimator, Item, Response
+
+    item = Item("q", difficulty=0.5)
+    r = Response("ada", "q", "wrong")
+    a = RaschEstimator(guess=0.25)
+    b = RaschEstimator()
+    with_meta = Response("ada", "q", "wrong", meta={"guess": 0.25})
+    assert a.observe(a.init(), r, item) == b.observe(b.init(), with_meta, item)
+
+
+def test_confusions_counts_only_wrong_picks():
+    from learny.tracing import Response, confusions
+
+    log = [
+        Response("ada", "tsu", "wrong", meta={"chosen": "shi"}),
+        Response("bo", "tsu", "wrong", meta={"chosen": "shi"}),
+        Response("ada", "tsu", "skipped", meta={"chosen": "shi"}),
+        Response("ada", "tsu", "correct", meta={"chosen": "tsu"}),
+    ]
+    assert confusions(log) == {("tsu", "shi"): 2}
+    assert confusions(r for r in log if r.student == "ada") == {("tsu", "shi"): 1}
+
+
+def test_choice_meta_round_trips():
+    from learny.tracing import CHOICE_META_KEYS, Response
+
+    meta = dict.fromkeys(CHOICE_META_KEYS, "x") | {"shown": ["a", "b"], "guess": 0.5, "extra": 1}
+    r = Response("ada", "a", "correct", meta=meta)
+    assert Response.from_dict(r.to_dict()) == r
+
+
+def test_prequential_forecasts_at_each_rounds_own_guess():
+    """A forecast is judged at the rate the update learned from (#51)."""
+    from learny.tracing import Item, RaschEstimator, Response, prequential
+
+    items = {"q": Item("q", difficulty=0.5)}
+    two = {"pattern": "M1", "shown": ["q", "x"]}
+    rs = [Response("a", "q", "correct", meta=two)]
+    [(_, p)] = prequential(rs, items=items, estimator=RaschEstimator())
+    assert p == 0.5 + 0.5 * 0.5  # cold start: half the time known, else a coin flip
