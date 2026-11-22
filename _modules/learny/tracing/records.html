@@ -756,6 +756,9 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"META_SPEC"</span><span class="p">,</span>
     <span class="s2">"META_SESSION"</span><span class="p">,</span>
     <span class="s2">"META_NOT_REACHED"</span><span class="p">,</span>
+    <span class="s2">"META_TIMED_OUT"</span><span class="p">,</span>
+    <span class="s2">"META_CREDIT"</span><span class="p">,</span>
+    <span class="s2">"credit_of"</span><span class="p">,</span>
     <span class="s2">"guess_of"</span><span class="p">,</span>
     <span class="s2">"confusions"</span><span class="p">,</span>
 <span class="p">]</span>
@@ -1025,6 +1028,13 @@ window.runMermaid = runMermaid;</script>
 <span class="n">META_SPEC</span> <span class="o">=</span> <span class="s2">"spec"</span>
 <span class="c1">#: The id of the sitting this response belongs to.</span>
 <span class="n">META_SESSION</span> <span class="o">=</span> <span class="s2">"session"</span>
+<span class="c1">#: True when the round's clock ran out while it was on screen: the learner saw the item</span>
+<span class="c1">#: and did not answer in time (unlike ``not_reached``, an item never shown at all).</span>
+<span class="n">META_TIMED_OUT</span> <span class="o">=</span> <span class="s2">"timed_out"</span>
+<span class="c1">#: Partial credit in ``[0, 1]`` a wrong pick earned for being close (a near-homophone, a</span>
+<span class="c1">#: look-alike). For schedulers and distractor weighting only: the learner model reads the</span>
+<span class="c1">#: ordered ``score``, not this. Defaults to ``score / max_score`` (see :func:`credit_of`).</span>
+<span class="n">META_CREDIT</span> <span class="o">=</span> <span class="s2">"credit"</span>
 
 <span class="c1">#: Set by :func:`~learny.tracing.estimators.mark_not_reached` on a blank the clock ran</span>
 <span class="c1">#: out before: not evidence about the student. Any game may write it, not only choice games.</span>
@@ -1041,6 +1051,8 @@ window.runMermaid = runMermaid;</script>
     <span class="n">META_GUESS</span><span class="p">,</span>
     <span class="n">META_SPEC</span><span class="p">,</span>
     <span class="n">META_SESSION</span><span class="p">,</span>
+    <span class="n">META_TIMED_OUT</span><span class="p">,</span>
+    <span class="n">META_CREDIT</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1">#: Patterns whose chance rate is one over the number of options shown: one correct</span>
@@ -1091,6 +1103,25 @@ window.runMermaid = runMermaid;</script>
     <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">META_PATTERN</span><span class="p">)</span> <span class="ow">in</span> <span class="n">GUESS_IS_ONE_OVER_K</span> <span class="ow">and</span> <span class="n">shown</span><span class="p">:</span>
         <span class="k">return</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">shown</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">default</span></div>
+
+
+
+<div class="viewcode-block" id="credit_of">
+<a class="viewcode-back" href="../../../_autosummary/learny.tracing.records.html#learny.tracing.credit_of">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">credit_of</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The share of full credit ``response`` earned: ``meta['credit']``, else</span>
+<span class="sd">    ``score / max_score``, else 1 if right and 0 if not.</span>
+
+<span class="sd">    &gt;&gt;&gt; credit_of(Response('ada', 'tsu', 'wrong', meta={'credit': 0.3}))</span>
+<span class="sd">    0.3</span>
+<span class="sd">    &gt;&gt;&gt; credit_of(Response('ada', 'tsu', 'wrong', score=1, max_score=4)), credit_of(Response('ada', 'tsu', 'correct'))</span>
+<span class="sd">    (0.25, 1.0)</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">META_CREDIT</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">meta</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="n">META_CREDIT</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">score</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">score</span> <span class="o">/</span> <span class="n">response</span><span class="o">.</span><span class="n">max_score</span>
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">correct</span> <span class="k">else</span> <span class="mf">0.0</span></div>
 
 
 

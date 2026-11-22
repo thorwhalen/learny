@@ -434,6 +434,18 @@
 <p>Learner responses are personal data. They are written under <code class="docutils literal notranslate"><span class="pre">~/.local/share/learny/</span></code> — never inside your project — one file per student, so one learner’s data can be handed over or deleted on its own. Set <code class="docutils literal notranslate"><span class="pre">LEARNY_DATA_DIR</span></code> to move the root. Every example and test in this package is synthetic.</p>
 </section>
 </section>
+<section id="what-to-ask-next">
+<h2>What to ask next<a class="headerlink" href="#what-to-ask-next" title="Link to this heading">#</a></h2>
+<p>A choice game (pick the match among k options) needs two more decisions per round: which item to ask, and which wrong options to show beside it. <code class="docutils literal notranslate"><span class="pre">learny.scheduling</span></code> makes both from the same response log, so the game holds no learner state of its own.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.scheduling</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_strategy</span>
+
+<span class="n">strategy</span> <span class="o">=</span> <span class="n">make_strategy</span><span class="p">()</span>                      <span class="c1"># confusion-weighted; also leitner, sm2, fsrs_lite, weakest, uniform_random</span>
+<span class="n">round_</span> <span class="o">=</span> <span class="n">strategy</span><span class="o">.</span><span class="n">next_selection</span><span class="p">(</span><span class="n">responses</span><span class="p">,</span> <span class="n">candidates</span><span class="o">=</span><span class="p">[</span><span class="s1">'tsu'</span><span class="p">,</span> <span class="s1">'shi'</span><span class="p">,</span> <span class="s1">'so'</span><span class="p">,</span> <span class="s1">'n'</span><span class="p">,</span> <span class="s1">'ka'</span><span class="p">])</span>
+<span class="n">round_</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">round_</span><span class="o">.</span><span class="n">options</span>                   <span class="c1"># the item to ask, and the k options in display order</span>
+</pre></div>
+</div>
+<p>The default asks most about what the learner mixes up, against what they mix it up with: a wrong pick recorded as <code class="docutils literal notranslate"><span class="pre">meta={'chosen':</span> <span class="pre">...}</span></code> makes that option a likelier distractor next time. Pass <code class="docutils literal notranslate"><span class="pre">similarity={'tsu':</span> <span class="pre">{'shi':</span> <span class="pre">1.0,</span> <span class="pre">...}}</span></code> for look-alikes known in advance; the learner’s own confusions are added on top. Record each round’s options as <code class="docutils literal notranslate"><span class="pre">meta['shown']</span></code> with <code class="docutils literal notranslate"><span class="pre">meta['pattern']</span> <span class="pre">=</span> <span class="pre">'M1'</span></code> and the learner model discounts lucky guesses at the round’s own <code class="docutils literal notranslate"><span class="pre">1/k</span></code> (the names are in <code class="docutils literal notranslate"><span class="pre">learny.tracing.records.CHOICE_META_KEYS</span></code>).</p>
+</section>
 <section id="games">
 <h2>Games<a class="headerlink" href="#games" title="Link to this heading">#</a></h2>
 <p><a class="reference external" href="https://github.com/thorwhalen/learny/tree/main/games/eleven_plus"><code class="docutils literal notranslate"><span class="pre">games/eleven_plus/</span></code></a> holds vocabulary material and a quiz app for the UK 11+ exam. It lives in this repository but outside the <code class="docutils literal notranslate"><span class="pre">learny</span></code> package, so <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">learny</span></code> installs the library only. The game-parameter JSON files are plain data and can be loaded by any front-end.</p>
@@ -443,7 +455,7 @@
 </section>
 </section>
 
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-22 11:35 UTC from <a href="https://github.com/thorwhalen/learny/commit/d0797adf9ad99891dc3bc1f54dc336055bef57a0">d0797ad</a> (main) · learny 0.0.1 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-11-22 11:42 UTC from <a href="https://github.com/thorwhalen/learny/commit/4ab62645389e5b3411675838c097041ede7264e7">4ab6264</a> (main) · learny 0.0.1 · <a href="about-this-build.html">about this build</a></p>
 
                 </article>
               
@@ -492,6 +504,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#privacy">Privacy</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-ask-next">What to ask next</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#games">Games</a></li>
 </ul>
   </nav></div>

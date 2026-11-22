@@ -29,16 +29,19 @@ the log records what happened.
 | [`META_GUESS`](#learny.tracing.records.META_GUESS)          | The probability of a correct answer by chance, when the game knows it.                                                                                                                     |
 | [`META_SPEC`](#learny.tracing.records.META_SPEC)           | The game settings this response was played under (an id, or the spec itself).                                                                                                              |
 | [`META_SESSION`](#learny.tracing.records.META_SESSION)        | The id of the sitting this response belongs to.                                                                                                                                            |
+| [`META_TIMED_OUT`](#learny.tracing.records.META_TIMED_OUT)      | the learner saw the item and did not answer in time (unlike `not_reached`, an item never shown at all).                                                                                    |
+| [`META_CREDIT`](#learny.tracing.records.META_CREDIT)         | Partial credit in `[0, 1]` a wrong pick earned for being close (a near-homophone, a look-alike).                                                                                           |
 | [`META_NOT_REACHED`](#learny.tracing.records.META_NOT_REACHED)    | Set by [`mark_not_reached()`](learny.tracing.estimators.html.md#learny.tracing.estimators.mark_not_reached) on a blank the clock ran out before: not evidence about the student. |
 | [`CHOICE_META_KEYS`](#learny.tracing.records.CHOICE_META_KEYS)    | Every meta key a choice game writes, in the order above.                                                                                                                                   |
 | [`GUESS_IS_ONE_OVER_K`](#learny.tracing.records.GUESS_IS_ONE_OVER_K) | one correct option among k (M1), one correct target among k (M4).                                                                                                                          |
 
 ### Functions
 
-| [`restrict_labels`](#learny.tracing.records.restrict_labels)(items, \*, keep[, ...])   | Project an item bank onto a subset of its labels — one facet, say.              |
-|--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`guess_of`](#learny.tracing.records.guess_of)(response, \*[, default])         | The chance of answering `response`'s item right by guessing, from its meta.     |
-| [`confusions`](#learny.tracing.records.confusions)(responses)                     | How often each item was answered with each wrong option: `(item, chosen) -> n`. |
+| [`restrict_labels`](#learny.tracing.records.restrict_labels)(items, \*, keep[, ...])   | Project an item bank onto a subset of its labels — one facet, say.                                                    |
+|--------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| [`credit_of`](#learny.tracing.records.credit_of)(response)                       | The share of full credit `response` earned: `meta['credit']`, else `score / max_score`, else 1 if right and 0 if not. |
+| [`guess_of`](#learny.tracing.records.guess_of)(response, \*[, default])         | The chance of answering `response`'s item right by guessing, from its meta.                                           |
+| [`confusions`](#learny.tracing.records.confusions)(responses)                     | How often each item was answered with each wrong option: `(item, chosen) -> n`.                                       |
 
 ### Classes
 
@@ -47,7 +50,7 @@ the log records what happened.
 | [`Item`](#learny.tracing.records.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty. |
 | [`Response`](#learny.tracing.records.Response)(student, item, outcome[, at, meta, ...]) | One student meeting one item, once.                                         |
 
-### learny.tracing.records.CHOICE_META_KEYS *= ('shown', 'chosen', 'rt_ms', 'prompt', 'answer', 'pattern', 'guess', 'spec', 'session')*
+### learny.tracing.records.CHOICE_META_KEYS *= ('shown', 'chosen', 'rt_ms', 'prompt', 'answer', 'pattern', 'guess', 'spec', 'session', 'timed_out', 'credit')*
 
 Every meta key a choice game writes, in the order above.
 
@@ -100,6 +103,12 @@ The side(s) the options were shown in, i.e. what was asked for.
 
 The option id the learner picked; absent on a skip.
 
+### learny.tracing.records.META_CREDIT *= 'credit'*
+
+Partial credit in `[0, 1]` a wrong pick earned for being close (a near-homophone, a
+look-alike). For schedulers and distractor weighting only: the learner model reads the
+ordered `score`, not this. Defaults to `score / max_score` (see [`credit_of()`](#learny.tracing.records.credit_of)).
+
 ### learny.tracing.records.META_GUESS *= 'guess'*
 
 The probability of a correct answer by chance, when the game knows it.
@@ -136,6 +145,14 @@ item it shows, so a wrong pick names the item it was mistaken for.
 ### learny.tracing.records.META_SPEC *= 'spec'*
 
 The game settings this response was played under (an id, or the spec itself).
+
+### learny.tracing.records.META_TIMED_OUT *= 'timed_out'*
+
+the learner saw the item
+and did not answer in time (unlike `not_reached`, an item never shown at all).
+
+* **Type:**
+  True when the round’s clock ran out while it was on screen
 
 ### *class* learny.tracing.records.Outcome(\*values)
 
@@ -271,6 +288,21 @@ Counter({('tsu', 'shi'): 2, ('so', 'n'): 1})
 
 * **Return type:**
   [`Counter`](https://docs.python.org/3/library/collections.html#collections.Counter)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
+### learny.tracing.records.credit_of(response)
+
+The share of full credit `response` earned: `meta['credit']`, else
+`score / max_score`, else 1 if right and 0 if not.
+
+```pycon
+>>> credit_of(Response('ada', 'tsu', 'wrong', meta={'credit': 0.3}))
+0.3
+>>> credit_of(Response('ada', 'tsu', 'wrong', score=1, max_score=4)), credit_of(Response('ada', 'tsu', 'correct'))
+(0.25, 1.0)
+```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ### learny.tracing.records.guess_of(response, , default=None)
 

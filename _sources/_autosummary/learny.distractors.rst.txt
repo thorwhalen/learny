@@ -1,0 +1,23 @@
+learny.distractors
+==================
+
+.. automodule:: learny.distractors
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      Similarity
+      DEFAULT_HALFLIFE_DAYS
+      DEFAULT_MIN_SHORTFALL
+      DEFAULT_CONFUSION_BOOST
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      confusion_weights
+      merge_similarity
+      pick_distractors
+   

@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="alternate" type="text/markdown" href="learny.scheduling.html.md">
+<link rel="describedby" href="../llms.txt" type="text/markdown">
+<link rel="alternate" type="text/markdown" href="learny.scheduling.html.md">
+<link rel="describedby" href="llms.txt">
+    <title>learny.scheduling &#8212; learny</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/epythet.css?v=1ba707ae" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_autosummary/learny.scheduling';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="learny.tracing" href="learny.tracing.html" />
+    <link rel="prev" title="learny.distractors" href="learny.distractors.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.0.1" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">learny</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../ai-agents.html">
+    For AI agents
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/thorwhalen/learny" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../ai-agents.html">
+    For AI agents
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/thorwhalen/learny" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="learny.html">learny</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="learny.distractors.html">learny.distractors</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">learny.scheduling</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="learny.tracing.html">learny.tracing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.diagnostics.html">learny.tracing.diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.difficulty.html">learny.tracing.difficulty</a></li>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.estimators.html">learny.tracing.estimators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.model.html">learny.tracing.model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.records.html">learny.tracing.records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="learny.tracing.stores.html">learny.tracing.stores</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../api.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="learny.html" class="nav-link">learny</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">learny.scheduling</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-learny.scheduling">
+<span id="learny-scheduling"></span><h1>learny.scheduling<a class="headerlink" href="#module-learny.scheduling" title="Link to this heading">#</a></h1>
+<p>Which item to ask next, and which options to show with it, from the response log.</p>
+<p>A <a class="reference internal" href="#learny.scheduling.Strategy" title="learny.scheduling.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a> turns one learner’s responses into the next round of a choice game:
+a target item drawn from the candidates, and the options to show with it (the target
+plus distractors from <a class="reference internal" href="learny.distractors.html#module-learny.distractors" title="learny.distractors"><code class="xref py py-mod docutils literal notranslate"><span class="pre">learny.distractors</span></code></a>). Per-item state (a Leitner box, an SM-2
+ease, a memory stability) is rebuilt by replaying the responses, the same way
+<a class="reference internal" href="learny.tracing.html#module-learny.tracing" title="learny.tracing"><code class="xref py py-mod docutils literal notranslate"><span class="pre">learny.tracing</span></code></a> rebuilds its estimates from the append-only log, so a strategy
+holds no state of its own and can be swapped at any time.</p>
+<p>Strategies are chosen by key, which is what a settings screen offers:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">learny.tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Response</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="p">[</span><span class="n">Response</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="s1">'tsu'</span><span class="p">,</span> <span class="s1">'wrong'</span><span class="p">,</span> <span class="n">at</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s1">'chosen'</span><span class="p">:</span> <span class="s1">'shi'</span><span class="p">})]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">strategy</span> <span class="o">=</span> <span class="n">make_strategy</span><span class="p">(</span><span class="s1">'confusion_weighted'</span><span class="p">,</span> <span class="n">epsilon_explore</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">round_</span> <span class="o">=</span> <span class="n">strategy</span><span class="o">.</span><span class="n">next_selection</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="p">[</span><span class="s1">'tsu'</span><span class="p">,</span> <span class="s1">'shi'</span><span class="p">,</span> <span class="s1">'so'</span><span class="p">,</span> <span class="s1">'n'</span><span class="p">],</span> <span class="n">now</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">rng</span><span class="o">=</span><span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">round_</span><span class="o">.</span><span class="n">target</span> <span class="ow">in</span> <span class="n">round_</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">round_</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
+<span class="go">(True, 4)</span>
+</pre></div>
+</div>
+<p>The keys: <code class="docutils literal notranslate"><span class="pre">uniform_random</span></code> (the baseline), <code class="docutils literal notranslate"><span class="pre">leitner</span></code> (boxes), <code class="docutils literal notranslate"><span class="pre">sm2</span></code> (SuperMemo 2,
+graded by response time), <code class="docutils literal notranslate"><span class="pre">confusion_weighted</span></code> (the default: the items the learner
+mixes up, against what they mix them up with), <code class="docutils literal notranslate"><span class="pre">fsrs_lite</span></code> (a memory-decay model) and
+<code class="docutils literal notranslate"><span class="pre">weakest</span></code> (items on the labels <a class="reference internal" href="learny.tracing.html#learny.tracing.LearnerModel.weakest" title="learny.tracing.LearnerModel.weakest"><code class="xref py py-meth docutils literal notranslate"><span class="pre">weakest()</span></code></a> names).
+Spacing intervals are in days; in a single dense sitting little is ever due, so every
+scheduler falls back to an urgency ranking rather than stalling.</p>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.scheduling.make_strategy" title="learny.scheduling.make_strategy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_strategy</span></code></a>([key])</p></td>
+<td><p>The strategy registered under <code class="docutils literal notranslate"><span class="pre">key</span></code> (default <code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_STRATEGY</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.scheduling.list_strategies" title="learny.scheduling.list_strategies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_strategies</span></code></a>()</p></td>
+<td><p>Each strategy's key, name, description, whether it is the default, and its parameters (name, type, default) for a settings screen.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.scheduling.Selection" title="learny.scheduling.Selection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Selection</span></code></a>(target, options)</p></td>
+<td><p>One round: the target item, and every option to show in display order.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.scheduling.Strategy" title="learny.scheduling.Strategy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Strategy</span></code></a>([n_choices, learner_confusions, ...])</p></td>
+<td><p>Picks the target, then distractors from what is known to be confusable.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.scheduling.UniformRandom" title="learny.scheduling.UniformRandom"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UniformRandom</span></code></a>([n_choices, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.scheduling.Leitner" title="learny.scheduling.Leitner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Leitner</span></code></a>([n_choices, learner_confusions, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.scheduling.SM2" title="learny.scheduling.SM2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SM2</span></code></a>([n_choices, learner_confusions, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.scheduling.ConfusionWeighted" title="learny.scheduling.ConfusionWeighted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfusionWeighted</span></code></a>([n_choices, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.scheduling.FSRSLite" title="learny.scheduling.FSRSLite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FSRSLite</span></code></a>([n_choices, learner_confusions, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.scheduling.Weakest" title="learny.scheduling.Weakest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Weakest</span></code></a>([n_choices, learner_confusions, ...])</p></td>
+<td><p>Items on the labels the learner model says are weakest; else the least likely right.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.scheduling.ConfusionWeighted">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.scheduling.</span></span><span class="sig-name descname"><span class="pre">ConfusionWeighted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learner_confusions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recency_halflife_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confusion_boost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon_explore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#ConfusionWeighted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.ConfusionWeighted" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#learny.scheduling.Strategy" title="learny.scheduling.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a></p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.ConfusionWeighted.epsilon_explore">
+<span class="sig-name descname"><span class="pre">epsilon_explore</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></span><a class="headerlink" href="#learny.scheduling.ConfusionWeighted.epsilon_explore" title="Link to this definition">#</a></dt>
+<dd><p>Chance of a uniformly random target, so nothing is never asked.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.ConfusionWeighted.floor">
+<span class="sig-name descname"><span class="pre">floor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.05</span></span><a class="headerlink" href="#learny.scheduling.ConfusionWeighted.floor" title="Link to this definition">#</a></dt>
+<dd><p>Weight every candidate keeps.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.ConfusionWeighted.learner_confusions">
+<span class="sig-name descname"><span class="pre">learner_confusions</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#learny.scheduling.ConfusionWeighted.learner_confusions" title="Link to this definition">#</a></dt>
+<dd><p>Add the learner’s own confusions to the distractor similarity.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.ConfusionWeighted.prior">
+<span class="sig-name descname"><span class="pre">prior</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="headerlink" href="#learny.scheduling.ConfusionWeighted.prior" title="Link to this definition">#</a></dt>
+<dd><p>Extra weight of an item never asked, against its confusion weight.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.scheduling.FSRSLite">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.scheduling.</span></span><span class="sig-name descname"><span class="pre">FSRSLite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learner_confusions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recency_halflife_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confusion_boost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stability_growth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lapse_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lapse_floor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#FSRSLite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.FSRSLite" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#learny.scheduling.Strategy" title="learny.scheduling.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a></p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.FSRSLite.learner_confusions">
+<span class="sig-name descname"><span class="pre">learner_confusions</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#learny.scheduling.FSRSLite.learner_confusions" title="Link to this definition">#</a></dt>
+<dd><p>Add the learner’s own confusions to the distractor similarity.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.scheduling.FSRSLite.recall">
+<span class="sig-name descname"><span class="pre">recall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#FSRSLite.recall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.FSRSLite.recall" title="Link to this definition">#</a></dt>
+<dd><p>Probability the learner still recalls <code class="docutils literal notranslate"><span class="pre">item</span></code> now (0 if never seen).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.FSRSLite.s_init">
+<span class="sig-name descname"><span class="pre">s_init</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="headerlink" href="#learny.scheduling.FSRSLite.s_init" title="Link to this definition">#</a></dt>
+<dd><p>Stability in days of a new item; multiplied by <code class="docutils literal notranslate"><span class="pre">stability_growth</span></code> on each right
+answer, by <code class="docutils literal notranslate"><span class="pre">lapse_factor</span></code> on each wrong one, down to <code class="docutils literal notranslate"><span class="pre">lapse_floor</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.scheduling.FSRSLite.stability">
+<span class="sig-name descname"><span class="pre">stability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">responses</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#FSRSLite.stability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.FSRSLite.stability" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{item:</span> <span class="pre">(stability</span> <span class="pre">in</span> <span class="pre">days,</span> <span class="pre">last</span> <span class="pre">answered</span> <span class="pre">at)}</span></code>, replayed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.scheduling.Leitner">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.scheduling.</span></span><span class="sig-name descname"><span class="pre">Leitner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learner_confusions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recency_halflife_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confusion_boost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_boxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intervals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">8,</span> <span class="pre">16)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">demotion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'reset'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#Leitner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.Leitner" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#learny.scheduling.Strategy" title="learny.scheduling.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a></p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.scheduling.Leitner.boxes">
+<span class="sig-name descname"><span class="pre">boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">responses</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#Leitner.boxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.Leitner.boxes" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{item:</span> <span class="pre">(box,</span> <span class="pre">last</span> <span class="pre">answered</span> <span class="pre">at)}</span></code>, replayed from the responses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Leitner.demotion">
+<span class="sig-name descname"><span class="pre">demotion</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'reset'</span></span><a class="headerlink" href="#learny.scheduling.Leitner.demotion" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;reset&quot;</span></code> sends a wrong answer to box 1, <code class="docutils literal notranslate"><span class="pre">&quot;step&quot;</span></code> down one box.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Leitner.intervals">
+<span class="sig-name descname"><span class="pre">intervals</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">8,</span> <span class="pre">16)</span></span><a class="headerlink" href="#learny.scheduling.Leitner.intervals" title="Link to this definition">#</a></dt>
+<dd><p>Days before an item in each box is due again; extended by doubling to <code class="docutils literal notranslate"><span class="pre">n_boxes</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.scheduling.SM2">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.scheduling.</span></span><span class="sig-name descname"><span class="pre">SM2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learner_confusions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recency_halflife_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confusion_boost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ef_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast_ms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slow_ms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overdue_floor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#SM2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.SM2" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#learny.scheduling.Strategy" title="learny.scheduling.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a></p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.SM2.fast_ms">
+<span class="sig-name descname"><span class="pre">fast_ms</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3500</span></span><a class="headerlink" href="#learny.scheduling.SM2.fast_ms" title="Link to this definition">#</a></dt>
+<dd><p>A right answer at most this fast (<code class="docutils literal notranslate"><span class="pre">meta['rt_ms']</span></code>) grades 5, at least this slow 3.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.scheduling.SM2.grade">
+<span class="sig-name descname"><span class="pre">grade</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#SM2.grade"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.SM2.grade" title="Link to this definition">#</a></dt>
+<dd><p>SM-2’s 0-5 quality for one response.</p>
+<p>Right: 5 if fast, 3 if slow or timed out (<code class="docutils literal notranslate"><span class="pre">meta['timed_out']</span></code>), else 4. Wrong:
+2 for a near miss that earned partial credit (<code class="docutils literal notranslate"><span class="pre">meta['credit']</span></code> or a score), 1
+otherwise, 0 if timed out.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.SM2.i1">
+<span class="sig-name descname"><span class="pre">i1</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#learny.scheduling.SM2.i1" title="Link to this definition">#</a></dt>
+<dd><p>Days to the first and second review after a pass.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.SM2.overdue_floor">
+<span class="sig-name descname"><span class="pre">overdue_floor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></span><a class="headerlink" href="#learny.scheduling.SM2.overdue_floor" title="Link to this definition">#</a></dt>
+<dd><p>Weight the least overdue item keeps when drawing by overdueness.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.scheduling.SM2.state">
+<span class="sig-name descname"><span class="pre">state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">responses</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#SM2.state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.SM2.state" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{item:</span> <span class="pre">{'ef',</span> <span class="pre">'n',</span> <span class="pre">'interval',</span> <span class="pre">'last'}}</span></code>, replayed from the responses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.scheduling.Selection">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.scheduling.</span></span><span class="sig-name descname"><span class="pre">Selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#Selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.Selection" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>One round: the target item, and every option to show in display order.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.scheduling.Strategy">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.scheduling.</span></span><span class="sig-name descname"><span class="pre">Strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learner_confusions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recency_halflife_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confusion_boost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#Strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.Strategy" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Picks the target, then distractors from what is known to be confusable.</p>
+<p>Subclasses override <code class="xref py py-meth docutils literal notranslate"><span class="pre">pick_target()</span></code>. Distractors come from the caller’s
+<code class="docutils literal notranslate"><span class="pre">similarity</span></code>, plus the learner’s own recent confusions when
+<code class="docutils literal notranslate"><span class="pre">learner_confusions</span></code> is on (the default for the strategies that model confusion;
+off for the baselines, which keep no memory of the learner’s mistakes).</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Strategy.confusion_boost">
+<span class="sig-name descname"><span class="pre">confusion_boost</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2.0</span></span><a class="headerlink" href="#learny.scheduling.Strategy.confusion_boost" title="Link to this definition">#</a></dt>
+<dd><p>How much more a learner’s confusion weighs than a known similarity.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.scheduling.Strategy.distractor_similarity">
+<span class="sig-name descname"><span class="pre">distractor_similarity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">responses</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#Strategy.distractor_similarity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.Strategy.distractor_similarity" title="Link to this definition">#</a></dt>
+<dd><p>The learner’s own confusions, recency-weighted, if <code class="docutils literal notranslate"><span class="pre">learner_confusions</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]] | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Strategy.learner_confusions">
+<span class="sig-name descname"><span class="pre">learner_confusions</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#learny.scheduling.Strategy.learner_confusions" title="Link to this definition">#</a></dt>
+<dd><p>Add the learner’s own confusions to the distractor similarity.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Strategy.n_choices">
+<span class="sig-name descname"><span class="pre">n_choices</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></span><a class="headerlink" href="#learny.scheduling.Strategy.n_choices" title="Link to this definition">#</a></dt>
+<dd><p>Options per round, the target included.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="learny.scheduling.Strategy.next_selection">
+<span class="sig-name descname"><span class="pre">next_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">responses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidates</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">now</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#Strategy.next_selection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.Strategy.next_selection" title="Link to this definition">#</a></dt>
+<dd><p>The next round for the learner whose <code class="docutils literal notranslate"><span class="pre">responses</span></code> these are.</p>
+<p><code class="docutils literal notranslate"><span class="pre">candidates</span></code> is the study set (duplicates ignored); <code class="docutils literal notranslate"><span class="pre">similarity</span></code> is what the
+caller knows to be confusable, to which the learner’s own confusions are added
+(never substituted, so an item not yet confused keeps its look-alikes). <code class="docutils literal notranslate"><span class="pre">now</span></code>
+is POSIX time, defaulting to the clock.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#learny.scheduling.Selection" title="learny.scheduling.Selection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Selection</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Strategy.recency_halflife_days">
+<span class="sig-name descname"><span class="pre">recency_halflife_days</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7.0</span></span><a class="headerlink" href="#learny.scheduling.Strategy.recency_halflife_days" title="Link to this definition">#</a></dt>
+<dd><p>A confusion’s weight halves every this many days.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.scheduling.UniformRandom">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.scheduling.</span></span><span class="sig-name descname"><span class="pre">UniformRandom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learner_confusions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recency_halflife_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confusion_boost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anti_repeat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#UniformRandom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.UniformRandom" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#learny.scheduling.Strategy" title="learny.scheduling.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a></p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.UniformRandom.anti_repeat">
+<span class="sig-name descname"><span class="pre">anti_repeat</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#learny.scheduling.UniformRandom.anti_repeat" title="Link to this definition">#</a></dt>
+<dd><p>Never ask the item just asked, when there is another.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="learny.scheduling.Weakest">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">learny.scheduling.</span></span><span class="sig-name descname"><span class="pre">Weakest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_choices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learner_confusions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recency_halflife_days</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confusion_boost</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">items</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weakest_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#Weakest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.Weakest" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#learny.scheduling.Strategy" title="learny.scheduling.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a></p>
+<p>Items on the labels the learner model says are weakest; else the least likely right.</p>
+<p>Replays the responses into a <a class="reference internal" href="learny.tracing.html#learny.tracing.LearnerModel" title="learny.tracing.LearnerModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerModel</span></code></a> over <code class="docutils literal notranslate"><span class="pre">items</span></code>
+(whose labels say what each item exercises) and asks it for the weakest labels.
+Candidates carrying those labels are drawn in proportion to their weight on them;
+when no label is credibly weakest, in proportion to the chance of a wrong answer.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Weakest.estimator">
+<span class="sig-name descname"><span class="pre">estimator</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.15)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#learny.scheduling.Weakest.estimator" title="Link to this definition">#</a></dt>
+<dd><p>Builds the estimator; <code class="docutils literal notranslate"><span class="pre">None</span></code> for the default (<a class="reference internal" href="learny.tracing.html#learny.tracing.RaschEstimator" title="learny.tracing.RaschEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RaschEstimator</span></code></a>).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Weakest.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><span class="pre">Mapping</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="learny.tracing.records.html#learny.tracing.records.Item" title="learny.tracing.records.Item"><span class="pre">Item</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#learny.scheduling.Weakest.items" title="Link to this definition">#</a></dt>
+<dd><p>labels and difficulties. An item missing here has no labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The item bank</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Weakest.learner_confusions">
+<span class="sig-name descname"><span class="pre">learner_confusions</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#learny.scheduling.Weakest.learner_confusions" title="Link to this definition">#</a></dt>
+<dd><p>Add the learner’s own confusions to the distractor similarity.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Weakest.n_labels">
+<span class="sig-name descname"><span class="pre">n_labels</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#learny.scheduling.Weakest.n_labels" title="Link to this definition">#</a></dt>
+<dd><p>How many weakest labels to draw from.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="learny.scheduling.Weakest.weakest_options">
+<span class="sig-name descname"><span class="pre">weakest_options</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><span class="pre">Mapping</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#learny.scheduling.Weakest.weakest_options" title="Link to this definition">#</a></dt>
+<dd><p>Passed on to <a class="reference internal" href="learny.tracing.html#learny.tracing.LearnerModel.weakest" title="learny.tracing.LearnerModel.weakest"><code class="xref py py-meth docutils literal notranslate"><span class="pre">weakest()</span></code></a> (<code class="docutils literal notranslate"><span class="pre">credible_below</span></code>…).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.scheduling.list_strategies">
+<span class="sig-prename descclassname"><span class="pre">learny.scheduling.</span></span><span class="sig-name descname"><span class="pre">list_strategies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#list_strategies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.list_strategies" title="Link to this definition">#</a></dt>
+<dd><p>Each strategy’s key, name, description, whether it is the default, and its
+parameters (name, type, default) for a settings screen.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">list_strategies</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'params'</span><span class="p">]][:</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">['n_choices', 'learner_confusions']</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="learny.scheduling.make_strategy">
+<span class="sig-prename descclassname"><span class="pre">learny.scheduling.</span></span><span class="sig-name descname"><span class="pre">make_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/scheduling.html#make_strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.scheduling.make_strategy" title="Link to this definition">#</a></dt>
+<dd><p>The strategy registered under <code class="docutils literal notranslate"><span class="pre">key</span></code> (default <code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_STRATEGY</span></code>).</p>
+<p>Parameters the strategy does not have are ignored, so one settings mapping can serve
+every strategy; an unknown key is an error.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">make_strategy</span><span class="p">(</span><span class="s1">'leitner'</span><span class="p">,</span> <span class="n">n_boxes</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">epsilon_explore</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span><span class="o">.</span><span class="n">intervals</span>
+<span class="go">(1, 2, 4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_strategy</span><span class="p">(</span><span class="s1">'nope'</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">no strategy 'nope'; known: uniform_random, leitner, sm2, confusion_weighted, fsrs_lite, weakest</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#learny.scheduling.Strategy" title="learny.scheduling.Strategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Strategy</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="learny.distractors.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">learny.distractors</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="learny.tracing.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">learny.tracing</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.ConfusionWeighted"><code class="docutils literal notranslate"><span class="pre">ConfusionWeighted</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.ConfusionWeighted.epsilon_explore"><code class="docutils literal notranslate"><span class="pre">ConfusionWeighted.epsilon_explore</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.ConfusionWeighted.floor"><code class="docutils literal notranslate"><span class="pre">ConfusionWeighted.floor</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.ConfusionWeighted.learner_confusions"><code class="docutils literal notranslate"><span class="pre">ConfusionWeighted.learner_confusions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.ConfusionWeighted.prior"><code class="docutils literal notranslate"><span class="pre">ConfusionWeighted.prior</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.FSRSLite"><code class="docutils literal notranslate"><span class="pre">FSRSLite</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.FSRSLite.learner_confusions"><code class="docutils literal notranslate"><span class="pre">FSRSLite.learner_confusions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.FSRSLite.recall"><code class="docutils literal notranslate"><span class="pre">FSRSLite.recall()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.FSRSLite.s_init"><code class="docutils literal notranslate"><span class="pre">FSRSLite.s_init</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.FSRSLite.stability"><code class="docutils literal notranslate"><span class="pre">FSRSLite.stability()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Leitner"><code class="docutils literal notranslate"><span class="pre">Leitner</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Leitner.boxes"><code class="docutils literal notranslate"><span class="pre">Leitner.boxes()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Leitner.demotion"><code class="docutils literal notranslate"><span class="pre">Leitner.demotion</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Leitner.intervals"><code class="docutils literal notranslate"><span class="pre">Leitner.intervals</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.SM2"><code class="docutils literal notranslate"><span class="pre">SM2</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.SM2.fast_ms"><code class="docutils literal notranslate"><span class="pre">SM2.fast_ms</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.SM2.grade"><code class="docutils literal notranslate"><span class="pre">SM2.grade()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.SM2.i1"><code class="docutils literal notranslate"><span class="pre">SM2.i1</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.SM2.overdue_floor"><code class="docutils literal notranslate"><span class="pre">SM2.overdue_floor</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.SM2.state"><code class="docutils literal notranslate"><span class="pre">SM2.state()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Selection"><code class="docutils literal notranslate"><span class="pre">Selection</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Strategy"><code class="docutils literal notranslate"><span class="pre">Strategy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Strategy.confusion_boost"><code class="docutils literal notranslate"><span class="pre">Strategy.confusion_boost</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Strategy.distractor_similarity"><code class="docutils literal notranslate"><span class="pre">Strategy.distractor_similarity()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Strategy.learner_confusions"><code class="docutils literal notranslate"><span class="pre">Strategy.learner_confusions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Strategy.n_choices"><code class="docutils literal notranslate"><span class="pre">Strategy.n_choices</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Strategy.next_selection"><code class="docutils literal notranslate"><span class="pre">Strategy.next_selection()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Strategy.recency_halflife_days"><code class="docutils literal notranslate"><span class="pre">Strategy.recency_halflife_days</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.UniformRandom"><code class="docutils literal notranslate"><span class="pre">UniformRandom</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.UniformRandom.anti_repeat"><code class="docutils literal notranslate"><span class="pre">UniformRandom.anti_repeat</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Weakest"><code class="docutils literal notranslate"><span class="pre">Weakest</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Weakest.estimator"><code class="docutils literal notranslate"><span class="pre">Weakest.estimator</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Weakest.items"><code class="docutils literal notranslate"><span class="pre">Weakest.items</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Weakest.learner_confusions"><code class="docutils literal notranslate"><span class="pre">Weakest.learner_confusions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Weakest.n_labels"><code class="docutils literal notranslate"><span class="pre">Weakest.n_labels</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.Weakest.weakest_options"><code class="docutils literal notranslate"><span class="pre">Weakest.weakest_options</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.list_strategies"><code class="docutils literal notranslate"><span class="pre">list_strategies()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.scheduling.make_strategy"><code class="docutils literal notranslate"><span class="pre">make_strategy()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/_autosummary/learny.scheduling.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

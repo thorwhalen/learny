@@ -1,0 +1,26 @@
+learny.scheduling
+=================
+
+.. automodule:: learny.scheduling
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      make_strategy
+      list_strategies
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Selection
+      Strategy
+      UniformRandom
+      Leitner
+      SM2
+      ConfusionWeighted
+      FSRSLite
+      Weakest
+   

@@ -320,6 +320,8 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="learny.html">learny</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="learny.distractors.html">learny.distractors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learny.scheduling.html">learny.scheduling</a></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="learny.tracing.html">learny.tracing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.diagnostics.html">learny.tracing.diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.difficulty.html">learny.tracing.difficulty</a></li>
@@ -444,6 +446,12 @@ the log records what happened.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.records.META_SESSION" title="learny.tracing.records.META_SESSION"><code class="xref py py-obj docutils literal notranslate"><span class="pre">META_SESSION</span></code></a></p></td>
 <td><p>The id of the sitting this response belongs to.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.records.META_TIMED_OUT" title="learny.tracing.records.META_TIMED_OUT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">META_TIMED_OUT</span></code></a></p></td>
+<td><p>the learner saw the item and did not answer in time (unlike <code class="docutils literal notranslate"><span class="pre">not_reached</span></code>, an item never shown at all).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.records.META_CREDIT" title="learny.tracing.records.META_CREDIT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">META_CREDIT</span></code></a></p></td>
+<td><p>Partial credit in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> a wrong pick earned for being close (a near-homophone, a look-alike).</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.records.META_NOT_REACHED" title="learny.tracing.records.META_NOT_REACHED"><code class="xref py py-obj docutils literal notranslate"><span class="pre">META_NOT_REACHED</span></code></a></p></td>
 <td><p>Set by <a class="reference internal" href="learny.tracing.estimators.html#learny.tracing.estimators.mark_not_reached" title="learny.tracing.estimators.mark_not_reached"><code class="xref py py-func docutils literal notranslate"><span class="pre">mark_not_reached()</span></code></a> on a blank the clock ran out before: not evidence about the student.</p></td>
 </tr>
@@ -462,10 +470,13 @@ the log records what happened.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.records.restrict_labels" title="learny.tracing.records.restrict_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">restrict_labels</span></code></a>(items, *, keep[, ...])</p></td>
 <td><p>Project an item bank onto a subset of its labels — one facet, say.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.records.guess_of" title="learny.tracing.records.guess_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guess_of</span></code></a>(response, *[, default])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.records.credit_of" title="learny.tracing.records.credit_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">credit_of</span></code></a>(response)</p></td>
+<td><p>The share of full credit <code class="docutils literal notranslate"><span class="pre">response</span></code> earned: <code class="docutils literal notranslate"><span class="pre">meta['credit']</span></code>, else <code class="docutils literal notranslate"><span class="pre">score</span> <span class="pre">/</span> <span class="pre">max_score</span></code>, else 1 if right and 0 if not.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.records.guess_of" title="learny.tracing.records.guess_of"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guess_of</span></code></a>(response, *[, default])</p></td>
 <td><p>The chance of answering <code class="docutils literal notranslate"><span class="pre">response</span></code>'s item right by guessing, from its meta.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#learny.tracing.records.confusions" title="learny.tracing.records.confusions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">confusions</span></code></a>(responses)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#learny.tracing.records.confusions" title="learny.tracing.records.confusions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">confusions</span></code></a>(responses)</p></td>
 <td><p>How often each item was answered with each wrong option: <code class="docutils literal notranslate"><span class="pre">(item,</span> <span class="pre">chosen)</span> <span class="pre">-&gt;</span> <span class="pre">n</span></code>.</p></td>
 </tr>
 </tbody>
@@ -488,7 +499,7 @@ the log records what happened.</p>
 </div>
 <dl class="py data">
 <dt class="sig sig-object py" id="learny.tracing.records.CHOICE_META_KEYS">
-<span class="sig-prename descclassname"><span class="pre">learny.tracing.records.</span></span><span class="sig-name descname"><span class="pre">CHOICE_META_KEYS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('shown',</span> <span class="pre">'chosen',</span> <span class="pre">'rt_ms',</span> <span class="pre">'prompt',</span> <span class="pre">'answer',</span> <span class="pre">'pattern',</span> <span class="pre">'guess',</span> <span class="pre">'spec',</span> <span class="pre">'session')</span></span><a class="headerlink" href="#learny.tracing.records.CHOICE_META_KEYS" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.records.</span></span><span class="sig-name descname"><span class="pre">CHOICE_META_KEYS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('shown',</span> <span class="pre">'chosen',</span> <span class="pre">'rt_ms',</span> <span class="pre">'prompt',</span> <span class="pre">'answer',</span> <span class="pre">'pattern',</span> <span class="pre">'guess',</span> <span class="pre">'spec',</span> <span class="pre">'session',</span> <span class="pre">'timed_out',</span> <span class="pre">'credit')</span></span><a class="headerlink" href="#learny.tracing.records.CHOICE_META_KEYS" title="Link to this definition">#</a></dt>
 <dd><p>Every meta key a choice game writes, in the order above.</p>
 </dd></dl>
 
@@ -554,6 +565,14 @@ mastery estimate less than a reliably-assigned one.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt class="sig sig-object py" id="learny.tracing.records.META_CREDIT">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.records.</span></span><span class="sig-name descname"><span class="pre">META_CREDIT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'credit'</span></span><a class="headerlink" href="#learny.tracing.records.META_CREDIT" title="Link to this definition">#</a></dt>
+<dd><p>Partial credit in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> a wrong pick earned for being close (a near-homophone, a
+look-alike). For schedulers and distractor weighting only: the learner model reads the
+ordered <code class="docutils literal notranslate"><span class="pre">score</span></code>, not this. Defaults to <code class="docutils literal notranslate"><span class="pre">score</span> <span class="pre">/</span> <span class="pre">max_score</span></code> (see <a class="reference internal" href="#learny.tracing.records.credit_of" title="learny.tracing.records.credit_of"><code class="xref py py-func docutils literal notranslate"><span class="pre">credit_of()</span></code></a>).</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="learny.tracing.records.META_GUESS">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.records.</span></span><span class="sig-name descname"><span class="pre">META_GUESS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'guess'</span></span><a class="headerlink" href="#learny.tracing.records.META_GUESS" title="Link to this definition">#</a></dt>
 <dd><p>The probability of a correct answer by chance, when the game knows it.</p>
@@ -606,6 +625,18 @@ item it shows, so a wrong pick names the item it was mistaken for.</p>
 <dt class="sig sig-object py" id="learny.tracing.records.META_SPEC">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.records.</span></span><span class="sig-name descname"><span class="pre">META_SPEC</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'spec'</span></span><a class="headerlink" href="#learny.tracing.records.META_SPEC" title="Link to this definition">#</a></dt>
 <dd><p>The game settings this response was played under (an id, or the spec itself).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="learny.tracing.records.META_TIMED_OUT">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.records.</span></span><span class="sig-name descname"><span class="pre">META_TIMED_OUT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'timed_out'</span></span><a class="headerlink" href="#learny.tracing.records.META_TIMED_OUT" title="Link to this definition">#</a></dt>
+<dd><p>the learner saw the item
+and did not answer in time (unlike <code class="docutils literal notranslate"><span class="pre">not_reached</span></code>, an item never shown at all).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True when the round’s clock ran out while it was on screen</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py class">
@@ -755,6 +786,24 @@ student’s responses for their confusions, everyone’s for the population’s.
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="learny.tracing.records.credit_of">
+<span class="sig-prename descclassname"><span class="pre">learny.tracing.records.</span></span><span class="sig-name descname"><span class="pre">credit_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/records.html#credit_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.records.credit_of" title="Link to this definition">#</a></dt>
+<dd><p>The share of full credit <code class="docutils literal notranslate"><span class="pre">response</span></code> earned: <code class="docutils literal notranslate"><span class="pre">meta['credit']</span></code>, else
+<code class="docutils literal notranslate"><span class="pre">score</span> <span class="pre">/</span> <span class="pre">max_score</span></code>, else 1 if right and 0 if not.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">credit_of</span><span class="p">(</span><span class="n">Response</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="s1">'tsu'</span><span class="p">,</span> <span class="s1">'wrong'</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="p">{</span><span class="s1">'credit'</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">}))</span>
+<span class="go">0.3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">credit_of</span><span class="p">(</span><span class="n">Response</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="s1">'tsu'</span><span class="p">,</span> <span class="s1">'wrong'</span><span class="p">,</span> <span class="n">score</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_score</span><span class="o">=</span><span class="mi">4</span><span class="p">)),</span> <span class="n">credit_of</span><span class="p">(</span><span class="n">Response</span><span class="p">(</span><span class="s1">'ada'</span><span class="p">,</span> <span class="s1">'tsu'</span><span class="p">,</span> <span class="s1">'correct'</span><span class="p">))</span>
+<span class="go">(0.25, 1.0)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="learny.tracing.records.guess_of">
 <span class="sig-prename descclassname"><span class="pre">learny.tracing.records.</span></span><span class="sig-name descname"><span class="pre">guess_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/learny/tracing/records.html#guess_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#learny.tracing.records.guess_of" title="Link to this definition">#</a></dt>
 <dd><p>The chance of answering <code class="docutils literal notranslate"><span class="pre">response</span></code>’s item right by guessing, from its meta.</p>
@@ -876,6 +925,7 @@ student’s global skill, so it is kept unless <code class="docutils literal not
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.LabelWeights"><code class="docutils literal notranslate"><span class="pre">LabelWeights</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.META_ANSWER"><code class="docutils literal notranslate"><span class="pre">META_ANSWER</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.META_CHOSEN"><code class="docutils literal notranslate"><span class="pre">META_CHOSEN</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.META_CREDIT"><code class="docutils literal notranslate"><span class="pre">META_CREDIT</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.META_GUESS"><code class="docutils literal notranslate"><span class="pre">META_GUESS</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.META_NOT_REACHED"><code class="docutils literal notranslate"><span class="pre">META_NOT_REACHED</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.META_PATTERN"><code class="docutils literal notranslate"><span class="pre">META_PATTERN</span></code></a></li>
@@ -884,6 +934,7 @@ student’s global skill, so it is kept unless <code class="docutils literal not
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.META_SESSION"><code class="docutils literal notranslate"><span class="pre">META_SESSION</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.META_SHOWN"><code class="docutils literal notranslate"><span class="pre">META_SHOWN</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.META_SPEC"><code class="docutils literal notranslate"><span class="pre">META_SPEC</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.META_TIMED_OUT"><code class="docutils literal notranslate"><span class="pre">META_TIMED_OUT</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.Outcome"><code class="docutils literal notranslate"><span class="pre">Outcome</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.Outcome.is_scored"><code class="docutils literal notranslate"><span class="pre">Outcome.is_scored</span></code></a></li>
 </ul>
@@ -897,6 +948,7 @@ student’s global skill, so it is kept unless <code class="docutils literal not
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.confusions"><code class="docutils literal notranslate"><span class="pre">confusions()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.credit_of"><code class="docutils literal notranslate"><span class="pre">credit_of()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.guess_of"><code class="docutils literal notranslate"><span class="pre">guess_of()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#learny.tracing.records.restrict_labels"><code class="docutils literal notranslate"><span class="pre">restrict_labels()</span></code></a></li>
 </ul>

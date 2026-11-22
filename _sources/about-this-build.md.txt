@@ -5,7 +5,7 @@ orphan: true
 
 # About this build
 
-This documentation was built on **2026-11-22 11:35 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/d0797adf9ad99891dc3bc1f54dc336055bef57a0"><code>d0797ad</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-22 11:42 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/4ab62645389e5b3411675838c097041ede7264e7"><code>4ab6264</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 :::{note}
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -15,7 +15,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 | | |
 |---|---|
-| Commit | <a href="https://github.com/thorwhalen/learny/commit/d0797adf9ad99891dc3bc1f54dc336055bef57a0"><code>d0797adf9ad99891dc3bc1f54dc336055bef57a0</code></a> |
+| Commit | <a href="https://github.com/thorwhalen/learny/commit/4ab62645389e5b3411675838c097041ede7264e7"><code>4ab62645389e5b3411675838c097041ede7264e7</code></a> |
 | Branch | <code>main</code> |
 | Tags at this commit | none |
 | Working tree | clean |
@@ -26,9 +26,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 | | |
 |---|---|
 | Repository | <code>thorwhalen/learny</code> |
-| Run | <a href="https://github.com/thorwhalen/learny/actions/runs/45017850829">45017850829</a> |
+| Run | <a href="https://github.com/thorwhalen/learny/actions/runs/45018394899">45018394899</a> |
 | Ref | <code>refs/heads/main</code> |
-| Event commit | <code>d0797adf9ad99891dc3bc1f54dc336055bef57a0</code> (in the history of the built commit) |
+| Event commit | <code>4ab62645389e5b3411675838c097041ede7264e7</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -59,7 +59,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout d0797adf9ad99891dc3bc1f54dc336055bef57a0
+git checkout 4ab62645389e5b3411675838c097041ede7264e7
 pip install "epythet==0.2.23"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

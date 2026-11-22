@@ -18,6 +18,8 @@ learny.tracing.records
       META_GUESS
       META_SPEC
       META_SESSION
+      META_TIMED_OUT
+      META_CREDIT
       META_NOT_REACHED
       CHOICE_META_KEYS
       GUESS_IS_ONE_OVER_K
@@ -27,6 +29,7 @@ learny.tracing.records
    .. autosummary::
    
       restrict_labels
+      credit_of
       guess_of
       confusions
    

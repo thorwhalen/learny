@@ -10,4 +10,6 @@
    :toctree:
    :recursive:
 
+   distractors
+   scheduling
    tracing

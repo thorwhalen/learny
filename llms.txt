@@ -8,6 +8,8 @@
 - [learny](index.html.md): Turn learning into play — build knowledge with joy
 - [API reference](api.html.md): | &#96;learny&#96;   | Turn learning into play — build knowledge with joy.   |
 - [learny](_autosummary/learny.html.md): Turn learning into play — build knowledge with joy.
+- [learny.distractors](_autosummary/learny.distractors.html.md): Which wrong options to show beside the right one, from what the learner confuses.
+- [learny.scheduling](_autosummary/learny.scheduling.html.md): Which item to ask next, and which options to show with it, from the response log.
 - [learny.tracing](_autosummary/learny.tracing.html.md): Learner modelling: what a student knows, estimated from what they have answered.
 - [learny.tracing.diagnostics](_autosummary/learny.tracing.diagnostics.html.md): Diagnostics: when to believe the model, and how well it has predicted so far.
 - [learny.tracing.difficulty](_autosummary/learny.tracing.difficulty.html.md): Explanatory item difficulty: which item features make an item hard.
@@ -16,7 +18,7 @@
 - [learny.tracing.records](_autosummary/learny.tracing.records.html.md): Core data types for learner modelling: items, outcomes, and responses.
 - [learny.tracing.stores](_autosummary/learny.tracing.stores.html.md): Where learner data lives, and how code reaches it.
 - [For AI agents](ai-agents.html.md): &#96;learny&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-11-22 11:35 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-11-22 11:42 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 

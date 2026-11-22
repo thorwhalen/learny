@@ -6,6 +6,8 @@
 ## Pages in this subsection
 
 - [learny](learny.html.md): Turn learning into play — build knowledge with joy.
+- [learny.distractors](learny.distractors.html.md): Which wrong options to show beside the right one, from what the learner confuses.
+- [learny.scheduling](learny.scheduling.html.md): Which item to ask next, and which options to show with it, from the response log.
 - [learny.tracing](learny.tracing.html.md): Learner modelling: what a student knows, estimated from what they have answered.
 - [learny.tracing.diagnostics](learny.tracing.diagnostics.html.md): Diagnostics: when to believe the model, and how well it has predicted so far.
 - [learny.tracing.difficulty](learny.tracing.difficulty.html.md): Explanatory item difficulty: which item features make an item hard.

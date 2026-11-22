@@ -53,7 +53,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="learny.tracing" href="learny.tracing.html" />
+    <link rel="next" title="learny.distractors" href="learny.distractors.html" />
     <link rel="prev" title="API reference" href="../api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -320,6 +320,8 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a aria-current="page" class="current reference internal" href="#">learny</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="learny.distractors.html">learny.distractors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learny.scheduling.html">learny.scheduling</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="learny.tracing.html">learny.tracing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.diagnostics.html">learny.tracing.diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="learny.tracing.difficulty.html">learny.tracing.difficulty</a></li>
@@ -402,13 +404,18 @@ knows from what they have answered.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">learny.tracing</span></code></dt><dd><p>A per-student learner model whose priors update from that student’s own
 data. Start with <a class="reference internal" href="learny.tracing.model.html#learny.tracing.model.LearnerModel" title="learny.tracing.model.LearnerModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">LearnerModel</span></code></a>.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">learny.scheduling</span></code> and <code class="docutils literal notranslate"><span class="pre">learny.distractors</span></code></dt><dd><p>Which item to ask next and which options to show with it, read from the
+same response log: Leitner, SM-2, FSRS-lite, confusion-weighted and
+weakest-label strategies, and distractors drawn from what the learner
+confuses. Start with <a class="reference internal" href="learny.scheduling.html#learny.scheduling.make_strategy" title="learny.scheduling.make_strategy"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_strategy()</span></code></a>.</p>
+</dd>
 </dl>
 <p>The 11+ vocabulary games that used to live here (word lists, game parameters
 and a quiz front-end) are plain data and a web app, not Python API. They are
 kept in the repository under <code class="docutils literal notranslate"><span class="pre">games/</span></code>, outside this package, so they are not
 part of the installed distribution.</p>
 <p>The installed distribution is the library alone; <code class="docutils literal notranslate"><span class="pre">tracing</span></code> is its only
-sub-package:</p>
+sub-package (the other two are modules):</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">learny</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pkg_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">learny</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
@@ -421,6 +428,12 @@ sub-package:</p>
 <p class="rubric">Modules</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="learny.distractors.html#module-learny.distractors" title="learny.distractors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">distractors</span></code></a></p></td>
+<td><p>Which wrong options to show beside the right one, from what the learner confuses.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="learny.scheduling.html#module-learny.scheduling" title="learny.scheduling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scheduling</span></code></a></p></td>
+<td><p>Which item to ask next, and which options to show with it, from the response log.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="learny.tracing.html#module-learny.tracing" title="learny.tracing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tracing</span></code></a></p></td>
 <td><p>Learner modelling: what a student knows, estimated from what they have answered.</p></td>
 </tr>
@@ -449,11 +462,11 @@ sub-package:</p>
       </div>
     </a>
     <a class="right-next"
-       href="learny.tracing.html"
+       href="learny.distractors.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">learny.tracing</p>
+        <p class="prev-next-title">learny.distractors</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

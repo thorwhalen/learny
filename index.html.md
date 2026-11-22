@@ -114,6 +114,20 @@ See [`docs/learner-model-design.md`]() for the design and its boundaries, and [`
 
 Learner responses are personal data. They are written under `~/.local/share/learny/` — never inside your project — one file per student, so one learner’s data can be handed over or deleted on its own. Set `LEARNY_DATA_DIR` to move the root. Every example and test in this package is synthetic.
 
+## What to ask next
+
+A choice game (pick the match among k options) needs two more decisions per round: which item to ask, and which wrong options to show beside it. `learny.scheduling` makes both from the same response log, so the game holds no learner state of its own.
+
+```python
+from learny.scheduling import make_strategy
+
+strategy = make_strategy()                      # confusion-weighted; also leitner, sm2, fsrs_lite, weakest, uniform_random
+round_ = strategy.next_selection(responses, candidates=['tsu', 'shi', 'so', 'n', 'ka'])
+round_.target, round_.options                   # the item to ask, and the k options in display order
+```
+
+The default asks most about what the learner mixes up, against what they mix it up with: a wrong pick recorded as `meta={'chosen': ...}` makes that option a likelier distractor next time. Pass `similarity={'tsu': {'shi': 1.0, ...}}` for look-alikes known in advance; the learner’s own confusions are added on top. Record each round’s options as `meta['shown']` with `meta['pattern'] = 'M1'` and the learner model discounts lucky guesses at the round’s own `1/k` (the names are in `learny.tracing.records.CHOICE_META_KEYS`).
+
 ## Games
 
 [`games/eleven_plus/`](https://github.com/thorwhalen/learny/tree/main/games/eleven_plus) holds vocabulary material and a quiz app for the UK 11+ exam. It lives in this repository but outside the `learny` package, so `pip install learny` installs the library only. The game-parameter JSON files are plain data and can be loaded by any front-end.

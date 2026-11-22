@@ -1,4 +1,4 @@
-> built 2026-11-22 11:35 UTC from d0797ad (main) · learny 0.0.1. Details: build_info.json
+> built 2026-11-22 11:42 UTC from 4ab6264 (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -118,11 +118,156 @@ See [`docs/learner-model-design.md`]() for the design and its boundaries, and [`
 
 Learner responses are personal data. They are written under `~/.local/share/learny/` — never inside your project — one file per student, so one learner’s data can be handed over or deleted on its own. Set `LEARNY_DATA_DIR` to move the root. Every example and test in this package is synthetic.
 
+## What to ask next
+
+A choice game (pick the match among k options) needs two more decisions per round: which item to ask, and which wrong options to show beside it. `learny.scheduling` makes both from the same response log, so the game holds no learner state of its own.
+
+```python
+from learny.scheduling import make_strategy
+
+strategy = make_strategy()                      # confusion-weighted; also leitner, sm2, fsrs_lite, weakest, uniform_random
+round_ = strategy.next_selection(responses, candidates=['tsu', 'shi', 'so', 'n', 'ka'])
+round_.target, round_.options                   # the item to ask, and the k options in display order
+```
+
+The default asks most about what the learner mixes up, against what they mix it up with: a wrong pick recorded as `meta={'chosen': ...}` makes that option a likelier distractor next time. Pass `similarity={'tsu': {'shi': 1.0, ...}}` for look-alikes known in advance; the learner’s own confusions are added on top. Record each round’s options as `meta['shown']` with `meta['pattern'] = 'M1'` and the learner model discounts lucky guesses at the round’s own `1/k` (the names are in `learny.tracing.records.CHOICE_META_KEYS`).
+
 ## Games
 
 [`games/eleven_plus/`](https://github.com/thorwhalen/learny/tree/main/games/eleven_plus) holds vocabulary material and a quiz app for the UK 11+ exam. It lives in this repository but outside the `learny` package, so `pip install learny` installs the library only. The game-parameter JSON files are plain data and can be loaded by any front-end.
 
 <p class="epythet-aggregates">This documentation as a single file: <a href="learny.md">learny.md</a> (Markdown, for agents).</p>
+
+
+# _autosummary/learny.distractors.html.md
+
+# learny.distractors
+
+Which wrong options to show beside the right one, from what the learner confuses.
+
+A choice game (pick the match among k) is only as informative as its distractors: random
+ones are easy to rule out, while the ones a learner actually mistakes for the target are
+what they need to practise telling apart. This module chooses them from two sources,
+merged: a **similarity** the caller knows in advance (look-alike glyphs, near-homophones,
+similar poses) and the learner’s own **confusions**, read from the wrong picks in their
+response log (`meta['chosen']`; see [`CHOICE_META_KEYS`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.CHOICE_META_KEYS)).
+
+A similarity is a plain `{target: {option: weight}}` mapping, so any source can supply
+one. The three steps compose:
+
+```pycon
+>>> import random
+>>> from learny.tracing import Response
+>>> log = [Response('ada', 'tsu', 'wrong', at=0.0, meta={'chosen': 'shi'})]
+>>> looks_alike = {'tsu': {'so': 1.0}}
+>>> sim = merge_similarity(looks_alike, confusion_weights(log, now=0.0))
+>>> sorted(sim['tsu'])
+['shi', 'so']
+>>> sorted(pick_distractors('tsu', ['tsu', 'shi', 'so', 'n', 'ka'], n=2, similarity=sim,
+...                         rng=random.Random(0)))
+['shi', 'so']
+```
+
+### Module Attributes
+
+| [`Similarity`](_autosummary/learny.distractors.html.md#learny.distractors.Similarity)              | how confusable each option is with each target.                                      |
+|--------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [`DEFAULT_HALFLIFE_DAYS`](_autosummary/learny.distractors.html.md#learny.distractors.DEFAULT_HALFLIFE_DAYS)   | A confusion's weight halves every this many days.                                    |
+| [`DEFAULT_MIN_SHORTFALL`](_autosummary/learny.distractors.html.md#learny.distractors.DEFAULT_MIN_SHORTFALL)   | a near miss is still a confusion worth practising.                                   |
+| [`DEFAULT_CONFUSION_BOOST`](_autosummary/learny.distractors.html.md#learny.distractors.DEFAULT_CONFUSION_BOOST) | How much more the learner's own confusions weigh than a similarity known in advance. |
+
+### Functions
+
+| [`confusion_weights`](_autosummary/learny.distractors.html.md#learny.distractors.confusion_weights)(responses, \*[, ...])            | The learner's confusions as a similarity: recent wrong picks weigh most.   |
+|-----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| [`merge_similarity`](_autosummary/learny.distractors.html.md#learny.distractors.merge_similarity)(base, overlay, \*[, boost])       | `base` plus `boost` times `overlay`, target by target.                     |
+| [`pick_distractors`](_autosummary/learny.distractors.html.md#learny.distractors.pick_distractors)(target, candidates, \*, n[, ...]) | `n` options from `candidates` other than `target`, the confusable first.   |
+
+### learny.distractors.DEFAULT_CONFUSION_BOOST *= 2.0*
+
+How much more the learner’s own confusions weigh than a similarity known in advance.
+
+### learny.distractors.DEFAULT_HALFLIFE_DAYS *= 7.0*
+
+A confusion’s weight halves every this many days.
+
+### learny.distractors.DEFAULT_MIN_SHORTFALL *= 0.25*
+
+a near miss is
+still a confusion worth practising.
+
+* **Type:**
+  The weight a wrong pick keeps however much partial credit it earned
+
+### learny.distractors.Similarity
+
+how confusable each option is with each target.
+
+* **Type:**
+  `{target: {option: weight}}`
+
+alias of [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+
+### learny.distractors.confusion_weights(responses, , halflife_days=7.0, now=None, symmetric=True, min_shortfall=0.25)
+
+The learner’s confusions as a similarity: recent wrong picks weigh most.
+
+Each wrong response that recorded `meta['chosen']` adds to `[item][chosen]` a
+weight halved every `halflife_days` of age (`None`: no decay; an unknown `at`
+counts in full), times the share of credit it missed (a near miss with partial
+credit, [`credit_of()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.credit_of), counts less, but never under
+`min_shortfall`). With `symmetric=True` (the
+default) each confusion also counts the other way: if `tsu` is taken for `shi`,
+the two are hard to tell apart whichever is asked. For plain counts, use
+[`confusions()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.confusions).
+
+```pycon
+>>> week = 7 * 86_400.0
+>>> log = [Response('ada', 'tsu', 'wrong', at=0.0, meta={'chosen': 'shi'}),
+...        Response('ada', 'tsu', 'wrong', at=week, meta={'chosen': 'shi'})]
+>>> confusion_weights(log, now=week)
+{'tsu': {'shi': 1.5}, 'shi': {'tsu': 1.5}}
+>>> confusion_weights(log, halflife_days=None, symmetric=False)
+{'tsu': {'shi': 2.0}}
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+
+### learny.distractors.merge_similarity(base, overlay, , boost=2.0)
+
+`base` plus `boost` times `overlay`, target by target.
+
+Adds rather than replaces, so a target the learner has never confused keeps its
+known look-alikes, and the ones they have confused are weighted up.
+
+```pycon
+>>> merge_similarity({'a': {'b': 1.0}}, {'a': {'b': 1.0, 'c': 0.5}, 'd': {'a': 1.0}})
+{'a': {'b': 3.0, 'c': 1.0}, 'd': {'a': 2.0}}
+```
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]]
+
+### learny.distractors.pick_distractors(target, candidates, , n, similarity=None, rng, top_up=True)
+
+`n` options from `candidates` other than `target`, the confusable first.
+
+Drawn in proportion to `similarity[target]`; when that runs out (or there is
+none), topped up at random from the remaining candidates so the round still has
+`n` distractors whenever there are enough candidates (`top_up=False` to keep only
+the similar ones).
+
+```pycon
+>>> pick_distractors('a', ['a', 'b', 'c', 'd'], n=2, similarity={'a': {'d': 1.0}},
+...                  rng=Random(0))[0]
+'d'
+>>> len(pick_distractors('a', ['a', 'b'], n=3, rng=Random(0)))
+1
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 
 # _autosummary/learny.html.md
@@ -140,13 +285,19 @@ knows from what they have answered.
 : A per-student learner model whose priors update from that student’s own
   data. Start with [`LearnerModel`](_autosummary/learny.tracing.model.html.md#learny.tracing.model.LearnerModel).
 
+`learny.scheduling` and `learny.distractors`
+: Which item to ask next and which options to show with it, read from the
+  same response log: Leitner, SM-2, FSRS-lite, confusion-weighted and
+  weakest-label strategies, and distractors drawn from what the learner
+  confuses. Start with [`make_strategy()`](_autosummary/learny.scheduling.html.md#learny.scheduling.make_strategy).
+
 The 11+ vocabulary games that used to live here (word lists, game parameters
 and a quiz front-end) are plain data and a web app, not Python API. They are
 kept in the repository under `games/`, outside this package, so they are not
 part of the installed distribution.
 
 The installed distribution is the library alone; `tracing` is its only
-sub-package:
+sub-package (the other two are modules):
 
 ```pycon
 >>> from pathlib import Path
@@ -159,8 +310,288 @@ sub-package:
 
 ### Modules
 
-| [`tracing`](_autosummary/learny.tracing.html.md#module-learny.tracing)   | Learner modelling: what a student knows, estimated from what they have answered.   |
-|----------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| [`distractors`](_autosummary/learny.distractors.html.md#module-learny.distractors)   | Which wrong options to show beside the right one, from what the learner confuses.   |
+|------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| [`scheduling`](_autosummary/learny.scheduling.html.md#module-learny.scheduling)     | Which item to ask next, and which options to show with it, from the response log.   |
+| [`tracing`](_autosummary/learny.tracing.html.md#module-learny.tracing)           | Learner modelling: what a student knows, estimated from what they have answered.    |
+
+
+# _autosummary/learny.scheduling.html.md
+
+# learny.scheduling
+
+Which item to ask next, and which options to show with it, from the response log.
+
+A [`Strategy`](_autosummary/learny.scheduling.html.md#learny.scheduling.Strategy) turns one learner’s responses into the next round of a choice game:
+a target item drawn from the candidates, and the options to show with it (the target
+plus distractors from [`learny.distractors`](_autosummary/learny.distractors.html.md#module-learny.distractors)). Per-item state (a Leitner box, an SM-2
+ease, a memory stability) is rebuilt by replaying the responses, the same way
+[`learny.tracing`](_autosummary/learny.tracing.html.md#module-learny.tracing) rebuilds its estimates from the append-only log, so a strategy
+holds no state of its own and can be swapped at any time.
+
+Strategies are chosen by key, which is what a settings screen offers:
+
+```pycon
+>>> import random
+>>> from learny.tracing import Response
+>>> log = [Response('ada', 'tsu', 'wrong', at=0.0, meta={'chosen': 'shi'})]
+>>> strategy = make_strategy('confusion_weighted', epsilon_explore=0.0)
+>>> round_ = strategy.next_selection(log, ['tsu', 'shi', 'so', 'n'], now=0.0,
+...                                  rng=random.Random(1))
+>>> round_.target in round_.options, len(round_.options)
+(True, 4)
+```
+
+The keys: `uniform_random` (the baseline), `leitner` (boxes), `sm2` (SuperMemo 2,
+graded by response time), `confusion_weighted` (the default: the items the learner
+mixes up, against what they mix them up with), `fsrs_lite` (a memory-decay model) and
+`weakest` (items on the labels [`weakest()`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel.weakest) names).
+Spacing intervals are in days; in a single dense sitting little is ever due, so every
+scheduler falls back to an urgency ranking rather than stalling.
+
+### Functions
+
+| [`make_strategy`](_autosummary/learny.scheduling.html.md#learny.scheduling.make_strategy)([key])   | The strategy registered under `key` (default `DEFAULT_STRATEGY`).                                                                  |
+|-------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| [`list_strategies`](_autosummary/learny.scheduling.html.md#learny.scheduling.list_strategies)()      | Each strategy's key, name, description, whether it is the default, and its parameters (name, type, default) for a settings screen. |
+
+### Classes
+
+| [`Selection`](_autosummary/learny.scheduling.html.md#learny.scheduling.Selection)(target, options)                     | One round: the target item, and every option to show in display order.               |
+|-------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [`Strategy`](_autosummary/learny.scheduling.html.md#learny.scheduling.Strategy)([n_choices, learner_confusions, ...]) | Picks the target, then distractors from what is known to be confusable.              |
+| [`UniformRandom`](_autosummary/learny.scheduling.html.md#learny.scheduling.UniformRandom)([n_choices, ...])                |                                                                                      |
+| [`Leitner`](_autosummary/learny.scheduling.html.md#learny.scheduling.Leitner)([n_choices, learner_confusions, ...])  |                                                                                      |
+| [`SM2`](_autosummary/learny.scheduling.html.md#learny.scheduling.SM2)([n_choices, learner_confusions, ...])      |                                                                                      |
+| [`ConfusionWeighted`](_autosummary/learny.scheduling.html.md#learny.scheduling.ConfusionWeighted)([n_choices, ...])            |                                                                                      |
+| [`FSRSLite`](_autosummary/learny.scheduling.html.md#learny.scheduling.FSRSLite)([n_choices, learner_confusions, ...]) |                                                                                      |
+| [`Weakest`](_autosummary/learny.scheduling.html.md#learny.scheduling.Weakest)([n_choices, learner_confusions, ...])  | Items on the labels the learner model says are weakest; else the least likely right. |
+
+### *class* learny.scheduling.ConfusionWeighted(n_choices=4, learner_confusions=True, recency_halflife_days=7.0, confusion_boost=2.0, epsilon_explore=0.1, prior=1.0, floor=0.05)
+
+Bases: [`Strategy`](_autosummary/learny.scheduling.html.md#learny.scheduling.Strategy)
+
+#### epsilon_explore *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 0.1*
+
+Chance of a uniformly random target, so nothing is never asked.
+
+#### floor *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 0.05*
+
+Weight every candidate keeps.
+
+#### learner_confusions *: [bool](https://docs.python.org/3/builtins/functions.html#bool)* *= True*
+
+Add the learner’s own confusions to the distractor similarity.
+
+#### prior *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 1.0*
+
+Extra weight of an item never asked, against its confusion weight.
+
+### *class* learny.scheduling.FSRSLite(n_choices=4, learner_confusions=True, recency_halflife_days=7.0, confusion_boost=2.0, s_init=1.0, stability_growth=2.0, lapse_factor=0.5, lapse_floor=0.5, floor=0.05)
+
+Bases: [`Strategy`](_autosummary/learny.scheduling.html.md#learny.scheduling.Strategy)
+
+#### learner_confusions *: [bool](https://docs.python.org/3/builtins/functions.html#bool)* *= True*
+
+Add the learner’s own confusions to the distractor similarity.
+
+#### recall(item, state, now)
+
+Probability the learner still recalls `item` now (0 if never seen).
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
+#### s_init *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 1.0*
+
+Stability in days of a new item; multiplied by `stability_growth` on each right
+answer, by `lapse_factor` on each wrong one, down to `lapse_floor`.
+
+#### stability(responses)
+
+`{item: (stability in days, last answered at)}`, replayed.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`float`](https://docs.python.org/3/builtins/functions.html#float), [`float`](https://docs.python.org/3/builtins/functions.html#float) | [`None`](https://docs.python.org/3/builtins/constants.html#None)]]
+
+### *class* learny.scheduling.Leitner(n_choices=4, learner_confusions=False, recency_halflife_days=7.0, confusion_boost=2.0, n_boxes=5, intervals=(1, 2, 4, 8, 16), demotion='reset')
+
+Bases: [`Strategy`](_autosummary/learny.scheduling.html.md#learny.scheduling.Strategy)
+
+#### boxes(responses)
+
+`{item: (box, last answered at)}`, replayed from the responses.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`int`](https://docs.python.org/3/builtins/functions.html#int), [`float`](https://docs.python.org/3/builtins/functions.html#float) | [`None`](https://docs.python.org/3/builtins/constants.html#None)]]
+
+#### demotion *: [str](https://docs.python.org/3/builtins/stdtypes.html#str)* *= 'reset'*
+
+`"reset"` sends a wrong answer to box 1, `"step"` down one box.
+
+#### intervals *: [tuple](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[float](https://docs.python.org/3/builtins/functions.html#float), ...]* *= (1, 2, 4, 8, 16)*
+
+Days before an item in each box is due again; extended by doubling to `n_boxes`.
+
+### *class* learny.scheduling.SM2(n_choices=4, learner_confusions=False, recency_halflife_days=7.0, confusion_boost=2.0, ef_start=2.5, ef_min=1.3, i1=1, i2=6, fast_ms=3500, slow_ms=9000, overdue_floor=0.1)
+
+Bases: [`Strategy`](_autosummary/learny.scheduling.html.md#learny.scheduling.Strategy)
+
+#### fast_ms *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 3500*
+
+A right answer at most this fast (`meta['rt_ms']`) grades 5, at least this slow 3.
+
+#### grade(r)
+
+SM-2’s 0-5 quality for one response.
+
+Right: 5 if fast, 3 if slow or timed out (`meta['timed_out']`), else 4. Wrong:
+2 for a near miss that earned partial credit (`meta['credit']` or a score), 1
+otherwise, 0 if timed out.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
+#### i1 *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 1*
+
+Days to the first and second review after a pass.
+
+#### overdue_floor *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 0.1*
+
+Weight the least overdue item keeps when drawing by overdueness.
+
+#### state(responses)
+
+`{item: {'ef', 'n', 'interval', 'last'}}`, replayed from the responses.
+
+* **Return type:**
+  [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]]
+
+### *class* learny.scheduling.Selection(target, options)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+One round: the target item, and every option to show in display order.
+
+### *class* learny.scheduling.Strategy(n_choices=4, learner_confusions=False, recency_halflife_days=7.0, confusion_boost=2.0)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+Picks the target, then distractors from what is known to be confusable.
+
+Subclasses override `pick_target()`. Distractors come from the caller’s
+`similarity`, plus the learner’s own recent confusions when
+`learner_confusions` is on (the default for the strategies that model confusion;
+off for the baselines, which keep no memory of the learner’s mistakes).
+
+#### confusion_boost *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 2.0*
+
+How much more a learner’s confusion weighs than a known similarity.
+
+#### distractor_similarity(responses, , now)
+
+The learner’s own confusions, recency-weighted, if `learner_confusions`.
+
+* **Return type:**
+  [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Mapping`](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`float`](https://docs.python.org/3/builtins/functions.html#float)]] | [`None`](https://docs.python.org/3/builtins/constants.html#None)
+
+#### learner_confusions *: [bool](https://docs.python.org/3/builtins/functions.html#bool)* *= False*
+
+Add the learner’s own confusions to the distractor similarity.
+
+#### n_choices *: [int](https://docs.python.org/3/builtins/functions.html#int)* *= 4*
+
+Options per round, the target included.
+
+#### next_selection(responses, candidates, , similarity=None, now=None, rng=None)
+
+The next round for the learner whose `responses` these are.
+
+`candidates` is the study set (duplicates ignored); `similarity` is what the
+caller knows to be confusable, to which the learner’s own confusions are added
+(never substituted, so an item not yet confused keeps its look-alikes). `now`
+is POSIX time, defaulting to the clock.
+
+* **Return type:**
+  [`Selection`](_autosummary/learny.scheduling.html.md#learny.scheduling.Selection)
+
+#### recency_halflife_days *: [float](https://docs.python.org/3/builtins/functions.html#float)* *= 7.0*
+
+A confusion’s weight halves every this many days.
+
+### *class* learny.scheduling.UniformRandom(n_choices=4, learner_confusions=False, recency_halflife_days=7.0, confusion_boost=2.0, anti_repeat=True)
+
+Bases: [`Strategy`](_autosummary/learny.scheduling.html.md#learny.scheduling.Strategy)
+
+#### anti_repeat *: [bool](https://docs.python.org/3/builtins/functions.html#bool)* *= True*
+
+Never ask the item just asked, when there is another.
+
+### *class* learny.scheduling.Weakest(n_choices=4, learner_confusions=True, recency_halflife_days=7.0, confusion_boost=2.0, items=dict(), estimator=None, n_labels=3, weakest_options=dict(), floor=0.05)
+
+Bases: [`Strategy`](_autosummary/learny.scheduling.html.md#learny.scheduling.Strategy)
+
+Items on the labels the learner model says are weakest; else the least likely right.
+
+Replays the responses into a [`LearnerModel`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel) over `items`
+(whose labels say what each item exercises) and asks it for the weakest labels.
+Candidates carrying those labels are drawn in proportion to their weight on them;
+when no label is credibly weakest, in proportion to the chance of a wrong answer.
+
+#### estimator *: [Callable](https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable)[[], [Any](https://docs.python.org/3/library/typing.html#typing.Any)] | [None](https://docs.python.org/3/builtins/constants.html#None)* *= None*
+
+Builds the estimator; `None` for the default ([`RaschEstimator`](_autosummary/learny.tracing.html.md#learny.tracing.RaschEstimator)).
+
+#### items *: [Mapping](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Item](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Item)]*
+
+labels and difficulties. An item missing here has no labels.
+
+* **Type:**
+  The item bank
+
+#### learner_confusions *: [bool](https://docs.python.org/3/builtins/functions.html#bool)* *= True*
+
+Add the learner’s own confusions to the distractor similarity.
+
+#### n_labels *: [int](https://docs.python.org/3/builtins/functions.html#int)* *= 3*
+
+How many weakest labels to draw from.
+
+#### weakest_options *: [Mapping](https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Any](https://docs.python.org/3/library/typing.html#typing.Any)]*
+
+Passed on to [`weakest()`](_autosummary/learny.tracing.html.md#learny.tracing.LearnerModel.weakest) (`credible_below`…).
+
+### learny.scheduling.list_strategies()
+
+Each strategy’s key, name, description, whether it is the default, and its
+parameters (name, type, default) for a settings screen.
+
+```pycon
+>>> [p['name'] for p in list_strategies()[0]['params']][:2]
+['n_choices', 'learner_confusions']
+```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`dict`](https://docs.python.org/3/builtins/stdtypes.html#dict)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Any`](https://docs.python.org/3/library/typing.html#typing.Any)]]
+
+### learny.scheduling.make_strategy(key=None, \*\*params)
+
+The strategy registered under `key` (default `DEFAULT_STRATEGY`).
+
+Parameters the strategy does not have are ignored, so one settings mapping can serve
+every strategy; an unknown key is an error.
+
+```pycon
+>>> make_strategy('leitner', n_boxes=3, epsilon_explore=0.2).intervals
+(1, 2, 4)
+>>> make_strategy('nope')
+Traceback (most recent call last):
+    ...
+ValueError: no strategy 'nope'; known: uniform_random, leitner, sm2, confusion_weighted, fsrs_lite, weakest
+```
+
+* **Return type:**
+  [`Strategy`](_autosummary/learny.scheduling.html.md#learny.scheduling.Strategy)
 
 
 # _autosummary/learny.tracing.diagnostics.html.md
@@ -3527,16 +3958,19 @@ the log records what happened.
 | [`META_GUESS`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_GUESS)          | The probability of a correct answer by chance, when the game knows it.                                                                                                                     |
 | [`META_SPEC`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_SPEC)           | The game settings this response was played under (an id, or the spec itself).                                                                                                              |
 | [`META_SESSION`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_SESSION)        | The id of the sitting this response belongs to.                                                                                                                                            |
+| [`META_TIMED_OUT`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_TIMED_OUT)      | the learner saw the item and did not answer in time (unlike `not_reached`, an item never shown at all).                                                                                    |
+| [`META_CREDIT`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_CREDIT)         | Partial credit in `[0, 1]` a wrong pick earned for being close (a near-homophone, a look-alike).                                                                                           |
 | [`META_NOT_REACHED`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.META_NOT_REACHED)    | Set by [`mark_not_reached()`](_autosummary/learny.tracing.estimators.html.md#learny.tracing.estimators.mark_not_reached) on a blank the clock ran out before: not evidence about the student. |
 | [`CHOICE_META_KEYS`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.CHOICE_META_KEYS)    | Every meta key a choice game writes, in the order above.                                                                                                                                   |
 | [`GUESS_IS_ONE_OVER_K`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.GUESS_IS_ONE_OVER_K) | one correct option among k (M1), one correct target among k (M4).                                                                                                                          |
 
 ### Functions
 
-| [`restrict_labels`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.restrict_labels)(items, \*, keep[, ...])   | Project an item bank onto a subset of its labels — one facet, say.              |
-|--------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
-| [`guess_of`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.guess_of)(response, \*[, default])         | The chance of answering `response`'s item right by guessing, from its meta.     |
-| [`confusions`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.confusions)(responses)                     | How often each item was answered with each wrong option: `(item, chosen) -> n`. |
+| [`restrict_labels`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.restrict_labels)(items, \*, keep[, ...])   | Project an item bank onto a subset of its labels — one facet, say.                                                    |
+|--------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| [`credit_of`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.credit_of)(response)                       | The share of full credit `response` earned: `meta['credit']`, else `score / max_score`, else 1 if right and 0 if not. |
+| [`guess_of`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.guess_of)(response, \*[, default])         | The chance of answering `response`'s item right by guessing, from its meta.                                           |
+| [`confusions`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.confusions)(responses)                     | How often each item was answered with each wrong option: `(item, chosen) -> n`.                                       |
 
 ### Classes
 
@@ -3545,7 +3979,7 @@ the log records what happened.
 | [`Item`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Item)(id[, labels, difficulty, meta])              | A question, with the skill labels it exercises and its observed difficulty. |
 | [`Response`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.Response)(student, item, outcome[, at, meta, ...]) | One student meeting one item, once.                                         |
 
-### learny.tracing.records.CHOICE_META_KEYS *= ('shown', 'chosen', 'rt_ms', 'prompt', 'answer', 'pattern', 'guess', 'spec', 'session')*
+### learny.tracing.records.CHOICE_META_KEYS *= ('shown', 'chosen', 'rt_ms', 'prompt', 'answer', 'pattern', 'guess', 'spec', 'session', 'timed_out', 'credit')*
 
 Every meta key a choice game writes, in the order above.
 
@@ -3598,6 +4032,12 @@ The side(s) the options were shown in, i.e. what was asked for.
 
 The option id the learner picked; absent on a skip.
 
+### learny.tracing.records.META_CREDIT *= 'credit'*
+
+Partial credit in `[0, 1]` a wrong pick earned for being close (a near-homophone, a
+look-alike). For schedulers and distractor weighting only: the learner model reads the
+ordered `score`, not this. Defaults to `score / max_score` (see [`credit_of()`](_autosummary/learny.tracing.records.html.md#learny.tracing.records.credit_of)).
+
 ### learny.tracing.records.META_GUESS *= 'guess'*
 
 The probability of a correct answer by chance, when the game knows it.
@@ -3634,6 +4074,14 @@ item it shows, so a wrong pick names the item it was mistaken for.
 ### learny.tracing.records.META_SPEC *= 'spec'*
 
 The game settings this response was played under (an id, or the spec itself).
+
+### learny.tracing.records.META_TIMED_OUT *= 'timed_out'*
+
+the learner saw the item
+and did not answer in time (unlike `not_reached`, an item never shown at all).
+
+* **Type:**
+  True when the round’s clock ran out while it was on screen
 
 ### *class* learny.tracing.records.Outcome(\*values)
 
@@ -3769,6 +4217,21 @@ Counter({('tsu', 'shi'): 2, ('so', 'n'): 1})
 
 * **Return type:**
   [`Counter`](https://docs.python.org/3/library/collections.html#collections.Counter)[[`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]
+
+### learny.tracing.records.credit_of(response)
+
+The share of full credit `response` earned: `meta['credit']`, else
+`score / max_score`, else 1 if right and 0 if not.
+
+```pycon
+>>> credit_of(Response('ada', 'tsu', 'wrong', meta={'credit': 0.3}))
+0.3
+>>> credit_of(Response('ada', 'tsu', 'wrong', score=1, max_score=4)), credit_of(Response('ada', 'tsu', 'correct'))
+(0.25, 1.0)
+```
+
+* **Return type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
 
 ### learny.tracing.records.guess_of(response, , default=None)
 
@@ -3953,7 +4416,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-11-22 11:35 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/d0797adf9ad99891dc3bc1f54dc336055bef57a0"><code>d0797ad</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-22 11:42 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/4ab62645389e5b3411675838c097041ede7264e7"><code>4ab6264</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -3962,7 +4425,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/d0797adf9ad99891dc3bc1f54dc336055bef57a0"><code>d0797adf9ad99891dc3bc1f54dc336055bef57a0</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/4ab62645389e5b3411675838c097041ede7264e7"><code>4ab62645389e5b3411675838c097041ede7264e7</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -3973,9 +4436,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/45017850829">45017850829</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/45018394899">45018394899</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>d0797adf9ad99891dc3bc1f54dc336055bef57a0</code> (in the history of the built commit) |
+| Event commit | <code>4ab62645389e5b3411675838c097041ede7264e7</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4006,7 +4469,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout d0797adf9ad99891dc3bc1f54dc336055bef57a0
+git checkout 4ab62645389e5b3411675838c097041ede7264e7
 pip install "epythet==0.2.23"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
