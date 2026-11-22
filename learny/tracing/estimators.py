@@ -69,7 +69,7 @@ from numbers import Real
 from types import MappingProxyType
 from typing import Any, NamedTuple, Protocol, runtime_checkable
 
-from learny.tracing.records import Item, Outcome, Response
+from learny.tracing.records import META_NOT_REACHED, Item, Outcome, Response, guess_of
 
 __all__ = [
     "Estimator",
@@ -281,7 +281,7 @@ def mark_not_reached(responses: Sequence[Response]) -> list[Response]:
     for i in range(len(out) - 1, -1, -1):
         if out[i].outcome is not Outcome.SKIPPED:
             break
-        out[i] = replace(out[i], meta={**out[i].meta, "not_reached": True})
+        out[i] = replace(out[i], meta={**out[i].meta, META_NOT_REACHED: True})
     return out
 
 
@@ -454,7 +454,10 @@ class RaschEstimator:
     label_prior_var: float = 0.25
     #: Probability of getting an item right by guessing. For 5-option multiple choice,
     #: 0.2. Left at 0 by default because it is a property of the assessment, not of the
-    #: model, and a wrong value here quietly biases everything.
+    #: model, and a wrong value here quietly biases everything. A response that carries
+    #: its own rate in ``meta`` (see :func:`~learny.tracing.records.guess_of`: an explicit
+    #: ``guess``, or ``pattern='M1'`` with the options ``shown``) is updated at that rate
+    #: instead, so one log can mix rounds of 2 and 4 options.
     guess: float = 0.0
     #: Variance added per week since a skill was last seen, so a stale belief re-opens to
     #: new evidence. Inflating variance says "we know less now", which is true; decaying
@@ -598,8 +601,18 @@ class RaschEstimator:
         v_s = u0 + sum(share * u[k] for k, share in shares.items())
         return _Joint(glob, frame, labels, shares, u0, u, max(v_s, 0.0))
 
-    def predict(self, state: Mapping[str, Any], item: Item, *, at: float | None = None) -> float:
+    def predict(
+        self,
+        state: Mapping[str, Any],
+        item: Item,
+        *,
+        at: float | None = None,
+        guess: float | None = None,
+    ) -> float:
         """Probability of a correct answer, integrating over the posterior.
+
+        ``guess`` is the chance rate of the round being predicted (``1/k`` for k options),
+        defaulting to the estimator's ``guess``.
 
         With no evidence the prediction sits near the item's own base rate, but pulled
         toward a coin flip — because the model is being honest that it knows nothing about
@@ -618,9 +631,12 @@ class RaschEstimator:
         >>> sure = RaschEstimator(prior_var=1e-6)
         >>> round(sure.predict(sure.init(), Item('q', difficulty=0.75)), 3)
         0.25
+        >>> round(sure.predict(sure.init(), Item('q', difficulty=0.75), guess=0.5), 3)
+        0.625
         """
+        g = self.guess if guess is None else guess
         q = expit(self._integrated_predictor(state, item, at))
-        return self.guess + (1.0 - self.guess) * q
+        return g + (1.0 - g) * q
 
     def _integrated_predictor(
         self, state: Mapping[str, Any], item: Item, at: float | None
@@ -649,13 +665,17 @@ class RaschEstimator:
             return 1.0, 1.0
         if outcome is Outcome.WRONG:
             return 0.0, 1.0
-        if response.meta.get("not_reached"):
+        if response.meta.get(META_NOT_REACHED):
             return None  # the clock ran out; not evidence about the student
         if self.abstain_weight <= 0:
             return None
         # An interior blank is a decision not to answer: a soft observation at the
         # guessing rate, never a wrong answer.
-        return self.guess, self.abstain_weight
+        return self._guess(response), self.abstain_weight
+
+    def _guess(self, response: Response) -> float:
+        """The chance rate for this response: its own, from ``meta``, else the model's."""
+        return guess_of(response, default=self.guess)
 
     def _likelihood(
         self, response: Response, item: Item, s: float, v_s: float
@@ -671,9 +691,10 @@ class RaschEstimator:
         overrides it and inherits the rest.
         """
         target, weight = self._target(response)
+        g = self._guess(response)
         q = expit(s)
-        p = self.guess + (1.0 - self.guess) * q
-        dp_ds = (1.0 - self.guess) * q * (1.0 - q)
+        p = g + (1.0 - g) * q
+        dp_ds = (1.0 - g) * q * (1.0 - q)
         denom = max(p * (1.0 - p), 1e-9)
         score = weight * (target - p) * dp_ds / denom        # gradient of the log-likelihood
         info = weight * dp_ds * dp_ds / denom                # Fisher information
@@ -873,8 +894,9 @@ class RaschEstimator:
         if not response.outcome.is_scored:
             return response
         item = item if item is not None else Item(response.item)
+        g = self._guess(response)
         q = expit(self.skill(state).mu - self._null_difficulty(item))
-        p = self.guess + (1.0 - self.guess) * q
+        p = g + (1.0 - g) * q
         drawn = Outcome.CORRECT if rng.random() < p else Outcome.WRONG
         return replace(response, outcome=drawn, score=None, max_score=None)
 

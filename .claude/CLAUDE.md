@@ -17,7 +17,9 @@ vocabulary games that used to live in the package are now plain data/a web app u
 - `records.py` — core data types (`Item`, `Outcome`, `Response`) — the vocabulary
   every other module speaks. `Response` is deliberately small/serialisable: it is
   what gets appended to the append-only response log, the system's single source
-  of truth.
+  of truth. Also names the meta keys a choice game writes (`CHOICE_META_KEYS`) and
+  reads them back: `guess_of` (per-response guess rate, used by `RaschEstimator`)
+  and `confusions` (wrong picks, for distractor choice).
 - `stores.py` — where learner data lives: two `MutableMapping` stores (local JSON
   files by default), so swapping in `s3dol` or a database is a keyword argument,
   not a rewrite.
@@ -29,7 +31,7 @@ vocabulary games that used to live in the package are now plain data/a web app u
 
 ```bash
 uv venv .venv && uv pip install -e . pytest ruff
-.venv/bin/pytest -v --tb=short --doctest-modules --ignore=games   # 122 passed
+.venv/bin/pytest -v --tb=short --doctest-modules --ignore=games   # 323 passed
 .venv/bin/ruff check .
 ```
 Or `wads ci-local` for the full gate (Python 3.10+3.12, Windows included, doctests

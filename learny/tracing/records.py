@@ -1,5 +1,8 @@
 """Core data types for learner modelling: items, outcomes, and responses.
 
+Also the names of what a choice game records in a response's ``meta``
+(:data:`CHOICE_META_KEYS`), with :func:`guess_of` and :func:`confusions` to read them.
+
 These are the vocabulary every other module in :mod:`learny.tracing` speaks. They are
 deliberately small and serialisable: a :class:`Response` is what gets appended to the
 append-only log that is the system's single source of truth, so its shape is a
@@ -14,13 +17,34 @@ the log records what happened.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Collection, Mapping, Sequence
+from collections import Counter
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, asdict, replace
 from enum import Enum
-from numbers import Integral
+from numbers import Integral, Real
 from typing import Any
 
-__all__ = ["Outcome", "Item", "Response", "LabelWeights", "restrict_labels"]
+__all__ = [
+    "Outcome",
+    "Item",
+    "Response",
+    "LabelWeights",
+    "restrict_labels",
+    "CHOICE_META_KEYS",
+    "GUESS_IS_ONE_OVER_K",
+    "META_SHOWN",
+    "META_CHOSEN",
+    "META_RT_MS",
+    "META_PROMPT",
+    "META_ANSWER",
+    "META_PATTERN",
+    "META_GUESS",
+    "META_SPEC",
+    "META_SESSION",
+    "META_NOT_REACHED",
+    "guess_of",
+    "confusions",
+]
 
 #: Spellings seen in real answer keys, mapped to the canonical three. Extend by passing
 #: your own mapping at the adapter boundary rather than editing this.
@@ -172,6 +196,18 @@ class Response:
     Traceback (most recent call last):
         ...
     ValueError: Response 'q': a skipped response has no score (got score=0)
+
+    **A choice game** (the learner picks among options shown) writes its facts into
+    ``meta`` under the names in :data:`CHOICE_META_KEYS`: ``shown`` (option ids in display
+    order), ``chosen`` (the pick), ``rt_ms`` (response time), ``prompt`` and ``answer``
+    (the sides shown and asked for), ``pattern`` (``'M1'``...), ``guess``, ``spec`` and
+    ``session``. :func:`guess_of` reads the guess rate from them and :func:`confusions`
+    the wrong picks. Other keys are allowed and kept as they are.
+
+    >>> r = Response("ada", "ni", "wrong", meta={"shown": ["ni", "wo", "ta"], "chosen": "wo",
+    ...              "rt_ms": 1840, "pattern": "M1"})
+    >>> guess_of(r), Response.from_dict(r.to_dict()) == r
+    (0.3333333333333333, True)
     """
 
     student: str
@@ -232,6 +268,125 @@ class Response:
         """Inverse of :meth:`to_dict`, tolerant of unknown keys from a future version."""
         known = {"student", "item", "outcome", "at", "meta", "score", "max_score"}
         return cls(**{k: v for k, v in d.items() if k in known})
+
+
+# -- what a choice game writes into Response.meta ---------------------------------
+#
+# A game where the learner picks among options shown (pick-the-match and its kin, see
+# ``docs/research/learning-game-patterns.md`` section 5) records the same facts whatever
+# its UI: the options, the pick, the time taken, the guess rate. These names are the
+# contract, shared with the TypeScript side; ``meta`` stays open to any other key.
+
+#: Option ids in display order, the correct one included. An option id is the id of the
+#: item it shows, so a wrong pick names the item it was mistaken for.
+META_SHOWN = "shown"
+#: The option id the learner picked; absent on a skip.
+META_CHOSEN = "chosen"
+#: Response time, in milliseconds.
+META_RT_MS = "rt_ms"
+#: The side(s) of the item shown as the prompt (``'fr.text'``, ``['zh.hanzi']``...).
+META_PROMPT = "prompt"
+#: The side(s) the options were shown in, i.e. what was asked for.
+META_ANSWER = "answer"
+#: The pattern id: ``'M1'`` (pick the match among k), ``'M2'``, ``'P1'``...
+META_PATTERN = "pattern"
+#: The probability of a correct answer by chance, when the game knows it.
+META_GUESS = "guess"
+#: The game settings this response was played under (an id, or the spec itself).
+META_SPEC = "spec"
+#: The id of the sitting this response belongs to.
+META_SESSION = "session"
+
+#: Set by :func:`~learny.tracing.estimators.mark_not_reached` on a blank the clock ran
+#: out before: not evidence about the student. Any game may write it, not only choice games.
+META_NOT_REACHED = "not_reached"
+
+#: Every meta key a choice game writes, in the order above.
+CHOICE_META_KEYS = (
+    META_SHOWN,
+    META_CHOSEN,
+    META_RT_MS,
+    META_PROMPT,
+    META_ANSWER,
+    META_PATTERN,
+    META_GUESS,
+    META_SPEC,
+    META_SESSION,
+)
+
+#: Patterns whose chance rate is one over the number of options shown: one correct
+#: option among k (M1), one correct target among k (M4).
+GUESS_IS_ONE_OVER_K = frozenset({"M1", "M4"})
+
+
+def guess_of(
+    response: Response | Mapping[str, Any], *, default: float | None = None
+) -> float | None:
+    """The chance of answering ``response``'s item right by guessing, from its meta.
+
+    An explicit ``meta['guess']`` wins. Otherwise, for a pattern in
+    :data:`GUESS_IS_ONE_OVER_K`, it is one over the number of options shown. Otherwise
+    ``default``, which is where a model-wide ``guess=`` comes in. The guess rate is a
+    property of the game that produced the response, so a log mixing 2-option and
+    4-option rounds carries the right rate on each one. ``response`` may also be just a
+    ``meta`` mapping, to get the rate of a round before it is played.
+
+    >>> guess_of(Response('ada', 'ni', 'correct', meta={'pattern': 'M1', 'shown': ['ni', 'wo', 'ta', 'hao']}))
+    0.25
+    >>> guess_of(Response('ada', 'ni', 'wrong', meta={'guess': 0.5, 'pattern': 'M1', 'shown': ['ni', 'wo', 'ta']}))
+    0.5
+    >>> guess_of(Response('ada', 'ni', 'correct'), default=0.2)  # nothing in meta
+    0.2
+    >>> guess_of({'pattern': 'M1', 'shown': ['ni', 'wo']})  # a round about to be played
+    0.5
+    >>> guess_of(Response('ada', 'ni', 'correct', meta={'pattern': 'P1'})) is None  # typed: no k
+    True
+    >>> guess_of(Response('ada', 'ni', 'correct', meta={'guess': 1.0}))
+    Traceback (most recent call last):
+        ...
+    ValueError: Response 'ni': meta['guess'] must be a number in [0, 1), got 1.0
+    """
+    meta = response.meta if isinstance(response, Response) else response
+    if META_GUESS in meta:
+        g = meta[META_GUESS]
+        if isinstance(g, bool) or not isinstance(g, Real) or not 0.0 <= g < 1.0:
+            where = f"Response {response.item!r}" if isinstance(response, Response) else "meta"
+            raise ValueError(
+                f"{where}: meta[{META_GUESS!r}] must be a number "
+                f"in [0, 1), got {g!r}"
+            )
+        return float(g)
+    shown = meta.get(META_SHOWN)
+    if meta.get(META_PATTERN) in GUESS_IS_ONE_OVER_K and shown:
+        return 1.0 / len(shown)
+    return default
+
+
+def confusions(responses: Iterable[Response]) -> Counter[tuple[str, str]]:
+    """How often each item was answered with each wrong option: ``(item, chosen) -> n``.
+
+    Read from wrong responses that recorded ``meta['chosen']``; everything else is
+    skipped. This is what a distractor policy feeds on (offer the learner the options
+    they actually mistake for this item) and what tells two labels apart. Pass one
+    student's responses for their confusions, everyone's for the population's.
+
+    >>> log = [
+    ...     Response('ada', 'tsu', 'wrong', meta={'chosen': 'shi'}),
+    ...     Response('ada', 'tsu', 'wrong', meta={'chosen': 'shi'}),
+    ...     Response('ada', 'tsu', 'correct', meta={'chosen': 'tsu'}),
+    ...     Response('ada', 'so', 'wrong', meta={'chosen': 'n'}),
+    ...     Response('ada', 'so', 'wrong'),            # no pick recorded: not counted
+    ... ]
+    >>> confusions(log)
+    Counter({('tsu', 'shi'): 2, ('so', 'n'): 1})
+    """
+    return Counter(
+        (r.item, chosen)
+        for r in responses
+        if r.outcome is Outcome.WRONG
+        and (chosen := r.meta.get(META_CHOSEN)) is not None
+        and chosen != r.item
+    )
 
 
 def restrict_labels(
