@@ -1,4 +1,4 @@
-> built 2026-11-22 11:42 UTC from 4ab6264 (main) · learny 0.0.1. Details: build_info.json
+> built 2026-11-25 18:12 UTC from c5954ff (main) · learny 0.0.1. Details: build_info.json
 
 # index.html.md
 
@@ -4416,7 +4416,7 @@ The default response log, under `~/.local/share/learny/responses/`.
 
 # About this build
 
-This documentation was built on **2026-11-22 11:42 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/4ab62645389e5b3411675838c097041ede7264e7"><code>4ab6264</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-25 18:12 UTC** from commit <a href="https://github.com/thorwhalen/learny/commit/c5954ffc36dfcba99d84021249686551302d74f1"><code>c5954ff</code></a> on branch <code>main</code>, for **learny 0.0.1** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -4425,7 +4425,7 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                          |
 |---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/learny/commit/4ab62645389e5b3411675838c097041ede7264e7"><code>4ab62645389e5b3411675838c097041ede7264e7</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/learny/commit/c5954ffc36dfcba99d84021249686551302d74f1"><code>c5954ffc36dfcba99d84021249686551302d74f1</code></a> |
 | Branch              | <code>main</code>                                                                                                                                        |
 | Tags at this commit | none                                                                                                                                                     |
 | Working tree        | clean                                                                                                                                                    |
@@ -4436,15 +4436,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/learny</code>                                                             |
-| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/45018394899">45018394899</a>    |
+| Run          | <a href="https://github.com/thorwhalen/learny/actions/runs/45672296899">45672296899</a>    |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>4ab62645389e5b3411675838c097041ede7264e7</code> (in the history of the built commit) |
+| Event commit | <code>c5954ffc36dfcba99d84021249686551302d74f1</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.23  |
+| epythet  | 0.2.25  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.16 |
@@ -4469,8 +4469,8 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ```bash
 git clone https://github.com/thorwhalen/learny && cd learny
-git checkout 4ab62645389e5b3411675838c097041ede7264e7
-pip install "epythet==0.2.23"
+git checkout c5954ffc36dfcba99d84021249686551302d74f1
+pip install "epythet==0.2.25"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 
@@ -4490,6 +4490,16 @@ machine-readable copies of this documentation.
 ## Skills
 
 Skills are folders holding a `SKILL.md` (the [Agent Skills](https://agentskills.io) format): a description that tells an agent when to use it and a body with the procedure. Install one into your agent with `gh skill` (any host: `--agent claude-code`, `copilot`, `cursor`, `codex`, `gemini`), or use the copy bundled in the wheel.
+
+### `learner-modelling`
+
+Estimate what a learner knows and what to practise, with `learny`: per-student P(correct) on an item, item difficulty (prior from a published band or item features, posterior from play), the labels a student is credibly weakest on, the next item and its distractors, and whether to trust the numbers. Use in any education, quiz, drill, exam-prep or learning-game app on “how hard is this question for this student”, “estimate difficulty”, “what should she work on”, “what to practise next”, “which skills is he weak on”, “diagnose a student from their answers”, “adaptive practice”, “spaced repetition”, “which features make a question hard”, “feature engineering on items”, “prior and posterior difficulty”, “Bayesian success/failure estimate”, or IRT, Rasch, Elo, LLTM, knowledge tracing, partial credit, mastery, calibration. Read before writing scoring, difficulty or mastery code of your own.
+
+```bash
+gh skill install thorwhalen/learny learner-modelling --agent claude-code
+```
+
+Source: [`skills/learner-modelling`](https://github.com/thorwhalen/learny/tree/HEAD/skills/learner-modelling).
 
 ### `learning-game-patterns`
 
