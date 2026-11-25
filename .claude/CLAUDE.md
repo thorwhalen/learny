@@ -25,6 +25,10 @@ vocabulary games that used to live in the package are now plain data/a web app u
   not a rewrite.
 - `diagnostics.py` — when to trust an estimate: calibration + how well the model
   has predicted so far, so it can say "I'm guessing" instead of guessing silently.
+- `difficulty.py` — which item features make an item hard: `fit_feature_difficulty`
+  (LLTM with a residual per item, plus per-attempt features), exported as a
+  `FeatureDifficulty` artifact that enters the model through `items=`. The one place
+  that reads across students, and only when called.
 - `tests/` — `test_model.py`, `test_records_and_stores.py`, `test_diagnostics.py`.
 
 ## Module map (`learny/`, outside `tracing`)
@@ -62,7 +66,15 @@ are excluded — see `[tool.wads.ci.testing]`).
 ## Docs
 
 - `docs/learner-model-design.md` — the v1 design decisions and their boundaries.
-- `docs/research/` — background research (`multidimensional-skill-spaces.md`).
+- `docs/research/` — background research; `docs/research/README.md` indexes it.
+
+## Skills
+
+Real files in `skills/`, bridged by relative symlinks in `.claude/skills/`:
+`learner-modelling` (consumer: how to use `learny` for difficulty, mastery, what to
+practise and what to ask next; linked into `~/.claude/skills/` so every session sees it)
+and `learning-game-patterns` (designing a game and what it must log). When the API or a
+default changes, update `learner-modelling` in the same PR.
 
 ## Dependents
 
